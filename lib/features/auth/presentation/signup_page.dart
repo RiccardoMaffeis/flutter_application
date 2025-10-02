@@ -251,9 +251,10 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                 autocorrect: false,
                 enableSuggestions: false,
               ),
+              divider,
               _PasswordChecklist(controller: _password),
 
-              divider,
+              const SizedBox(height: 2),
 
               // Confirm Password (must match primary password)
               TextFormField(

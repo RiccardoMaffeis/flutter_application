@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "317501248625",
+    "project_id": "tesi-2025-a0d0c",
+    "storage_bucket": "tesi-2025-a0d0c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:317501248625:android:1ddfc53fb76770ad68b7d0",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBimM38pUAyLfGQbYOzKgIC0f5R0nqOc8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

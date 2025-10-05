@@ -8,11 +8,13 @@ import '../domain/products_repository.dart';
 import '../domain/product.dart';
 import '../domain/category.dart';
 
-class ProductsRepositoryFake implements ProductsRepository {
+import 'dto/product_dto.dart';
+import 'dto/product_dto_mapper.dart';
+
+class ProductsRepositoryImpl implements ProductsRepository {
   final _rng = Random(1);
   final _favs = <String>{};
 
-  // Categorie allineate alle etichette mostrate in UI
   static const List<Category> _cats = <Category>[
     Category(id: 'all', name: 'All'),
     Category(id: 'xt1', name: 'XT1'),
@@ -44,50 +46,13 @@ class ProductsRepositoryFake implements ProductsRepository {
     final seenCodes = <String>{};
 
     _all = items
-        .map<Product?>((m) {
-          final code = (m['code'] as String?)?.trim();
-          if (code == null || code.isEmpty) return null;
-          if (!seenCodes.add(code)) return null;
-
-          final nameField = (m['name'] as String?) ?? '';
-
-          final categoryId = _guessCategoryId(nameField);
-
+        .map((m) => ProductDto.fromJson(m))
+        .where((dto) => dto.code.isNotEmpty && seenCodes.add(dto.code))
+        .map((dto) {
           final price = 100 + _rng.nextInt(200) + _rng.nextDouble();
-
-          final imagePath = _pickXt1Image(nameField);
-
-          return Product(
-            id: code,
-            code: code, 
-            displayName: nameField, 
-            price: price,
-            imageUrl: imagePath,
-            categoryId: categoryId,
-          );
+          return dto.toDomain(price);
         })
-        .whereType<Product>()
         .toList();
-  }
-
-  String _guessCategoryId(String rawName) {
-    final n = rawName.toUpperCase();
-    if (n.contains('XT1')) return 'xt1';
-    if (n.contains('XT2')) return 'xt2';
-    if (n.contains('XT3')) return 'xt3';
-    if (n.contains('XT4')) return 'xt4';
-    if (n.contains('XT5')) return 'xt5';
-    if (n.contains('XT6')) return 'xt6';
-    if (n.contains('XT7')) return 'xt7';
-    return 'all';
-  }
-
-  String _pickXt1Image(String name) {
-    final lower = name.toLowerCase();
-    if (lower.contains('4p')) {
-      return 'lib/images/XT1/9IBA255356_800x536.png';
-    }
-    return 'lib/images/XT1/9IBA255127_800x536.png';
   }
 
   @override
@@ -114,16 +79,12 @@ class ProductsRepositoryFake implements ProductsRepository {
 
   @override
   Future<void> toggleFavourite(String productId) async {
-    if (_favs.contains(productId)) {
-      _favs.remove(productId);
-    } else {
-      _favs.add(productId);
-    }
+    _favs.contains(productId) ? _favs.remove(productId) : _favs.add(productId);
   }
 
   @override
   Future<int> getCartCount() async {
     await Future<void>.delayed(const Duration(milliseconds: 60));
-    return 2; 
+    return 2;
   }
 }

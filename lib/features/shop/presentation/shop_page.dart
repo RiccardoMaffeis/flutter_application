@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/features/shop/domain/product.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../controllers/shop_controller.dart';
 import 'widgets/product_card.dart';
@@ -12,26 +14,98 @@ class ShopPage extends ConsumerStatefulWidget {
 }
 
 class _ShopPageState extends ConsumerState<ShopPage> {
-  int _navIndex = 0;
+
+  String _familyLabel(Product p) {
+    final id = p.categoryId.toUpperCase();
+    if (id.startsWith('XT')) return id.toUpperCase();
+
+    final m = RegExp(
+      r'\bXT(\d+)\b',
+      caseSensitive: false,
+    ).firstMatch(p.displayName.toUpperCase());
+    return m != null ? 'XT${m.group(1)!}' : 'Other';
+  }
+
+  Map<String, List<Product>> _groupByFamily(List<Product> items) {
+    final map = <String, List<Product>>{};
+    for (final p in items) {
+      final key = _familyLabel(p);
+      map.putIfAbsent(key, () => []).add(p);
+    }
+
+    int familyRank(String k) {
+      final m = RegExp(r'^XT(\d+)$').firstMatch(k);
+      return m != null ? int.parse(m.group(1)!) : 999;
+    }
+
+    final keys = map.keys.toList()
+      ..sort((a, b) => familyRank(a).compareTo(familyRank(b)));
+    return {for (final k in keys) k: map[k]!};
+  }
+
+  String _xt1GroupLabel(String displayName) {
+    final up = displayName.toUpperCase();
+
+    final m = RegExp(r'\bXT1([A-Z])\b').firstMatch(up);
+    final variant = m != null ? 'XT1${m.group(1)!}' : 'XT1';
+
+    final poles = up.contains('4P') ? '4p' : '3p';
+
+    return '$variant $poles';
+  }
+
+  Map<String, List<Product>> _groupXt1(List<Product> items) {
+    final map = <String, List<Product>>{};
+    for (final p in items) {
+      final key = _xt1GroupLabel(p.displayName);
+      map.putIfAbsent(key, () => []).add(p);
+    }
+
+    int _variantRank(String key) {
+      final v = RegExp(r'XT1([A-Z])').firstMatch(key)?.group(1) ?? 'Z';
+      const order = ['N', 'B', 'H', 'S', 'F', 'D'];
+      final idx = order.indexOf(v);
+      return idx == -1 ? 999 : idx;
+    }
+
+    int _polesRank(String key) => key.contains('3p') ? 0 : 1;
+
+    final sortedKeys = map.keys.toList()
+      ..sort((a, b) {
+        final byV = _variantRank(a).compareTo(_variantRank(b));
+        if (byV != 0) return byV;
+        final byP = _polesRank(a).compareTo(_polesRank(b));
+        if (byP != 0) return byP;
+        return a.compareTo(b);
+      });
+
+    return {for (final k in sortedKeys) k: map[k]!};
+  }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(shopControllerProvider);
     final ctrl = ref.read(shopControllerProvider.notifier);
 
-    // Etichette visive per le categorie (in ordine)
-    const categoryLabels = ['All', 'XT1', 'XT2', 'XT3', 'XT4', 'XT5', 'XT6', 'XT7'];
+    const categoryLabels = [
+      'All',
+      'XT1',
+      'XT2',
+      'XT3',
+      'XT4',
+      'XT5',
+      'XT6',
+      'XT7',
+    ];
 
-    // Trova l'indice della categoria selezionata nello stato
     final selectedIdx = state.categories.indexWhere(
       (c) => c.id == state.selectedCategoryId,
     );
 
-    // Titolo da mostrare sopra la griglia
     final sectionTitle =
         (selectedIdx >= 0 && selectedIdx < categoryLabels.length)
         ? categoryLabels[selectedIdx]
-        : categoryLabels.first; // fallback: "All"
+        : categoryLabels.first;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F7),
@@ -41,7 +115,6 @@ class _ShopPageState extends ConsumerState<ShopPage> {
           children: [
             Column(
               children: [
-                // riga con icone e titolo centrato
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -86,10 +159,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                         color: AppTheme.accent.withOpacity(0.45),
                         blurRadius: 3,
                         spreadRadius: 0.4,
-                        offset: const Offset(
-                          0,
-                          3,
-                        ), // sposta l’ombra verso il basso
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
@@ -97,7 +167,6 @@ class _ShopPageState extends ConsumerState<ShopPage> {
 
                 const SizedBox(height: 12),
 
-                // strip categorie: etichette testuali fisse
                 SizedBox(
                   height: 64,
                   child: ListView.separated(
@@ -155,22 +224,145 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                 ),
 
                 const SizedBox(height: 4),
-                Text(
-                  sectionTitle,
-                  style: const TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 8),
 
-                // griglia prodotti
                 Expanded(
                   child: state.products.when(
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
                     error: (e, _) => Center(child: Text('Failed to load: $e')),
                     data: (items) {
+                      final isAll = sectionTitle.toUpperCase() == 'ALL';
+                      final isXt1 = sectionTitle.toUpperCase() == 'XT1';
+
+                      if (isAll) {
+                        final families = _groupByFamily(items);
+
+                        return CustomScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          slivers: [
+                            for (final entry in families.entries) ...[
+                              SliverToBoxAdapter(
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    12,
+                                    12,
+                                    12,
+                                    6,
+                                  ),
+                                  child: Text(
+                                    entry.key,
+                                    style: const TextStyle(
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ),
+                              SliverToBoxAdapter(
+                                child: SizedBox(
+                                  height: 320,
+                                  child: ListView.separated(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                    ),
+                                    scrollDirection: Axis.horizontal,
+                                    physics: const BouncingScrollPhysics(),
+                                    itemBuilder: (_, i) {
+                                      final p = entry.value[i];
+                                      final fav = state.favourites.contains(
+                                        p.id,
+                                      );
+                                      return SizedBox(
+                                        width: 220,
+                                        child: ProductCard(
+                                          product: p,
+                                          isFavourite: fav,
+                                          onFavToggle: () =>
+                                              ctrl.toggleFavourite(p.id),
+                                          onTap: () {
+                                            // TODO: product details / AR
+                                          },
+                                        ),
+                                      );
+                                    },
+                                    separatorBuilder: (_, __) =>
+                                        const SizedBox(width: 12),
+                                    itemCount: entry.value.length,
+                                  ),
+                                ),
+                              ),
+                            ],
+                            const SliverToBoxAdapter(
+                              child: SizedBox(height: 76),
+                            ),
+                          ],
+                        );
+                      }
+
+                      if (isXt1) {
+                        final groups = _groupXt1(items);
+
+                        return CustomScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          slivers: [
+                            for (final entry in groups.entries) ...[
+                              SliverToBoxAdapter(
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    12,
+                                    12,
+                                    12,
+                                    6,
+                                  ),
+                                  child: Text(
+                                    entry.key,
+                                    style: const TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SliverToBoxAdapter(
+                                child: SizedBox(
+                                  height: 320,
+                                  child: ListView.separated(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                    ),
+                                    scrollDirection: Axis.horizontal,
+                                    physics: const BouncingScrollPhysics(),
+                                    itemBuilder: (_, i) {
+                                      final p = entry.value[i];
+                                      final fav = state.favourites.contains(
+                                        p.id,
+                                      );
+                                      return SizedBox(
+                                        width: 220,
+                                        child: ProductCard(
+                                          product: p,
+                                          isFavourite: fav,
+                                          onFavToggle: () =>
+                                              ctrl.toggleFavourite(p.id),
+                                          onTap: () {},
+                                        ),
+                                      );
+                                    },
+                                    separatorBuilder: (_, __) =>
+                                        const SizedBox(width: 12),
+                                    itemCount: entry.value.length,
+                                  ),
+                                ),
+                              ),
+                            ],
+                            const SliverToBoxAdapter(
+                              child: SizedBox(height: 76),
+                            ),
+                          ],
+                        );
+                      }
+
                       return Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -193,9 +385,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                               product: p,
                               isFavourite: fav,
                               onFavToggle: () => ctrl.toggleFavourite(p.id),
-                              onTap: () {
-                                // TODO: product details / AR
-                              },
+                              onTap: () {},
                             );
                           },
                         ),
@@ -234,8 +424,13 @@ class _ShopPageState extends ConsumerState<ShopPage> {
               right: 16,
               bottom: 16,
               child: _BottomPillNav(
-                index: _navIndex,
-                onChanged: (i) => setState(() => _navIndex = i),
+                index: 0,
+                onChanged: (i) {
+                  if (i == 0) return;
+                  if (i == 1) context.go('/favourites');
+                  if (i == 2)
+                    context.go('/profile');
+                },
               ),
             ),
           ],
@@ -265,9 +460,9 @@ class _BottomPillNav extends StatelessWidget {
             spreadRadius: 2,
             offset: Offset(0, 10),
           ),
-          
+
           BoxShadow(
-            color: Color(0x14000000), 
+            color: Color(0x14000000),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),

@@ -44,9 +44,8 @@ class ShopState {
   );
 }
 
-// provider del repository (swap con la tua impl reale quando pronta)
 final productsRepositoryProvider = Provider<ProductsRepository>((ref) {
-  return ProductsRepositoryFake();
+  return ProductsRepositoryImpl();
 });
 
 final shopControllerProvider =
@@ -68,7 +67,7 @@ class ShopController extends StateNotifier<ShopState> {
       favourites: favs,
       cartCount: count,
     );
-    await loadProducts(); // default categoria 'all'
+    await loadProducts();
   }
 
   Future<void> loadProducts({String? categoryId}) async {

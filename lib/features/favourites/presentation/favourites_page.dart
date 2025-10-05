@@ -48,7 +48,7 @@ class FavouritesPage extends ConsumerWidget {
                       ),
                       IconButton(
                         onPressed: () {}, // TODO: cart
-                        icon: const Icon(Icons.shopping_cart_outlined, size: 32),
+                        icon: const Icon(Icons.shopping_cart_outlined, size: 35),
                       ),
                     ],
                   ),

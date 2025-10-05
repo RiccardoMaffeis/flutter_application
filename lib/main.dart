@@ -40,6 +40,7 @@ class MyApp extends ConsumerWidget {
       title: 'Welcome/Auth Demo',
       // Centralized light theme for the app.
       theme: AppTheme.light,
+      
       // GoRouter configuration that handles routing and redirects.
       routerConfig: router,
     );

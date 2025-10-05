@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application/features/shop/presentation/shop_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -8,7 +9,6 @@ import 'features/auth/controllers/auth_controller.dart';
 import 'features/auth/presentation/welcome_page.dart';
 import 'features/auth/presentation/login_page.dart';
 import 'features/auth/presentation/signup_page.dart';
-import 'features/auth/presentation/home_page.dart';
 
 /// Thin adapter that turns a Stream into a Listenable so GoRouter can
 /// refresh its redirect logic whenever the stream emits (e.g., auth changes).
@@ -80,7 +80,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/welcome', builder: (_, __) => const WelcomePage()),
       GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
       GoRoute(path: '/signup', builder: (_, __) => const SignupPage()),
-      GoRoute(path: '/home', builder: (_, __) => const HomePage()),
+      GoRoute(path: '/home', builder: (_, __) => const ShopPage()),
     ],
   );
 });

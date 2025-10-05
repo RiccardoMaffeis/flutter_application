@@ -9,7 +9,8 @@ class AppTheme {
   // Uses Material 3 and a seeded color scheme for consistent tones.
   static ThemeData get light => ThemeData(
         useMaterial3: true,               
-        colorSchemeSeed: _abbRed,          
+        colorSchemeSeed: _abbRed,  
+        fontFamily: 'ABBvoice',        
         scaffoldBackgroundColor: const Color(0xFFF5F5F7), 
         textTheme: const TextTheme(
           headlineMedium: TextStyle(fontWeight: FontWeight.w700), 

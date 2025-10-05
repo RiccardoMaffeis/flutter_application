@@ -1,0 +1,2480 @@
+[
+  {
+    "code": "1SDA102860R1",
+    "name": "XT6N 800 TMA In=800A 4p F F InN100%In UL",
+    "url": "https://new.abb.com/products/en/1SDA102860R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 TMA In=800A 4p F F InN100%In UL",
+        "Product ID": "1SDA102860R1",
+        "EAN": "8015644033712",
+        "Catalog Description": "XT6N 800 TMA In=800A 4p F F InN100%In UL",
+        "Long Description": "C.BREAKER TMAX T6N 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 800 I3=4000...8000 A A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA102861R1",
+    "name": "XT6N 800 Ekip Dip LS/I 800 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102861R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LS/I 800 4p FF UL/CSA",
+        "Product ID": "1SDA102861R1",
+        "EAN": "8015644033729",
+        "Catalog Description": "XT6N 800 Ekip Dip LS/I 800 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102862R1",
+    "name": "XT6N 800 Ekip Dip LSI In800 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102862R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LSI In800 4p FF UL/CSA",
+        "Product ID": "1SDA102862R1",
+        "EAN": "8015644033736",
+        "Catalog Description": "XT6N 800 Ekip Dip LSI In800 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102863R1",
+    "name": "XT6N 800 Ekip Dip LSIG 800 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102863R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LSIG 800 4p FF UL/CSA",
+        "Product ID": "1SDA102863R1",
+        "EAN": "8015644033743",
+        "Catalog Description": "XT6N 800 Ekip Dip LSIG 800 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102864R1",
+    "name": "XT6N 800 Ekip Dip LIG In800 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102864R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LIG In800 4p FF UL/CSA",
+        "Product ID": "1SDA102864R1",
+        "EAN": "8015644033750",
+        "Catalog Description": "XT6N 800 Ekip Dip LIG In800 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102865R1",
+    "name": "XT6S 800 TMA In=800A 4p F F InN100%In UL",
+    "url": "https://new.abb.com/products/en/1SDA102865R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 TMA In=800A 4p F F InN100%In UL",
+        "Product ID": "1SDA102865R1",
+        "EAN": "8015644033767",
+        "Catalog Description": "XT6S 800 TMA In=800A 4p F F InN100%In UL",
+        "Long Description": "C.BREAKER TMAX T6S 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 800 I3=4000...8000 A A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA102866R1",
+    "name": "XT6S 800 Ekip Dip LS/I 800 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102866R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LS/I 800 4p FF UL/CSA",
+        "Product ID": "1SDA102866R1",
+        "EAN": "8015644033774",
+        "Catalog Description": "XT6S 800 Ekip Dip LS/I 800 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102867R1",
+    "name": "XT6S 800 Ekip Dip LSI In800 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102867R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LSI In800 4p FF UL/CSA",
+        "Product ID": "1SDA102867R1",
+        "EAN": "8015644033781",
+        "Catalog Description": "XT6S 800 Ekip Dip LSI In800 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102868R1",
+    "name": "XT6S 800 Ekip Dip LSIG 800 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102868R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LSIG 800 4p FF UL/CSA",
+        "Product ID": "1SDA102868R1",
+        "EAN": "8015644033798",
+        "Catalog Description": "XT6S 800 Ekip Dip LSIG 800 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102869R1",
+    "name": "XT6S 800 Ekip Dip LIG In800 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102869R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LIG In800 4p FF UL/CSA",
+        "Product ID": "1SDA102869R1",
+        "EAN": "8015644033804",
+        "Catalog Description": "XT6S 800 Ekip Dip LIG In800 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102870R1",
+    "name": "XT6H 800 TMA In=800A 4p F F InN100%In UL",
+    "url": "https://new.abb.com/products/en/1SDA102870R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 TMA In=800A 4p F F InN100%In UL",
+        "Product ID": "1SDA102870R1",
+        "EAN": "8015644033811",
+        "Catalog Description": "XT6H 800 TMA In=800A 4p F F InN100%In UL",
+        "Long Description": "C.BREAKER TMAX T6H 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 800 I3=4000...8000 A A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA102871R1",
+    "name": "XT6H 800 Ekip Dip LS/I 800 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102871R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LS/I 800 4p FF UL/CSA",
+        "Product ID": "1SDA102871R1",
+        "EAN": "8015644033828",
+        "Catalog Description": "XT6H 800 Ekip Dip LS/I 800 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102872R1",
+    "name": "XT6H 800 Ekip Dip LSI In800 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102872R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LSI In800 4p FF UL/CSA",
+        "Product ID": "1SDA102872R1",
+        "EAN": "8015644033835",
+        "Catalog Description": "XT6H 800 Ekip Dip LSI In800 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102873R1",
+    "name": "XT6H 800 Ekip Dip LSIG 800 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102873R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LSIG 800 4p FF UL/CSA",
+        "Product ID": "1SDA102873R1",
+        "EAN": "8015644033842",
+        "Catalog Description": "XT6H 800 Ekip Dip LSIG 800 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102874R1",
+    "name": "XT6H 800 Ekip Dip LIG In800 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102874R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LIG In800 4p FF UL/CSA",
+        "Product ID": "1SDA102874R1",
+        "EAN": "8015644033859",
+        "Catalog Description": "XT6H 800 Ekip Dip LIG In800 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA107646R1",
+    "name": "XT6N 800 TMA In=600A 4p F F InN100%In UL",
+    "url": "https://new.abb.com/products/en/1SDA107646R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 TMA In=600A 4p F F InN100%In UL",
+        "Product ID": "1SDA107646R1",
+        "EAN": "8015644102999",
+        "Catalog Description": "XT6N 800 TMA In=600A 4p F F InN100%In UL",
+        "Long Description": "C.BREAKER TMAX T6N 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 600 I3=3000...6000 A A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA107647R1",
+    "name": "XT6N 800 Ekip Dip LS/I 600 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107647R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LS/I 600 4p FF UL/CSA",
+        "Product ID": "1SDA107647R1",
+        "EAN": "8015644103002",
+        "Catalog Description": "XT6N 800 Ekip Dip LS/I 600 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107648R1",
+    "name": "XT6N 800 Ekip Dip LSI In600 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107648R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LSI In600 4p FF UL/CSA",
+        "Product ID": "1SDA107648R1",
+        "EAN": "8015644103019",
+        "Catalog Description": "XT6N 800 Ekip Dip LSI In600 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107649R1",
+    "name": "XT6N 800 Ekip Dip LSIG 600 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107649R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LSIG 600 4p FF UL/CSA",
+        "Product ID": "1SDA107649R1",
+        "EAN": "8015644103026",
+        "Catalog Description": "XT6N 800 Ekip Dip LSIG 600 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107650R1",
+    "name": "XT6N 800 Ekip Dip LIG In600 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107650R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LIG In600 4p FF UL/CSA",
+        "Product ID": "1SDA107650R1",
+        "EAN": "8015644103033",
+        "Catalog Description": "XT6N 800 Ekip Dip LIG In600 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107651R1",
+    "name": "XT6S 800 TMA In=600A 4p F F InN100%In UL",
+    "url": "https://new.abb.com/products/en/1SDA107651R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 TMA In=600A 4p F F InN100%In UL",
+        "Product ID": "1SDA107651R1",
+        "EAN": "8056221028356",
+        "Catalog Description": "XT6S 800 TMA In=600A 4p F F InN100%In UL",
+        "Long Description": "C.BREAKER TMAX T6S 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 600 I3=3000...6000 A A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA107652R1",
+    "name": "XT6S 800 Ekip Dip LS/I 600 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107652R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LS/I 600 4p FF UL/CSA",
+        "Product ID": "1SDA107652R1",
+        "EAN": "8056221028363",
+        "Catalog Description": "XT6S 800 Ekip Dip LS/I 600 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107653R1",
+    "name": "XT6S 800 Ekip Dip LSI In600 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107653R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LSI In600 4p FF UL/CSA",
+        "Product ID": "1SDA107653R1",
+        "EAN": "8056221028370",
+        "Catalog Description": "XT6S 800 Ekip Dip LSI In600 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107654R1",
+    "name": "XT6S 800 Ekip Dip LSIG 600 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107654R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LSIG 600 4p FF UL/CSA",
+        "Product ID": "1SDA107654R1",
+        "EAN": "8015644103071",
+        "Catalog Description": "XT6S 800 Ekip Dip LSIG 600 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107655R1",
+    "name": "XT6S 800 Ekip Dip LIG In600 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107655R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LIG In600 4p FF UL/CSA",
+        "Product ID": "1SDA107655R1",
+        "EAN": "8015644103088",
+        "Catalog Description": "XT6S 800 Ekip Dip LIG In600 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107656R1",
+    "name": "XT6H 800 TMA In=600A 4p F F InN100%In UL",
+    "url": "https://new.abb.com/products/en/1SDA107656R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 TMA In=600A 4p F F InN100%In UL",
+        "Product ID": "1SDA107656R1",
+        "EAN": "8056221028387",
+        "Catalog Description": "XT6H 800 TMA In=600A 4p F F InN100%In UL",
+        "Long Description": "C.BREAKER TMAX T6H 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 600 I3=3000...6000 A A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA107657R1",
+    "name": "XT6H 800 Ekip Dip LS/I 600 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107657R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LS/I 600 4p FF UL/CSA",
+        "Product ID": "1SDA107657R1",
+        "EAN": "8056221028394",
+        "Catalog Description": "XT6H 800 Ekip Dip LS/I 600 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107658R1",
+    "name": "XT6H 800 Ekip Dip LSI In600 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107658R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LSI In600 4p FF UL/CSA",
+        "Product ID": "1SDA107658R1",
+        "EAN": "8056221028400",
+        "Catalog Description": "XT6H 800 Ekip Dip LSI In600 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107659R1",
+    "name": "XT6H 800 Ekip Dip LSIG 600 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107659R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LSIG 600 4p FF UL/CSA",
+        "Product ID": "1SDA107659R1",
+        "EAN": "8056221028417",
+        "Catalog Description": "XT6H 800 Ekip Dip LSIG 600 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107660R1",
+    "name": "XT6H 800 Ekip Dip LIG In600 4p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107660R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LIG In600 4p FF UL/CSA",
+        "Product ID": "1SDA107660R1",
+        "EAN": "8015644103132",
+        "Catalog Description": "XT6H 800 Ekip Dip LIG In600 4p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA100730R1",
+    "name": "XT6N 800 TMA 800-8000 4p F F InN=50%In",
+    "url": "https://new.abb.com/products/en/1SDA100730R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 TMA 800-8000 4p F F InN=50%In",
+        "Product ID": "1SDA100730R1",
+        "EAN": "8056221003551",
+        "Catalog Description": "XT6N 800 TMA 800-8000 4p F F InN=50%In",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 800 I3=4000...8000 A NEUTRAL = 50% PHASES"
+      }
+    }
+  },
+  {
+    "code": "1SDA100731R1",
+    "name": "XT6N 800 TMA 800-8000 4p F F InN=100%In",
+    "url": "https://new.abb.com/products/en/1SDA100731R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 TMA 800-8000 4p F F InN=100%In",
+        "Product ID": "1SDA100731R1",
+        "EAN": "8056221003568",
+        "Catalog Description": "XT6N 800 TMA 800-8000 4p F F InN=100%In",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE FOUR-POLE IN AC-DC TMA R 800 I3=4000...8000 A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA100732R1",
+    "name": "XT6N 800 Ekip Dip LS/I In=800 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100732R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LS/I In=800 4p F F",
+        "Product ID": "1SDA100732R1",
+        "EAN": "8056221003575",
+        "Catalog Description": "XT6N 800 Ekip Dip LS/I In=800 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100733R1",
+    "name": "XT6N 1000 Ekip Dip LS/I In=1000 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100733R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 1000 Ekip Dip LS/I In=1000 4p F F",
+        "Product ID": "1SDA100733R1",
+        "EAN": "8056221003582",
+        "Catalog Description": "XT6N 1000 Ekip Dip LS/I In=1000 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 1000 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100734R1",
+    "name": "XT6N 800 Ekip Dip LSI In=800 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100734R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LSI In=800 4p F F",
+        "Product ID": "1SDA100734R1",
+        "EAN": "8056221003599",
+        "Catalog Description": "XT6N 800 Ekip Dip LSI In=800 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100735R1",
+    "name": "XT6N 1000 Ekip Dip LSI In=1000 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100735R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 1000 Ekip Dip LSI In=1000 4p F F",
+        "Product ID": "1SDA100735R1",
+        "EAN": "8056221003605",
+        "Catalog Description": "XT6N 1000 Ekip Dip LSI In=1000 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 1000 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100736R1",
+    "name": "XT6N 800 Ekip Dip LSIG In=800 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100736R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LSIG In=800 4p F F",
+        "Product ID": "1SDA100736R1",
+        "EAN": "8056221003612",
+        "Catalog Description": "XT6N 800 Ekip Dip LSIG In=800 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100737R1",
+    "name": "XT6N 1000 Ekip Dip LSIG In=1000 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100737R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 1000 Ekip Dip LSIG In=1000 4p F F",
+        "Product ID": "1SDA100737R1",
+        "EAN": "8056221003629",
+        "Catalog Description": "XT6N 1000 Ekip Dip LSIG In=1000 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 1000 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100738R1",
+    "name": "XT6N 800 Ekip Dip LIG In=800 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100738R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LIG In=800 4p F F",
+        "Product ID": "1SDA100738R1",
+        "EAN": "8056221003636",
+        "Catalog Description": "XT6N 800 Ekip Dip LIG In=800 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100739R1",
+    "name": "XT6N 1000 Ekip Dip LIG In=1000 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100739R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 1000 Ekip Dip LIG In=1000 4p F F",
+        "Product ID": "1SDA100739R1",
+        "EAN": "8056221003643",
+        "Catalog Description": "XT6N 1000 Ekip Dip LIG In=1000 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 1000 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100752R1",
+    "name": "XT6S 800 TMA 800-8000 4p F F InN=50%In",
+    "url": "https://new.abb.com/products/en/1SDA100752R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 TMA 800-8000 4p F F InN=50%In",
+        "Product ID": "1SDA100752R1",
+        "EAN": "8056221008068",
+        "Catalog Description": "XT6S 800 TMA 800-8000 4p F F InN=50%In",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 800 I3=4000...8000 A NEUTRAL = 50% PHASES"
+      }
+    }
+  },
+  {
+    "code": "1SDA100753R1",
+    "name": "XT6S 800 TMA 800-8000 4p F F InN=100%In",
+    "url": "https://new.abb.com/products/en/1SDA100753R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 TMA 800-8000 4p F F InN=100%In",
+        "Product ID": "1SDA100753R1",
+        "EAN": "8056221008075",
+        "Catalog Description": "XT6S 800 TMA 800-8000 4p F F InN=100%In",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE FOUR-POLE IN AC-DC TMA R 800 I3=4000...8000 A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA100754R1",
+    "name": "XT6S 800 Ekip Dip LS/I In=800 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100754R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LS/I In=800 4p F F",
+        "Product ID": "1SDA100754R1",
+        "EAN": "8056221008082",
+        "Catalog Description": "XT6S 800 Ekip Dip LS/I In=800 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100755R1",
+    "name": "XT6S 1000 Ekip Dip LS/I In=1000 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100755R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 1000 Ekip Dip LS/I In=1000 4p F F",
+        "Product ID": "1SDA100755R1",
+        "EAN": "8056221008099",
+        "Catalog Description": "XT6S 1000 Ekip Dip LS/I In=1000 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 1000 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100756R1",
+    "name": "XT6S 800 Ekip Dip LSI In=800 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100756R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LSI In=800 4p F F",
+        "Product ID": "1SDA100756R1",
+        "EAN": "8056221008105",
+        "Catalog Description": "XT6S 800 Ekip Dip LSI In=800 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100757R1",
+    "name": "XT6S 1000 Ekip Dip LSI In=1000 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100757R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 1000 Ekip Dip LSI In=1000 4p F F",
+        "Product ID": "1SDA100757R1",
+        "EAN": "8056221008112",
+        "Catalog Description": "XT6S 1000 Ekip Dip LSI In=1000 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 1000 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100758R1",
+    "name": "XT6S 800 Ekip Dip LSIG In=800 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100758R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LSIG In=800 4p F F",
+        "Product ID": "1SDA100758R1",
+        "EAN": "8056221008129",
+        "Catalog Description": "XT6S 800 Ekip Dip LSIG In=800 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100759R1",
+    "name": "XT6S 1000 Ekip Dip LSIG In=1000 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100759R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 1000 Ekip Dip LSIG In=1000 4p F F",
+        "Product ID": "1SDA100759R1",
+        "EAN": "8056221008136",
+        "Catalog Description": "XT6S 1000 Ekip Dip LSIG In=1000 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 1000 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100760R1",
+    "name": "XT6S 800 Ekip Dip LIG In=800 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100760R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LIG In=800 4p F F",
+        "Product ID": "1SDA100760R1",
+        "EAN": "8056221008143",
+        "Catalog Description": "XT6S 800 Ekip Dip LIG In=800 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100761R1",
+    "name": "XT6S 1000 Ekip Dip LIG In=1000 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100761R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 1000 Ekip Dip LIG In=1000 4p F F",
+        "Product ID": "1SDA100761R1",
+        "EAN": "8056221008150",
+        "Catalog Description": "XT6S 1000 Ekip Dip LIG In=1000 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 1000 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100774R1",
+    "name": "XT6H 800 TMA 800-8000 4p F F InN=50%In",
+    "url": "https://new.abb.com/products/en/1SDA100774R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 TMA 800-8000 4p F F InN=50%In",
+        "Product ID": "1SDA100774R1",
+        "EAN": "8056221008280",
+        "Catalog Description": "XT6H 800 TMA 800-8000 4p F F InN=50%In",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 800 I3=4000...8000 A NEUTRAL = 50% PHASES"
+      }
+    }
+  },
+  {
+    "code": "1SDA100775R1",
+    "name": "XT6H 800 TMA 800-8000 4p F F InN=100%In",
+    "url": "https://new.abb.com/products/en/1SDA100775R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 TMA 800-8000 4p F F InN=100%In",
+        "Product ID": "1SDA100775R1",
+        "EAN": "8056221008297",
+        "Catalog Description": "XT6H 800 TMA 800-8000 4p F F InN=100%In",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE FOUR-POLE IN AC-DC TMA R 800 I3=4000...8000 A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA100776R1",
+    "name": "XT6H 800 Ekip Dip LS/I In=800 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100776R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LS/I In=800 4p F F",
+        "Product ID": "1SDA100776R1",
+        "EAN": "8056221008303",
+        "Catalog Description": "XT6H 800 Ekip Dip LS/I In=800 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100777R1",
+    "name": "XT6H 1000 Ekip Dip LS/I In=1000 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100777R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 1000 Ekip Dip LS/I In=1000 4p F F",
+        "Product ID": "1SDA100777R1",
+        "EAN": "8056221008310",
+        "Catalog Description": "XT6H 1000 Ekip Dip LS/I In=1000 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 1000 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100778R1",
+    "name": "XT6H 800 Ekip Dip LSI In=800 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100778R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LSI In=800 4p F F",
+        "Product ID": "1SDA100778R1",
+        "EAN": "8056221008327",
+        "Catalog Description": "XT6H 800 Ekip Dip LSI In=800 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100779R1",
+    "name": "XT6H 1000 Ekip Dip LSI In=1000 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100779R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 1000 Ekip Dip LSI In=1000 4p F F",
+        "Product ID": "1SDA100779R1",
+        "EAN": "8056221008334",
+        "Catalog Description": "XT6H 1000 Ekip Dip LSI In=1000 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 1000 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100780R1",
+    "name": "XT6H 800 Ekip Dip LSIG In=800 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100780R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LSIG In=800 4p F F",
+        "Product ID": "1SDA100780R1",
+        "EAN": "8056221008341",
+        "Catalog Description": "XT6H 800 Ekip Dip LSIG In=800 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100781R1",
+    "name": "XT6H 1000 Ekip Dip LSIG In=1000 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100781R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 1000 Ekip Dip LSIG In=1000 4p F F",
+        "Product ID": "1SDA100781R1",
+        "EAN": "8056221008358",
+        "Catalog Description": "XT6H 1000 Ekip Dip LSIG In=1000 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 1000 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100782R1",
+    "name": "XT6H 800 Ekip Dip LIG In=800 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100782R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LIG In=800 4p F F",
+        "Product ID": "1SDA100782R1",
+        "EAN": "8056221008365",
+        "Catalog Description": "XT6H 800 Ekip Dip LIG In=800 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100783R1",
+    "name": "XT6H 1000 Ekip Dip LIG In=1000 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA100783R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 1000 Ekip Dip LIG In=1000 4p F F",
+        "Product ID": "1SDA100783R1",
+        "EAN": "8056221008372",
+        "Catalog Description": "XT6H 1000 Ekip Dip LIG In=1000 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 1000 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA107568R1",
+    "name": "XT6N 800 TMA 630-6300 4p F F InN=50%In",
+    "url": "https://new.abb.com/products/en/1SDA107568R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 TMA 630-6300 4p F F InN=50%In",
+        "Product ID": "1SDA107568R1",
+        "EAN": "8015644102210",
+        "Catalog Description": "XT6N 800 TMA 630-6300 4p F F InN=50%In",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 630 I3=3150...6300 A NEUTRAL = 50% PHASES"
+      }
+    }
+  },
+  {
+    "code": "1SDA107569R1",
+    "name": "XT6N 800 TMA 630-6300 4p F F InN=100%In",
+    "url": "https://new.abb.com/products/en/1SDA107569R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 TMA 630-6300 4p F F InN=100%In",
+        "Product ID": "1SDA107569R1",
+        "EAN": "8015644102227",
+        "Catalog Description": "XT6N 800 TMA 630-6300 4p F F InN=100%In",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE FOUR-POLE IN AC-DC TMA R 630 I3=3150...6300 A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA107570R1",
+    "name": "XT6N 800 Ekip Dip LS/I In=630 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA107570R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LS/I In=630 4p F F",
+        "Product ID": "1SDA107570R1",
+        "EAN": "8015644102234",
+        "Catalog Description": "XT6N 800 Ekip Dip LS/I In=630 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107571R1",
+    "name": "XT6N 800 Ekip Dip LSI In=630 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA107571R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LSI In=630 4p F F",
+        "Product ID": "1SDA107571R1",
+        "EAN": "8015644102241",
+        "Catalog Description": "XT6N 800 Ekip Dip LSI In=630 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107572R1",
+    "name": "XT6N 800 Ekip Dip LSIG In=630 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA107572R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LSIG In=630 4p F F",
+        "Product ID": "1SDA107572R1",
+        "EAN": "8015644102258",
+        "Catalog Description": "XT6N 800 Ekip Dip LSIG In=630 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107573R1",
+    "name": "XT6N 800 Ekip Dip LIG In=630 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA107573R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LIG In=630 4p F F",
+        "Product ID": "1SDA107573R1",
+        "EAN": "8015644102265",
+        "Catalog Description": "XT6N 800 Ekip Dip LIG In=630 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107581R1",
+    "name": "XT6S 800 TMA 630-6300 4p F F InN=50%In",
+    "url": "https://new.abb.com/products/en/1SDA107581R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 TMA 630-6300 4p F F InN=50%In",
+        "Product ID": "1SDA107581R1",
+        "EAN": "8015644102340",
+        "Catalog Description": "XT6S 800 TMA 630-6300 4p F F InN=50%In",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 630 I3=3150...6300 A NEUTRAL = 50% PHASES"
+      }
+    }
+  },
+  {
+    "code": "1SDA107582R1",
+    "name": "XT6S 800 TMA 630-6300 4p F F InN=100%In",
+    "url": "https://new.abb.com/products/en/1SDA107582R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 TMA 630-6300 4p F F InN=100%In",
+        "Product ID": "1SDA107582R1",
+        "EAN": "8015644102357",
+        "Catalog Description": "XT6S 800 TMA 630-6300 4p F F InN=100%In",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE FOUR-POLE IN AC-DC TMA R 630 I3=3150...6300 A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA107583R1",
+    "name": "XT6S 800 Ekip Dip LS/I In=630 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA107583R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LS/I In=630 4p F F",
+        "Product ID": "1SDA107583R1",
+        "EAN": "8015644102364",
+        "Catalog Description": "XT6S 800 Ekip Dip LS/I In=630 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107584R1",
+    "name": "XT6S 800 Ekip Dip LSI In=630 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA107584R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LSI In=630 4p F F",
+        "Product ID": "1SDA107584R1",
+        "EAN": "8015644102371",
+        "Catalog Description": "XT6S 800 Ekip Dip LSI In=630 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107585R1",
+    "name": "XT6S 800 Ekip Dip LSIG In=630 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA107585R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LSIG In=630 4p F F",
+        "Product ID": "1SDA107585R1",
+        "EAN": "8015644102388",
+        "Catalog Description": "XT6S 800 Ekip Dip LSIG In=630 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107586R1",
+    "name": "XT6S 800 Ekip Dip LIG In=630 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA107586R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LIG In=630 4p F F",
+        "Product ID": "1SDA107586R1",
+        "EAN": "8015644102395",
+        "Catalog Description": "XT6S 800 Ekip Dip LIG In=630 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107594R1",
+    "name": "XT6H 800 TMA 630-6300 4p F F InN=50%In",
+    "url": "https://new.abb.com/products/en/1SDA107594R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 TMA 630-6300 4p F F InN=50%In",
+        "Product ID": "1SDA107594R1",
+        "EAN": "8015644102470",
+        "Catalog Description": "XT6H 800 TMA 630-6300 4p F F InN=50%In",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 630 I3=3150...6300 A NEUTRAL = 50% PHASES"
+      }
+    }
+  },
+  {
+    "code": "1SDA107595R1",
+    "name": "XT6H 800 TMA 630-6300 4p F F InN=100%In",
+    "url": "https://new.abb.com/products/en/1SDA107595R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 TMA 630-6300 4p F F InN=100%In",
+        "Product ID": "1SDA107595R1",
+        "EAN": "8015644102487",
+        "Catalog Description": "XT6H 800 TMA 630-6300 4p F F InN=100%In",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE FOUR-POLE IN AC-DC TMA R 630 I3=3150...6300 A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA107596R1",
+    "name": "XT6H 800 Ekip Dip LS/I In=630 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA107596R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LS/I In=630 4p F F",
+        "Product ID": "1SDA107596R1",
+        "EAN": "8056221028301",
+        "Catalog Description": "XT6H 800 Ekip Dip LS/I In=630 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107597R1",
+    "name": "XT6H 800 Ekip Dip LSI In=630 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA107597R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LSI In=630 4p F F",
+        "Product ID": "1SDA107597R1",
+        "EAN": "8015644102500",
+        "Catalog Description": "XT6H 800 Ekip Dip LSI In=630 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107598R1",
+    "name": "XT6H 800 Ekip Dip LSIG In=630 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA107598R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LSIG In=630 4p F F",
+        "Product ID": "1SDA107598R1",
+        "EAN": "8015644102517",
+        "Catalog Description": "XT6H 800 Ekip Dip LSIG In=630 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107599R1",
+    "name": "XT6H 800 Ekip Dip LIG In=630 4p F F",
+    "url": "https://new.abb.com/products/en/1SDA107599R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LIG In=630 4p F F",
+        "Product ID": "1SDA107599R1",
+        "EAN": "8015644102524",
+        "Catalog Description": "XT6H 800 Ekip Dip LIG In=630 4p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED FOUR-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA102839R1",
+    "name": "XT6N 800 TMA In=800A 3p F F UL",
+    "url": "https://new.abb.com/products/en/1SDA102839R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 TMA In=800A 3p F F UL",
+        "Product ID": "1SDA102839R1",
+        "EAN": "8015644033507",
+        "Catalog Description": "XT6N 800 TMA In=800A 3p F F UL",
+        "Long Description": "C.BREAKER TMAX T6N 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 800 I3=4000...8000 A A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA102840R1",
+    "name": "XT6N 800 Ekip Dip LS/I 800 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102840R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LS/I 800 3p FF UL/CSA",
+        "Product ID": "1SDA102840R1",
+        "EAN": "8015644033514",
+        "Catalog Description": "XT6N 800 Ekip Dip LS/I 800 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102841R1",
+    "name": "XT6N 800 Ekip Dip LSI In800 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102841R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LSI In800 3p FF UL/CSA",
+        "Product ID": "1SDA102841R1",
+        "EAN": "8015644033521",
+        "Catalog Description": "XT6N 800 Ekip Dip LSI In800 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102842R1",
+    "name": "XT6N 800 Ekip Dip LSIG 800 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102842R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LSIG 800 3p FF UL/CSA",
+        "Product ID": "1SDA102842R1",
+        "EAN": "8015644033538",
+        "Catalog Description": "XT6N 800 Ekip Dip LSIG 800 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102843R1",
+    "name": "XT6N 800 Ekip M Dip I (MCP) 800 3p FF UL",
+    "url": "https://new.abb.com/products/en/1SDA102843R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip M Dip I (MCP) 800 3p FF UL",
+        "Product ID": "1SDA102843R1",
+        "EAN": "8015644033545",
+        "Catalog Description": "XT6N 800 Ekip M Dip I (MCP) 800 3p FF UL",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP I R 800 (MCP)"
+      }
+    }
+  },
+  {
+    "code": "1SDA102844R1",
+    "name": "XT6N 800 EkipM Dip LIU(MPCB)800 3p FF UL",
+    "url": "https://new.abb.com/products/en/1SDA102844R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 EkipM Dip LIU(MPCB)800 3p FF UL",
+        "Product ID": "1SDA102844R1",
+        "EAN": "8015644033552",
+        "Catalog Description": "XT6N 800 EkipM Dip LIU(MPCB)800 3p FF UL",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP LIU R 800 (MPCB)"
+      }
+    }
+  },
+  {
+    "code": "1SDA102845R1",
+    "name": "XT6N 800 Ekip Dip LIG In800 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102845R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LIG In800 3p FF UL/CSA",
+        "Product ID": "1SDA102845R1",
+        "EAN": "8015644033569",
+        "Catalog Description": "XT6N 800 Ekip Dip LIG In800 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102846R1",
+    "name": "XT6S 800 TMA In=800A 3p F F UL",
+    "url": "https://new.abb.com/products/en/1SDA102846R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 TMA In=800A 3p F F UL",
+        "Product ID": "1SDA102846R1",
+        "EAN": "8015644033576",
+        "Catalog Description": "XT6S 800 TMA In=800A 3p F F UL",
+        "Long Description": "C.BREAKER TMAX T6S 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 800 I3=4000...8000 A A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA102847R1",
+    "name": "XT6S 800 Ekip Dip LS/I 800 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102847R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LS/I 800 3p FF UL/CSA",
+        "Product ID": "1SDA102847R1",
+        "EAN": "8015644033583",
+        "Catalog Description": "XT6S 800 Ekip Dip LS/I 800 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102848R1",
+    "name": "XT6S 800 Ekip Dip LSI In800 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102848R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LSI In800 3p FF UL/CSA",
+        "Product ID": "1SDA102848R1",
+        "EAN": "8015644033590",
+        "Catalog Description": "XT6S 800 Ekip Dip LSI In800 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102849R1",
+    "name": "XT6S 800 Ekip Dip LSIG 800 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102849R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LSIG 800 3p FF UL/CSA",
+        "Product ID": "1SDA102849R1",
+        "EAN": "8015644033606",
+        "Catalog Description": "XT6S 800 Ekip Dip LSIG 800 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102850R1",
+    "name": "XT6S 800 Ekip M Dip I (MCP) 800 3p FF UL",
+    "url": "https://new.abb.com/products/en/1SDA102850R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip M Dip I (MCP) 800 3p FF UL",
+        "Product ID": "1SDA102850R1",
+        "EAN": "8015644033613",
+        "Catalog Description": "XT6S 800 Ekip M Dip I (MCP) 800 3p FF UL",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP I R 800 (MCP)"
+      }
+    }
+  },
+  {
+    "code": "1SDA102851R1",
+    "name": "XT6S 800 EkipM Dip LIU(MPCB)800 3p FF UL",
+    "url": "https://new.abb.com/products/en/1SDA102851R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 EkipM Dip LIU(MPCB)800 3p FF UL",
+        "Product ID": "1SDA102851R1",
+        "EAN": "8015644033620",
+        "Catalog Description": "XT6S 800 EkipM Dip LIU(MPCB)800 3p FF UL",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP LIU R 800 (MPCB)"
+      }
+    }
+  },
+  {
+    "code": "1SDA102852R1",
+    "name": "XT6S 800 Ekip Dip LIG In800 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102852R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LIG In800 3p FF UL/CSA",
+        "Product ID": "1SDA102852R1",
+        "EAN": "8015644033637",
+        "Catalog Description": "XT6S 800 Ekip Dip LIG In800 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102853R1",
+    "name": "XT6H 800 TMA In=800A 3p F F UL",
+    "url": "https://new.abb.com/products/en/1SDA102853R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 TMA In=800A 3p F F UL",
+        "Product ID": "1SDA102853R1",
+        "EAN": "8015644033644",
+        "Catalog Description": "XT6H 800 TMA In=800A 3p F F UL",
+        "Long Description": "C.BREAKER TMAX T6H 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 800 I3=4000...8000 A A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA102854R1",
+    "name": "XT6H 800 Ekip Dip LS/I 800 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102854R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LS/I 800 3p FF UL/CSA",
+        "Product ID": "1SDA102854R1",
+        "EAN": "8015644033651",
+        "Catalog Description": "XT6H 800 Ekip Dip LS/I 800 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102855R1",
+    "name": "XT6H 800 Ekip Dip LSI In800 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102855R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LSI In800 3p FF UL/CSA",
+        "Product ID": "1SDA102855R1",
+        "EAN": "8015644033668",
+        "Catalog Description": "XT6H 800 Ekip Dip LSI In800 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 800 \""
+      }
+    }
+  },
+  {
+    "code": "1SDA102856R1",
+    "name": "XT6H 800 Ekip Dip LSIG 800 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102856R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LSIG 800 3p FF UL/CSA",
+        "Product ID": "1SDA102856R1",
+        "EAN": "8015644033675",
+        "Catalog Description": "XT6H 800 Ekip Dip LSIG 800 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA102857R1",
+    "name": "XT6H 800 Ekip M Dip I (MCP) 800 3p FF UL",
+    "url": "https://new.abb.com/products/en/1SDA102857R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip M Dip I (MCP) 800 3p FF UL",
+        "Product ID": "1SDA102857R1",
+        "EAN": "8015644033682",
+        "Catalog Description": "XT6H 800 Ekip M Dip I (MCP) 800 3p FF UL",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP I R 800 (MCP)"
+      }
+    }
+  },
+  {
+    "code": "1SDA102858R1",
+    "name": "XT6H 800 EkipM Dip LIU(MPCB)800 3p FF UL",
+    "url": "https://new.abb.com/products/en/1SDA102858R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 EkipM Dip LIU(MPCB)800 3p FF UL",
+        "Product ID": "1SDA102858R1",
+        "EAN": "8015644033699",
+        "Catalog Description": "XT6H 800 EkipM Dip LIU(MPCB)800 3p FF UL",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP LIU R 800 (MPCB)"
+      }
+    }
+  },
+  {
+    "code": "1SDA102859R1",
+    "name": "XT6H 800 Ekip Dip LIG In800 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA102859R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LIG In800 3p FF UL/CSA",
+        "Product ID": "1SDA102859R1",
+        "EAN": "8015644033705",
+        "Catalog Description": "XT6H 800 Ekip Dip LIG In800 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA107625R1",
+    "name": "XT6N 800 TMA In=600A 3p F F UL",
+    "url": "https://new.abb.com/products/en/1SDA107625R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 TMA In=600A 3p F F UL",
+        "Product ID": "1SDA107625R1",
+        "EAN": "8015644102784",
+        "Catalog Description": "XT6N 800 TMA In=600A 3p F F UL",
+        "Long Description": "C.BREAKER TMAX T6N 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 600 I3=3000...6000 A A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA107626R1",
+    "name": "XT6N 800 Ekip Dip LS/I 600 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107626R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LS/I 600 3p FF UL/CSA",
+        "Product ID": "1SDA107626R1",
+        "EAN": "8056221028349",
+        "Catalog Description": "XT6N 800 Ekip Dip LS/I 600 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107627R1",
+    "name": "XT6N 800 Ekip Dip LSI In600 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107627R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LSI In600 3p FF UL/CSA",
+        "Product ID": "1SDA107627R1",
+        "EAN": "8015644102807",
+        "Catalog Description": "XT6N 800 Ekip Dip LSI In600 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107628R1",
+    "name": "XT6N 800 Ekip Dip LSIG 600 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107628R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LSIG 600 3p FF UL/CSA",
+        "Product ID": "1SDA107628R1",
+        "EAN": "8015644102814",
+        "Catalog Description": "XT6N 800 Ekip Dip LSIG 600 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107629R1",
+    "name": "XT6N 800 Ekip M Dip I (MCP) 600 3p FF UL",
+    "url": "https://new.abb.com/products/en/1SDA107629R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip M Dip I (MCP) 600 3p FF UL",
+        "Product ID": "1SDA107629R1",
+        "EAN": "8015644102821",
+        "Catalog Description": "XT6N 800 Ekip M Dip I (MCP) 600 3p FF UL",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP I R 600 (MCP)"
+      }
+    }
+  },
+  {
+    "code": "1SDA107630R1",
+    "name": "XT6N 800 EkipM Dip LIU(MPCB)600 3p FF UL",
+    "url": "https://new.abb.com/products/en/1SDA107630R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 EkipM Dip LIU(MPCB)600 3p FF UL",
+        "Product ID": "1SDA107630R1",
+        "EAN": "8015644102838",
+        "Catalog Description": "XT6N 800 EkipM Dip LIU(MPCB)600 3p FF UL",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP LIU R 600 (MPCB)"
+      }
+    }
+  },
+  {
+    "code": "1SDA107631R1",
+    "name": "XT6N 800 Ekip Dip LIG In600 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107631R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LIG In600 3p FF UL/CSA",
+        "Product ID": "1SDA107631R1",
+        "EAN": "8015644102845",
+        "Catalog Description": "XT6N 800 Ekip Dip LIG In600 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6N 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107632R1",
+    "name": "XT6S 800 TMA In=600A 3p F F UL",
+    "url": "https://new.abb.com/products/en/1SDA107632R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 TMA In=600A 3p F F UL",
+        "Product ID": "1SDA107632R1",
+        "EAN": "8015644102852",
+        "Catalog Description": "XT6S 800 TMA In=600A 3p F F UL",
+        "Long Description": "C.BREAKER TMAX T6S 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 600 I3=3000...6000 A A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA107633R1",
+    "name": "XT6S 800 Ekip Dip LS/I 600 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107633R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LS/I 600 3p FF UL/CSA",
+        "Product ID": "1SDA107633R1",
+        "EAN": "8015644102869",
+        "Catalog Description": "XT6S 800 Ekip Dip LS/I 600 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107634R1",
+    "name": "XT6S 800 Ekip Dip LSI In600 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107634R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LSI In600 3p FF UL/CSA",
+        "Product ID": "1SDA107634R1",
+        "EAN": "8015644102876",
+        "Catalog Description": "XT6S 800 Ekip Dip LSI In600 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107635R1",
+    "name": "XT6S 800 Ekip Dip LSIG 600 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107635R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LSIG 600 3p FF UL/CSA",
+        "Product ID": "1SDA107635R1",
+        "EAN": "8015644102883",
+        "Catalog Description": "XT6S 800 Ekip Dip LSIG 600 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107636R1",
+    "name": "XT6S 800 Ekip M Dip I (MCP) 600 3p FF UL",
+    "url": "https://new.abb.com/products/en/1SDA107636R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip M Dip I (MCP) 600 3p FF UL",
+        "Product ID": "1SDA107636R1",
+        "EAN": "8015644102890",
+        "Catalog Description": "XT6S 800 Ekip M Dip I (MCP) 600 3p FF UL",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP I R 600 (MCP)"
+      }
+    }
+  },
+  {
+    "code": "1SDA107637R1",
+    "name": "XT6S 800 EkipM Dip LIU(MPCB)600 3p FF UL",
+    "url": "https://new.abb.com/products/en/1SDA107637R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 EkipM Dip LIU(MPCB)600 3p FF UL",
+        "Product ID": "1SDA107637R1",
+        "EAN": "8015644102906",
+        "Catalog Description": "XT6S 800 EkipM Dip LIU(MPCB)600 3p FF UL",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP LIU R 600 (MPCB)"
+      }
+    }
+  },
+  {
+    "code": "1SDA107638R1",
+    "name": "XT6S 800 Ekip Dip LIG In600 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107638R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LIG In600 3p FF UL/CSA",
+        "Product ID": "1SDA107638R1",
+        "EAN": "8015644102913",
+        "Catalog Description": "XT6S 800 Ekip Dip LIG In600 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6S 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107639R1",
+    "name": "XT6H 800 TMA In=600A 3p F F UL",
+    "url": "https://new.abb.com/products/en/1SDA107639R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 TMA In=600A 3p F F UL",
+        "Product ID": "1SDA107639R1",
+        "EAN": "8015644102920",
+        "Catalog Description": "XT6H 800 TMA In=600A 3p F F UL",
+        "Long Description": "C.BREAKER TMAX T6H 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 600 I3=3000...6000 A A FULLY RATED NEUTRAL"
+      }
+    }
+  },
+  {
+    "code": "1SDA107640R1",
+    "name": "XT6H 800 Ekip Dip LS/I 600 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107640R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LS/I 600 3p FF UL/CSA",
+        "Product ID": "1SDA107640R1",
+        "EAN": "8015644102937",
+        "Catalog Description": "XT6H 800 Ekip Dip LS/I 600 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107641R1",
+    "name": "XT6H 800 Ekip Dip LSI In600 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107641R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LSI In600 3p FF UL/CSA",
+        "Product ID": "1SDA107641R1",
+        "EAN": "8015644102944",
+        "Catalog Description": "XT6H 800 Ekip Dip LSI In600 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107642R1",
+    "name": "XT6H 800 Ekip Dip LSIG 600 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107642R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LSIG 600 3p FF UL/CSA",
+        "Product ID": "1SDA107642R1",
+        "EAN": "8015644102951",
+        "Catalog Description": "XT6H 800 Ekip Dip LSIG 600 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA107643R1",
+    "name": "XT6H 800 Ekip M Dip I (MCP) 600 3p FF UL",
+    "url": "https://new.abb.com/products/en/1SDA107643R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip M Dip I (MCP) 600 3p FF UL",
+        "Product ID": "1SDA107643R1",
+        "EAN": "8015644102968",
+        "Catalog Description": "XT6H 800 Ekip M Dip I (MCP) 600 3p FF UL",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP I R 600 (MCP)"
+      }
+    }
+  },
+  {
+    "code": "1SDA107644R1",
+    "name": "XT6H 800 EkipM Dip LIU(MPCB)600 3p FF UL",
+    "url": "https://new.abb.com/products/en/1SDA107644R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 EkipM Dip LIU(MPCB)600 3p FF UL",
+        "Product ID": "1SDA107644R1",
+        "EAN": "8015644102975",
+        "Catalog Description": "XT6H 800 EkipM Dip LIU(MPCB)600 3p FF UL",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP LIU R 600 (MPCB)"
+      }
+    }
+  },
+  {
+    "code": "1SDA107645R1",
+    "name": "XT6H 800 Ekip Dip LIG In600 3p FF UL/CSA",
+    "url": "https://new.abb.com/products/en/1SDA107645R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LIG In600 3p FF UL/CSA",
+        "Product ID": "1SDA107645R1",
+        "EAN": "8015644102982",
+        "Catalog Description": "XT6H 800 Ekip Dip LIG In600 3p FF UL/CSA",
+        "Long Description": "C.BREAKER TMAX XT6H 800 UL/CSA FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 600"
+      }
+    }
+  },
+  {
+    "code": "1SDA100718R1",
+    "name": "XT6N 800 TMA 800-8000 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100718R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 TMA 800-8000 3p F F",
+        "Product ID": "1SDA100718R1",
+        "EAN": "8056221007948",
+        "Catalog Description": "XT6N 800 TMA 800-8000 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED THREE-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 800 I3=4000...8000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100719R1",
+    "name": "XT6N 800 Ekip Dip LS/I In=800 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100719R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LS/I In=800 3p F F",
+        "Product ID": "1SDA100719R1",
+        "EAN": "8056221007955",
+        "Catalog Description": "XT6N 800 Ekip Dip LS/I In=800 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100720R1",
+    "name": "XT6N 1000 Ekip Dip LS/I In=1000 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100720R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 1000 Ekip Dip LS/I In=1000 3p F F",
+        "Product ID": "1SDA100720R1",
+        "EAN": "8056221007962",
+        "Catalog Description": "XT6N 1000 Ekip Dip LS/I In=1000 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 1000 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100721R1",
+    "name": "XT6N 800 Ekip Dip LSI In=800 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100721R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LSI In=800 3p F F",
+        "Product ID": "1SDA100721R1",
+        "EAN": "8056221007979",
+        "Catalog Description": "XT6N 800 Ekip Dip LSI In=800 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100722R1",
+    "name": "XT6N 1000 Ekip Dip LSI In=1000 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100722R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 1000 Ekip Dip LSI In=1000 3p F F",
+        "Product ID": "1SDA100722R1",
+        "EAN": "8056221007986",
+        "Catalog Description": "XT6N 1000 Ekip Dip LSI In=1000 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 1000 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100723R1",
+    "name": "XT6N 800 Ekip Dip LSIG In=800 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100723R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LSIG In=800 3p F F",
+        "Product ID": "1SDA100723R1",
+        "EAN": "8056221007993",
+        "Catalog Description": "XT6N 800 Ekip Dip LSIG In=800 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100724R1",
+    "name": "XT6N 1000 Ekip Dip LSIG In=1000 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100724R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 1000 Ekip Dip LSIG In=1000 3p F F",
+        "Product ID": "1SDA100724R1",
+        "EAN": "8056221008006",
+        "Catalog Description": "XT6N 1000 Ekip Dip LSIG In=1000 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 1000 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100725R1",
+    "name": "XT6N 800 Ekip M Dip I In=800A 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100725R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip M Dip I In=800A 3p F F",
+        "Product ID": "1SDA100725R1",
+        "EAN": "8056221008013",
+        "Catalog Description": "XT6N 800 Ekip M Dip I In=800A 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC Ekip M DIP I R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100726R1",
+    "name": "XT6N 1000 Ekip M Dip I In=1000A 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100726R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 1000 Ekip M Dip I In=1000A 3p F F",
+        "Product ID": "1SDA100726R1",
+        "EAN": "8056221008020",
+        "Catalog Description": "XT6N 1000 Ekip M Dip I In=1000A 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 1000 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC Ekip M DIP I R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100727R1",
+    "name": "XT6N 800 Ekip M Dip LIU In=800A 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100727R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip M Dip LIU In=800A 3p F F",
+        "Product ID": "1SDA100727R1",
+        "EAN": "8056221003520",
+        "Catalog Description": "XT6N 800 Ekip M Dip LIU In=800A 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP LIU R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100728R1",
+    "name": "XT6N 800 Ekip Dip LIG In=800 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100728R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LIG In=800 3p F F",
+        "Product ID": "1SDA100728R1",
+        "EAN": "8056221003537",
+        "Catalog Description": "XT6N 800 Ekip Dip LIG In=800 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100729R1",
+    "name": "XT6N 1000 Ekip Dip LIG In=1000 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100729R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 1000 Ekip Dip LIG In=1000 3p F F",
+        "Product ID": "1SDA100729R1",
+        "EAN": "8056221003544",
+        "Catalog Description": "XT6N 1000 Ekip Dip LIG In=1000 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 1000 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100740R1",
+    "name": "XT6S 800 TMA 800-8000 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100740R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 TMA 800-8000 3p F F",
+        "Product ID": "1SDA100740R1",
+        "EAN": "8056221003650",
+        "Catalog Description": "XT6S 800 TMA 800-8000 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED THREE-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 800 I3=4000...8000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100741R1",
+    "name": "XT6S 800 Ekip Dip LS/I In=800 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100741R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LS/I In=800 3p F F",
+        "Product ID": "1SDA100741R1",
+        "EAN": "8056221003667",
+        "Catalog Description": "XT6S 800 Ekip Dip LS/I In=800 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100742R1",
+    "name": "XT6S 1000 Ekip Dip LS/I In=1000 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100742R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 1000 Ekip Dip LS/I In=1000 3p F F",
+        "Product ID": "1SDA100742R1",
+        "EAN": "8056221003674",
+        "Catalog Description": "XT6S 1000 Ekip Dip LS/I In=1000 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 1000 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100743R1",
+    "name": "XT6S 800 Ekip Dip LSI In=800 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100743R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LSI In=800 3p F F",
+        "Product ID": "1SDA100743R1",
+        "EAN": "8056221003681",
+        "Catalog Description": "XT6S 800 Ekip Dip LSI In=800 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100744R1",
+    "name": "XT6S 1000 Ekip Dip LSI In=1000 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100744R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 1000 Ekip Dip LSI In=1000 3p F F",
+        "Product ID": "1SDA100744R1",
+        "EAN": "8056221003698",
+        "Catalog Description": "XT6S 1000 Ekip Dip LSI In=1000 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 1000 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100745R1",
+    "name": "XT6S 800 Ekip Dip LSIG In=800 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100745R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LSIG In=800 3p F F",
+        "Product ID": "1SDA100745R1",
+        "EAN": "8056221003704",
+        "Catalog Description": "XT6S 800 Ekip Dip LSIG In=800 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100746R1",
+    "name": "XT6S 1000 Ekip Dip LSIG In=1000 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100746R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 1000 Ekip Dip LSIG In=1000 3p F F",
+        "Product ID": "1SDA100746R1",
+        "EAN": "8056221003711",
+        "Catalog Description": "XT6S 1000 Ekip Dip LSIG In=1000 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 1000 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100747R1",
+    "name": "XT6S 800 Ekip M Dip I In=800A 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100747R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip M Dip I In=800A 3p F F",
+        "Product ID": "1SDA100747R1",
+        "EAN": "8056221003728",
+        "Catalog Description": "XT6S 800 Ekip M Dip I In=800A 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC Ekip M DIP I R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100748R1",
+    "name": "XT6S 1000 Ekip M Dip I In=1000A 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100748R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 1000 Ekip M Dip I In=1000A 3p F F",
+        "Product ID": "1SDA100748R1",
+        "EAN": "8056221003735",
+        "Catalog Description": "XT6S 1000 Ekip M Dip I In=1000A 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 1000 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC Ekip M DIP I R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100749R1",
+    "name": "XT6S 800 Ekip M Dip LIU In=800A 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100749R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip M Dip LIU In=800A 3p F F",
+        "Product ID": "1SDA100749R1",
+        "EAN": "8056221008037",
+        "Catalog Description": "XT6S 800 Ekip M Dip LIU In=800A 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP LIU R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100750R1",
+    "name": "XT6S 800 Ekip Dip LIG In=800 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100750R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LIG In=800 3p F F",
+        "Product ID": "1SDA100750R1",
+        "EAN": "8056221008044",
+        "Catalog Description": "XT6S 800 Ekip Dip LIG In=800 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100751R1",
+    "name": "XT6S 1000 Ekip Dip LIG In=1000 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100751R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 1000 Ekip Dip LIG In=1000 3p F F",
+        "Product ID": "1SDA100751R1",
+        "EAN": "8056221008051",
+        "Catalog Description": "XT6S 1000 Ekip Dip LIG In=1000 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 1000 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100762R1",
+    "name": "XT6H 800 TMA 800-8000 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100762R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 TMA 800-8000 3p F F",
+        "Product ID": "1SDA100762R1",
+        "EAN": "8056221008167",
+        "Catalog Description": "XT6H 800 TMA 800-8000 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED THREE-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 800 I3=4000...8000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100763R1",
+    "name": "XT6H 800 Ekip Dip LS/I In=800 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100763R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LS/I In=800 3p F F",
+        "Product ID": "1SDA100763R1",
+        "EAN": "8056221008174",
+        "Catalog Description": "XT6H 800 Ekip Dip LS/I In=800 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100764R1",
+    "name": "XT6H 1000 Ekip Dip LS/I In=1000 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100764R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 1000 Ekip Dip LS/I In=1000 3p F F",
+        "Product ID": "1SDA100764R1",
+        "EAN": "8056221008181",
+        "Catalog Description": "XT6H 1000 Ekip Dip LS/I In=1000 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 1000 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100765R1",
+    "name": "XT6H 800 Ekip Dip LSI In=800 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100765R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LSI In=800 3p F F",
+        "Product ID": "1SDA100765R1",
+        "EAN": "8056221008198",
+        "Catalog Description": "XT6H 800 Ekip Dip LSI In=800 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100766R1",
+    "name": "XT6H 1000 Ekip Dip LSI In=1000 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100766R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 1000 Ekip Dip LSI In=1000 3p F F",
+        "Product ID": "1SDA100766R1",
+        "EAN": "8056221008204",
+        "Catalog Description": "XT6H 1000 Ekip Dip LSI In=1000 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 1000 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100767R1",
+    "name": "XT6H 800 Ekip Dip LSIG In=800 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100767R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LSIG In=800 3p F F",
+        "Product ID": "1SDA100767R1",
+        "EAN": "8056221008211",
+        "Catalog Description": "XT6H 800 Ekip Dip LSIG In=800 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100768R1",
+    "name": "XT6H 1000 Ekip Dip LSIG In=1000 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100768R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 1000 Ekip Dip LSIG In=1000 3p F F",
+        "Product ID": "1SDA100768R1",
+        "EAN": "8056221008228",
+        "Catalog Description": "XT6H 1000 Ekip Dip LSIG In=1000 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 1000 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100769R1",
+    "name": "XT6H 800 Ekip M Dip I In=800A 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100769R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip M Dip I In=800A 3p F F",
+        "Product ID": "1SDA100769R1",
+        "EAN": "8056221008235",
+        "Catalog Description": "XT6H 800 Ekip M Dip I In=800A 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC Ekip M DIP I R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100770R1",
+    "name": "XT6H 1000 Ekip M Dip I In=1000A 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100770R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 1000 Ekip M Dip I In=1000A 3p F F",
+        "Product ID": "1SDA100770R1",
+        "EAN": "8056221008242",
+        "Catalog Description": "XT6H 1000 Ekip M Dip I In=1000A 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 1000 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC Ekip M DIP I R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA100771R1",
+    "name": "XT6H 800 Ekip M Dip LIU In=800A 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100771R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip M Dip LIU In=800A 3p F F",
+        "Product ID": "1SDA100771R1",
+        "EAN": "8056221008259",
+        "Catalog Description": "XT6H 800 Ekip M Dip LIU In=800A 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP LIU R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100772R1",
+    "name": "XT6H 800 Ekip Dip LIG In=800 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100772R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LIG In=800 3p F F",
+        "Product ID": "1SDA100772R1",
+        "EAN": "8056221008266",
+        "Catalog Description": "XT6H 800 Ekip Dip LIG In=800 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 800"
+      }
+    }
+  },
+  {
+    "code": "1SDA100773R1",
+    "name": "XT6H 1000 Ekip Dip LIG In=1000 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA100773R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 1000 Ekip Dip LIG In=1000 3p F F",
+        "Product ID": "1SDA100773R1",
+        "EAN": "8056221008273",
+        "Catalog Description": "XT6H 1000 Ekip Dip LIG In=1000 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 1000 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 1000"
+      }
+    }
+  },
+  {
+    "code": "1SDA107561R1",
+    "name": "XT6N 800 TMA 630-6300 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107561R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 TMA 630-6300 3p F F",
+        "Product ID": "1SDA107561R1",
+        "EAN": "8015644101749",
+        "Catalog Description": "XT6N 800 TMA 630-6300 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED THREE-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 630 I3=3150...6300"
+      }
+    }
+  },
+  {
+    "code": "1SDA107562R1",
+    "name": "XT6N 800 Ekip Dip LS/I In=630 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107562R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LS/I In=630 3p F F",
+        "Product ID": "1SDA107562R1",
+        "EAN": "8015644101756",
+        "Catalog Description": "XT6N 800 Ekip Dip LS/I In=630 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107563R1",
+    "name": "XT6N 800 Ekip Dip LSI In=630 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107563R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LSI In=630 3p F F",
+        "Product ID": "1SDA107563R1",
+        "EAN": "8015644101763",
+        "Catalog Description": "XT6N 800 Ekip Dip LSI In=630 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107564R1",
+    "name": "XT6N 800 Ekip Dip LSIG In=630 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107564R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LSIG In=630 3p F F",
+        "Product ID": "1SDA107564R1",
+        "EAN": "8015644101770",
+        "Catalog Description": "XT6N 800 Ekip Dip LSIG In=630 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107565R1",
+    "name": "XT6N 800 Ekip M Dip I In=630A 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107565R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip M Dip I In=630A 3p F F",
+        "Product ID": "1SDA107565R1",
+        "EAN": "8015644101787",
+        "Catalog Description": "XT6N 800 Ekip M Dip I In=630A 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC Ekip M DIP I R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107566R1",
+    "name": "XT6N 800 Ekip M Dip LIU In=630A 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107566R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip M Dip LIU In=630A 3p F F",
+        "Product ID": "1SDA107566R1",
+        "EAN": "8015644101794",
+        "Catalog Description": "XT6N 800 Ekip M Dip LIU In=630A 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP LIU R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107567R1",
+    "name": "XT6N 800 Ekip Dip LIG In=630 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107567R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6N 800 Ekip Dip LIG In=630 3p F F",
+        "Product ID": "1SDA107567R1",
+        "EAN": "8015644101800",
+        "Catalog Description": "XT6N 800 Ekip Dip LIG In=630 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6N 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107574R1",
+    "name": "XT6S 800 TMA 630-6300 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107574R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 TMA 630-6300 3p F F",
+        "Product ID": "1SDA107574R1",
+        "EAN": "8015644102272",
+        "Catalog Description": "XT6S 800 TMA 630-6300 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED THREE-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 630 I3=3150...6300"
+      }
+    }
+  },
+  {
+    "code": "1SDA107575R1",
+    "name": "XT6S 800 Ekip Dip LS/I In=630 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107575R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LS/I In=630 3p F F",
+        "Product ID": "1SDA107575R1",
+        "EAN": "8015644102289",
+        "Catalog Description": "XT6S 800 Ekip Dip LS/I In=630 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107576R1",
+    "name": "XT6S 800 Ekip Dip LSI In=630 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107576R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LSI In=630 3p F F",
+        "Product ID": "1SDA107576R1",
+        "EAN": "8015644102296",
+        "Catalog Description": "XT6S 800 Ekip Dip LSI In=630 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107577R1",
+    "name": "XT6S 800 Ekip Dip LSIG In=630 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107577R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LSIG In=630 3p F F",
+        "Product ID": "1SDA107577R1",
+        "EAN": "8015644102302",
+        "Catalog Description": "XT6S 800 Ekip Dip LSIG In=630 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107578R1",
+    "name": "XT6S 800 Ekip M Dip I In=630A 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107578R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip M Dip I In=630A 3p F F",
+        "Product ID": "1SDA107578R1",
+        "EAN": "8015644102319",
+        "Catalog Description": "XT6S 800 Ekip M Dip I In=630A 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC Ekip M DIP I R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107579R1",
+    "name": "XT6S 800 Ekip M Dip LIU In=630A 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107579R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip M Dip LIU In=630A 3p F F",
+        "Product ID": "1SDA107579R1",
+        "EAN": "8015644102326",
+        "Catalog Description": "XT6S 800 Ekip M Dip LIU In=630A 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP LIU R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107580R1",
+    "name": "XT6S 800 Ekip Dip LIG In=630 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107580R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6S 800 Ekip Dip LIG In=630 3p F F",
+        "Product ID": "1SDA107580R1",
+        "EAN": "8015644102333",
+        "Catalog Description": "XT6S 800 Ekip Dip LIG In=630 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6S 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107587R1",
+    "name": "XT6H 800 TMA 630-6300 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107587R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 TMA 630-6300 3p F F",
+        "Product ID": "1SDA107587R1",
+        "EAN": "8015644102401",
+        "Catalog Description": "XT6H 800 TMA 630-6300 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED THREE-POLE WITH FRONT TERMINALS AND THERMOMAGNETIC RELEASE TMA R 630 I3=3150...6300"
+      }
+    }
+  },
+  {
+    "code": "1SDA107588R1",
+    "name": "XT6H 800 Ekip Dip LS/I In=630 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107588R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LS/I In=630 3p F F",
+        "Product ID": "1SDA107588R1",
+        "EAN": "8015644102418",
+        "Catalog Description": "XT6H 800 Ekip Dip LS/I In=630 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LS/I R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107589R1",
+    "name": "XT6H 800 Ekip Dip LSI In=630 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107589R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LSI In=630 3p F F",
+        "Product ID": "1SDA107589R1",
+        "EAN": "8015644102425",
+        "Catalog Description": "XT6H 800 Ekip Dip LSI In=630 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSI R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107590R1",
+    "name": "XT6H 800 Ekip Dip LSIG In=630 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107590R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LSIG In=630 3p F F",
+        "Product ID": "1SDA107590R1",
+        "EAN": "8015644102432",
+        "Catalog Description": "XT6H 800 Ekip Dip LSIG In=630 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LSIG R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107591R1",
+    "name": "XT6H 800 Ekip M Dip I In=630A 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107591R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip M Dip I In=630A 3p F F",
+        "Product ID": "1SDA107591R1",
+        "EAN": "8056221028271",
+        "Catalog Description": "XT6H 800 Ekip M Dip I In=630A 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC Ekip M DIP I R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107592R1",
+    "name": "XT6H 800 Ekip M Dip LIU In=630A 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107592R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip M Dip LIU In=630A 3p F F",
+        "Product ID": "1SDA107592R1",
+        "EAN": "8056221028288",
+        "Catalog Description": "XT6H 800 Ekip M Dip LIU In=630A 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP M DIP LIU R 630"
+      }
+    }
+  },
+  {
+    "code": "1SDA107593R1",
+    "name": "XT6H 800 Ekip Dip LIG In=630 3p F F",
+    "url": "https://new.abb.com/products/en/1SDA107593R1",
+    "general": {
+      "specs": {
+        "Extended Product Type": "XT6H 800 Ekip Dip LIG In=630 3p F F",
+        "Product ID": "1SDA107593R1",
+        "EAN": "8056221028295",
+        "Catalog Description": "XT6H 800 Ekip Dip LIG In=630 3p F F",
+        "Long Description": "C.BREAKER TMAX XT6H 800 FIXED THREE-POLE WITH FRONT TERMINALS AND SOLID-STATE RELEASE IN AC EKIP DIP LIG R 630"
+      }
+    }
+  }
+]

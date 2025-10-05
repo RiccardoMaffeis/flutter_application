@@ -24,3 +24,17 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - lib/images/XT1/
+    - lib/json/
+  fonts:
+    - family: ABBvoice
+      fonts:
+        - asset: lib/resources/ABBvoice_Lt.ttf
+          weight: 300
+        - asset: lib/resources/ABBvoice_Rg.ttf
+          weight: 400
+        - asset: lib/resources/ABBvoice_Md.ttf
+          weight: 500
+        - asset: lib/resources/ABBvoice_Bd.ttf
+          weight: 700

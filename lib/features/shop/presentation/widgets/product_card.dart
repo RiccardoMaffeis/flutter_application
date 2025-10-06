@@ -44,7 +44,6 @@ class ProductCard extends StatelessWidget {
               ),
             ),
 
-            // ---- IMMAGINE ----
             Expanded(
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(

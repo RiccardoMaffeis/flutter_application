@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_application/features/shop/domain/product_details.dart';
 
 import '../domain/products_repository.dart';
 import '../domain/product.dart';
@@ -86,5 +87,44 @@ class ProductsRepositoryImpl implements ProductsRepository {
   Future<int> getCartCount() async {
     await Future<void>.delayed(const Duration(milliseconds: 60));
     return 2;
+  }
+
+  Future<List<Map<String, dynamic>>> _loadRawItems() async {
+    final raw = await rootBundle.loadString('lib/json/XT1.json');
+    final decoded = json.decode(raw);
+    if (decoded is List) {
+      return decoded.cast<Map<String, dynamic>>();
+    } else if (decoded is Map<String, dynamic>) {
+      return [decoded];
+    }
+    return const <Map<String, dynamic>>[];
+  }
+
+  @override
+  Future<ProductDetails> fetchProductDetails(String productId) async {
+    // 1) assicura i Product in memoria (per avere price, image, category, ecc.)
+    await _ensureLoaded();
+    final all = _all ?? const <Product>[];
+    final product = all.firstWhere(
+      (p) => p.id == productId,
+      orElse: () => throw StateError('Product not found: $productId'),
+    );
+
+    // 2) cerca il record grezzo nel JSON e prendi general.specs
+    final items = await _loadRawItems();
+    final raw = items.firstWhere(
+      (m) => (m['code'] as String?)?.trim() == productId,
+      orElse: () => const <String, dynamic>{},
+    );
+
+    final general = (raw['general'] as Map?)?.cast<String, dynamic>() ?? {};
+    final specsRaw = (general['specs'] as Map?)?.cast<String, dynamic>() ?? {};
+
+    // mappa tutto a String
+    final specs = <String, String>{
+      for (final e in specsRaw.entries) e.key: e.value?.toString() ?? '',
+    };
+
+    return ProductDetails(product: product, specs: specs);
   }
 }

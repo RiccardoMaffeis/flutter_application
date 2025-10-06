@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/features/favourites/presentation/favourites_page.dart';
 import 'package:flutter_application/features/profile/presentation/profile_page.dart';
+import 'package:flutter_application/features/shop/presentation/product_details_page.dart';
 import 'package:flutter_application/features/shop/presentation/shop_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -85,6 +86,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/home', builder: (_, __) => const ShopPage()),
       GoRoute(path: '/favourites', builder: (_, __) => const FavouritesPage()),
       GoRoute(path: '/profile', builder: (_, __) => const ProfilePage()),
+      GoRoute(
+        path: '/product/:id',
+        builder: (context, state) =>
+            ProductDetailsPage(productId: state.pathParameters['id']!),
+      ),
     ],
   );
 });

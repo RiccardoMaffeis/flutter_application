@@ -14,7 +14,6 @@ class ShopPage extends ConsumerStatefulWidget {
 }
 
 class _ShopPageState extends ConsumerState<ShopPage> {
-
   String _familyLabel(Product p) {
     final id = p.categoryId.toUpperCase();
     if (id.startsWith('XT')) return id.toUpperCase();
@@ -280,9 +279,8 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                           isFavourite: fav,
                                           onFavToggle: () =>
                                               ctrl.toggleFavourite(p.id),
-                                          onTap: () {
-                                            // TODO: product details / AR
-                                          },
+                                          onTap: () =>
+                                              context.go('/product/${p.id}'),
                                         ),
                                       );
                                     },
@@ -345,7 +343,8 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                           isFavourite: fav,
                                           onFavToggle: () =>
                                               ctrl.toggleFavourite(p.id),
-                                          onTap: () {},
+                                          onTap: () =>
+                                              context.go('/product/${p.id}'),
                                         ),
                                       );
                                     },
@@ -385,7 +384,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                               product: p,
                               isFavourite: fav,
                               onFavToggle: () => ctrl.toggleFavourite(p.id),
-                              onTap: () {},
+                              onTap: () => context.go('/product/${p.id}'),
                             );
                           },
                         ),
@@ -428,8 +427,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                 onChanged: (i) {
                   if (i == 0) return;
                   if (i == 1) context.go('/favourites');
-                  if (i == 2)
-                    context.go('/profile');
+                  if (i == 2) context.go('/profile');
                 },
               ),
             ),

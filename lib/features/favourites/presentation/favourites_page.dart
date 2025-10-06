@@ -47,7 +47,7 @@ class FavouritesPage extends ConsumerWidget {
                             style: Theme.of(context).textTheme.headlineMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.w900,
-                                  fontSize: 36,
+                                  fontSize: 40,
                                 ),
                           ),
                         ),

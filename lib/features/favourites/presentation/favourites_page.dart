@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../shop/presentation/widgets/product_card.dart';
 import '../controllers/favourites_controller.dart';
-import '../../shop/controllers/shop_controller.dart'; // <— IMPORTANTE
+import '../../shop/controllers/shop_controller.dart';
 
 class FavouritesPage extends ConsumerWidget {
   const FavouritesPage({super.key});
@@ -15,11 +15,9 @@ class FavouritesPage extends ConsumerWidget {
     final favs = ref.watch(favouritesControllerProvider);
     final favsCtrl = ref.read(favouritesControllerProvider.notifier);
 
-    // Stato globale Shop: contiene Set<String> favourites
     final shopState = ref.watch(shopControllerProvider);
     final shopCtrl = ref.read(shopControllerProvider.notifier);
 
-    // Se i preferiti cambiano altrove, ricarica la lista qui
     ref.listen<Set<String>>(
       shopControllerProvider.select((s) => s.favourites),
       (_, __) => favsCtrl.refresh(),
@@ -101,7 +99,7 @@ class FavouritesPage extends ConsumerWidget {
                                 crossAxisCount: 2,
                                 mainAxisSpacing: 14,
                                 crossAxisSpacing: 14,
-                                childAspectRatio: 0.52, // stesso della ShopPage
+                                childAspectRatio: 0.52,
                               ),
                           itemCount: items.length,
                           itemBuilder: (_, i) {
@@ -114,8 +112,8 @@ class FavouritesPage extends ConsumerWidget {
                               onFavToggle: () async {
                                 await shopCtrl.toggleFavourite(
                                   p.id,
-                                ); // aggiorna globale
-                                await favsCtrl.refresh(); // rimuovi dalla lista
+                                );
+                                await favsCtrl.refresh();
                               },
                               onTap: () => context.go(
                                 '/product/${p.id}',
@@ -131,7 +129,6 @@ class FavouritesPage extends ConsumerWidget {
               ],
             ),
 
-            // bubble AI
             Positioned(
               right: 16,
               bottom: 90,

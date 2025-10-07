@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/features/shop/domain/product.dart';
+import 'package:flutter_application/features/shop/presentation/search/product_search_delegate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
@@ -122,9 +123,15 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                   child: Row(
                     children: [
                       IconButton(
-                        onPressed: () {}, // TODO: search
+                        onPressed: () {
+                          showSearch(
+                            context: context,
+                            delegate: ProductSearchDelegate(ref),
+                          );
+                        },
                         icon: const Icon(Icons.search, size: 35),
                       ),
+
                       Expanded(
                         child: Center(
                           child: Text(

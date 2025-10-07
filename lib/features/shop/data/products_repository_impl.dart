@@ -102,7 +102,6 @@ class ProductsRepositoryImpl implements ProductsRepository {
 
   @override
   Future<ProductDetails> fetchProductDetails(String productId) async {
-    // 1) assicura i Product in memoria (per avere price, image, category, ecc.)
     await _ensureLoaded();
     final all = _all ?? const <Product>[];
     final product = all.firstWhere(
@@ -110,7 +109,6 @@ class ProductsRepositoryImpl implements ProductsRepository {
       orElse: () => throw StateError('Product not found: $productId'),
     );
 
-    // 2) cerca il record grezzo nel JSON e prendi general.specs
     final items = await _loadRawItems();
     final raw = items.firstWhere(
       (m) => (m['code'] as String?)?.trim() == productId,
@@ -120,7 +118,6 @@ class ProductsRepositoryImpl implements ProductsRepository {
     final general = (raw['general'] as Map?)?.cast<String, dynamic>() ?? {};
     final specsRaw = (general['specs'] as Map?)?.cast<String, dynamic>() ?? {};
 
-    // mappa tutto a String
     final specs = <String, String>{
       for (final e in specsRaw.entries) e.key: e.value?.toString() ?? '',
     };

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/product.dart';
 
@@ -105,7 +106,20 @@ class ProductCard extends StatelessWidget {
                         shape: const CircleBorder(),
                         child: InkWell(
                           customBorder: const CircleBorder(),
-                          onTap: onTap, // TODO: open AR viewer
+                          onTap: () {
+                            final glb =
+                                'https://…/models/${product.code}.glb';
+
+                            context.push(
+                              '/ar-live',
+                              extra: {
+                                'title': product.code,
+                                'glb': glb,
+                                'scale': 0.18,
+                              },
+                            );
+                          },
+
                           child: const SizedBox(
                             width: 36,
                             height: 36,

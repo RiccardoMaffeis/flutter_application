@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_application/features/ar/presentation/ar_live_page.dart';
 import 'package:flutter_application/features/favourites/presentation/favourites_page.dart';
 import 'package:flutter_application/features/profile/presentation/profile_page.dart';
 import 'package:flutter_application/features/shop/presentation/product_details_page.dart';
@@ -90,6 +91,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/product/:id',
         builder: (context, state) =>
             ProductDetailsPage(productId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/ar-live',
+        builder: (ctx, state) {
+          final extra = (state.extra as Map?) ?? {};
+          return ArLivePage(
+            title: extra['title'] as String? ?? 'AR Preview',
+            glbUrl: extra['glb'] as String?,
+            assetGlb: extra['assetGlb'] as String?,
+            scale: extra['scale'] as double? ?? 0.2,
+          );
+        },
       ),
     ],
   );

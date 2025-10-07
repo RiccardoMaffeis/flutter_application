@@ -17,6 +17,8 @@ dependencies:
   cloud_firestore: ^5.5.0
   url_launcher: ^6.3.2
   shared_preferences: ^2.3.2
+  ar_flutter_plugin: ^0.7.3
+  vector_math: ^2.1.4 
 
 dev_dependencies:
   flutter_test:

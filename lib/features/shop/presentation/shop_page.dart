@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/features/cart/presentation/cart_popup.dart';
 import 'package:flutter_application/features/shop/domain/product.dart';
 import 'package:flutter_application/features/shop/presentation/search/product_search_delegate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -145,7 +146,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                         ),
                       ),
                       IconButton(
-                        onPressed: () {}, // TODO: cart
+                        onPressed: () => showCartPopup(context, ref),
                         icon: const Icon(
                           Icons.shopping_cart_outlined,
                           size: 35,

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/legacy.dart';
 
 import '../data/dto/user_profile_dto.dart';
 import '../data/dto/user_profile_dto_mapper.dart';
@@ -17,7 +18,11 @@ final profileControllerProvider =
       ProfileController,
       AsyncValue<UserProfile>
     >((ref) {
-      final user = ref.watch(authStateProvider).valueOrNull;
+      final asyncUser = ref.watch(authStateProvider);
+      final user = asyncUser.maybeWhen(
+        data: (u) => u,
+        orElse: () => null,
+      );
       final ctrl = ProfileController(user);
       // carica subito
       ctrl.load();

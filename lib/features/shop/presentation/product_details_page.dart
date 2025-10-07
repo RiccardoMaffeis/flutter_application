@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application/features/cart/presentation/cart_popup.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -59,7 +60,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
             ),
             actions: [
               IconButton(
-                onPressed: () {}, // TODO: cart
+                onPressed: () => showCartPopup(context, ref),
                 icon: const Icon(Icons.shopping_cart_outlined, size: 35),
               ),
             ],

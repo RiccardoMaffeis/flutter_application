@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import '../../shop/domain/product.dart';
 import '../../shop/domain/products_repository.dart';
 import '../../shop/controllers/shop_controller.dart';

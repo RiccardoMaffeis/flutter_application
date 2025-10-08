@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/features/cart/presentation/cart_popup.dart';
+import 'package:flutter_application/features/shop/presentation/widgets/cart_icon_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -51,12 +52,8 @@ class FavouritesPage extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      IconButton(
+                      CartIconButton(
                         onPressed: () => showCartPopup(context, ref),
-                        icon: const Icon(
-                          Icons.shopping_cart_outlined,
-                          size: 35,
-                        ),
                       ),
                     ],
                   ),

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_application/features/cart/controllers/cart_controller.dart';
 import 'package:flutter_application/features/cart/presentation/cart_popup.dart';
+import 'package:flutter_application/features/shop/domain/product.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -29,6 +32,12 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     final details = ref.watch(productDetailsProvider(widget.productId));
     final shop = ref.watch(shopControllerProvider);
     final shopCtrl = ref.read(shopControllerProvider.notifier);
+    final cartState = ref.watch(cartControllerProvider);
+    final cartCount = cartState.items.when(
+      data: (items) => items.fold<int>(0, (s, e) => s + e.qty),
+      loading: () => 0,
+      error: (_, __) => 0,
+    );
 
     const double headerH = 320;
     const double overlap = 60;
@@ -59,9 +68,42 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
               style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 40),
             ),
             actions: [
-              IconButton(
-                onPressed: () => showCartPopup(context, ref),
-                icon: const Icon(Icons.shopping_cart_outlined, size: 35),
+              Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    onPressed: () => showCartPopup(context, ref),
+                    icon: const Icon(Icons.shopping_cart_outlined, size: 35),
+                  ),
+                  if (cartCount > 0)
+                    Positioned(
+                      right: 4,
+                      top: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.accent,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          cartCount > 99 ? '99+' : '$cartCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ],
             bottom: PreferredSize(
@@ -186,7 +228,18 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                           child: SizedBox(
                             height: 45,
                             child: ElevatedButton(
-                              onPressed: () {},
+                              onPressed: () async {
+                                await ref
+                                    .read(cartControllerProvider.notifier)
+                                    .add(p, qty: qty);
+                                if (!context.mounted) return;
+                                showAddToCartSnack(
+                                  context,
+                                  ref: ref,
+                                  product: p,
+                                  qty: qty,
+                                );
+                              },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.accent,
                                 shape: RoundedRectangleBorder(
@@ -329,4 +382,111 @@ class _TinyIconButton extends StatelessWidget {
       icon: Icon(icon),
     );
   }
+}
+
+void showAddToCartSnack(
+  BuildContext context, {
+  required WidgetRef ref,
+  required Product product,
+  required int qty,
+}) {
+  HapticFeedback.lightImpact();
+
+  final textSecondary = Colors.black54;
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor:
+          Colors.transparent, // lasciamo trasparente e stilizziamo il content
+      elevation: 0,
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      duration: const Duration(seconds: 2),
+      content: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x22000000),
+              blurRadius: 16,
+              offset: Offset(0, 8),
+            ),
+          ],
+          border: Border.all(color: const Color(0x11000000)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: Colors.green,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.35),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: const Icon(Icons.check, size: 20, color: Colors.white),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${product.code} added to cart',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Qty $qty • ${product.displayName}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: textSecondary,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            // bottone "See"
+            TextButton(
+              onPressed: () => showCartPopup(context, ref),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                'See',
+                style: TextStyle(
+                  color: AppTheme.accent,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }

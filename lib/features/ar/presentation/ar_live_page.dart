@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:ar_flutter_plugin/datatypes/config_planedetection.dart';
 import 'package:ar_flutter_plugin/datatypes/node_types.dart';
 import 'package:ar_flutter_plugin/managers/ar_anchor_manager.dart';
@@ -7,13 +9,18 @@ import 'package:ar_flutter_plugin/managers/ar_session_manager.dart';
 import 'package:ar_flutter_plugin/models/ar_anchor.dart';
 import 'package:ar_flutter_plugin/models/ar_node.dart';
 import 'package:ar_flutter_plugin/widgets/ar_view.dart';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
 class ArLivePage extends StatefulWidget {
   final String title;
-  final String? glbUrl; // URL di un .glb (Android/iOS)
-  final String? assetGlb; // path asset (es. 'assets/models/xt1.glb')
+  final String? glbUrl;
+  final String? assetGlb;
   final double scale;
 
   const ArLivePage({
@@ -32,13 +39,40 @@ class _ArLivePageState extends State<ArLivePage> {
   ARSessionManager? _arSessionManager;
   ARObjectManager? _arObjectManager;
   ARAnchorManager? _arAnchorManager;
+
   ARNode? _node;
   ARPlaneAnchor? _anchor;
 
   @override
   void dispose() {
+    _removePlacedNode();
     _arSessionManager?.dispose();
     super.dispose();
+  }
+
+  Future<void> _removePlacedNode() async {
+    if (_node != null) {
+      await _arObjectManager?.removeNode(_node!);
+      _node = null;
+    }
+    if (_anchor != null) {
+      await _arAnchorManager?.removeAnchor(_anchor!);
+      _anchor = null;
+    }
+  }
+
+  Future<String> _ensureGlbInAppFolder(String assetPath) async {
+    final data = await rootBundle.load(assetPath);
+    final docs = await getApplicationDocumentsDirectory();
+    final fileName = p.basename(assetPath);
+    final out = File(p.join(docs.path, fileName));
+    if (!await out.exists()) {
+      await out.create(recursive: true);
+      await out.writeAsBytes(
+        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
+      );
+    }
+    return fileName;
   }
 
   @override
@@ -51,7 +85,12 @@ class _ArLivePageState extends State<ArLivePage> {
             planeDetectionConfig: PlaneDetectionConfig.horizontal,
             onARViewCreated: _onARViewCreated,
           ),
-          Positioned(left: 16, right: 16, bottom: 20, child: _BottomHelpCard()),
+          const Positioned(
+            left: 16,
+            right: 16,
+            bottom: 20,
+            child: _BottomHelpCard(),
+          ),
         ],
       ),
     );
@@ -67,70 +106,148 @@ class _ArLivePageState extends State<ArLivePage> {
     _arObjectManager = arObjectManager;
     _arAnchorManager = arAnchorManager;
 
-    await _arSessionManager!.onInitialize(
-      showFeaturePoints: false,
-      showPlanes: true,
-      customPlaneTexturePath: null,
-      showWorldOrigin: false,
-      handleTaps: true,
-      handlePans: true,
-      handleRotation: true,
-    );
-    await _arObjectManager!.onInitialize();
+    try {
+      await _arSessionManager!.onInitialize(
+        showFeaturePoints: false,
+        showPlanes: true,
+        customPlaneTexturePath: null,
+        showWorldOrigin: false,
+        handleTaps: true,
+        handlePans: true,
+        handleRotation: true,
+      );
+      await _arObjectManager!.onInitialize();
+    } catch (_) {
+      if (!mounted) return;
+      await _showArCoreMissingDialog();
+      return;
+    }
 
-    // Tap su piano => ancora + modello
     _arSessionManager!.onPlaneOrPointTap = (hits) async {
       if (hits.isEmpty) return;
+
+      await _removePlacedNode();
+
       final hit = hits.first;
-
-      // crea anchor dove hai toccato
       _anchor = ARPlaneAnchor(transformation: hit.worldTransform);
-      final added = await _arAnchorManager!.addAnchor(_anchor!);
-      if (added != true) return;
+      final addedAnchor = await _arAnchorManager!.addAnchor(_anchor!);
+      if (addedAnchor != true) return;
 
-      // crea il nodo (modello .glb)
-      final node = ARNode(
-        type: widget.glbUrl != null ? NodeType.webGLB : NodeType.localGLTF2,
-        uri: widget.glbUrl ?? widget.assetGlb!,
-        scale: vm.Vector3(widget.scale, widget.scale, widget.scale),
-        position: vm.Vector3.zero(),
-        rotation: vm.Vector4(1, 0, 0, 0), // no rotazione iniziale
-      );
+      final uri = widget.glbUrl ?? widget.assetGlb;
+      if (uri == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('No 3D model available')));
+        return;
+      }
 
-      final didAddNode = await _arObjectManager!.addNode(
-        node,
-        planeAnchor: _anchor,
-      );
-      if (didAddNode == true) {
-        // se esisteva già un nodo, rimuovilo
-        if (_node != null) {
-          await _arObjectManager!.removeNode(_node!);
-        }
-        _node = node;
-        setState(() {});
+      ARNode node;
+
+      if (widget.glbUrl != null) {
+        node = ARNode(
+          type: NodeType.webGLB,
+          uri: widget.glbUrl!,
+          scale: vm.Vector3(widget.scale, widget.scale, widget.scale),
+          position: vm.Vector3.zero(),
+          rotation: vm.Vector4(0, 1, 0, 0),
+        );
+      } else if (uri.toLowerCase().endsWith('.glb')) {
+        final fileName = await _ensureGlbInAppFolder(uri);
+        node = ARNode(
+          type: NodeType.fileSystemAppFolderGLB,
+          uri: fileName,
+          scale: vm.Vector3(widget.scale, widget.scale, widget.scale),
+          position: vm.Vector3.zero(),
+          rotation: vm.Vector4(0, 1, 0, 0),
+        );
+      } else if (uri.toLowerCase().endsWith('.gltf')) {
+        node = ARNode(
+          type: NodeType.localGLTF2,
+          uri: uri,
+          scale: vm.Vector3(widget.scale, widget.scale, widget.scale),
+          position: vm.Vector3.zero(),
+          rotation: vm.Vector4(0, 1, 0, 0),
+        );
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Unsupported format: $uri')));
+        return;
+      }
+
+      final ok = await _arObjectManager!.addNode(node, planeAnchor: _anchor);
+      if (ok == true && mounted) {
+        setState(() => _node = node);
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to load the model')),
+        );
       }
     };
+  }
+
+  Future<void> _showArCoreMissingDialog() async {
+    final market = Uri.parse('market://details?id=com.google.ar.core');
+    final web = Uri.parse(
+      'https://play.google.com/store/apps/details?id=com.google.ar.core',
+    );
+
+    await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Missing AR service'),
+        content: const Text(
+          'To use augmented reality you must install or update '
+          '“Google Play Services for AR”.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              if (!await launchUrl(market)) {
+                await launchUrl(web, mode: LaunchMode.externalApplication);
+              }
+            },
+            child: const Text('Open Play Store'),
+          ),
+        ],
+      ),
+    );
   }
 }
 
 class _BottomHelpCard extends StatelessWidget {
+  const _BottomHelpCard();
+
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 6,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        child: Row(
-          children: const [
-            Icon(Icons.touch_app_outlined),
-            SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                'Tocca un piano per posizionare il modello. Pizzica per zoom, ruota con due dita.',
+    final theme = Theme.of(context);
+    return SafeArea(
+      minimum: const EdgeInsets.only(left: 0, right: 0, bottom: 0),
+      child: Card(
+        color: theme.colorScheme.surface,
+        elevation: 6,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        child: const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            children: [
+              Icon(Icons.touch_app_outlined),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Tap a plane to place the model. Pinch to zoom, rotate with two fingers.',
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

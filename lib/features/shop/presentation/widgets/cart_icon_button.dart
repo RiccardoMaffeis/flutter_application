@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/core/theme/app_theme.dart';
-import 'package:flutter_application/features/shop/controllers/cart_count_provider.dart';
+import 'package:flutter_application/features/shop/controllers/shop_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class CartIconButton extends ConsumerWidget {
@@ -26,7 +26,7 @@ class CartIconButton extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
               decoration: BoxDecoration(
-                color: AppTheme.accent, // o Colors.redAccent
+                color: AppTheme.accent,
                 borderRadius: BorderRadius.circular(10),
               ),
               alignment: Alignment.center,

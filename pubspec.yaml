@@ -18,6 +18,7 @@ dependencies:
   url_launcher: ^6.3.2
   shared_preferences: ^2.3.2
   ar_flutter_plugin: ^0.7.3
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
@@ -29,6 +30,7 @@ flutter:
   assets:
     - lib/images/XT1/
     - lib/json/
+    - lib/3Dmodels/
   fonts:
     - family: ABBvoice
       fonts:

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application/core/ar/arcore_check.dart';
 import 'package:flutter_application/features/cart/controllers/cart_controller.dart';
 import 'package:flutter_application/features/cart/presentation/cart_popup.dart';
 import 'package:flutter_application/features/shop/domain/product.dart';
@@ -8,7 +9,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../shop/controllers/shop_controller.dart';
-import '../../shop/controllers/product_details_provider.dart';
 import '../../shop/domain/product_details.dart';
 
 class ProductDetailsPage extends ConsumerStatefulWidget {
@@ -25,6 +25,15 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
   String _familyTitle(String categoryId) {
     final up = categoryId.toUpperCase();
     return up.startsWith('XT') ? up : 'Product';
+  }
+
+  Future<bool> _assetExists(String path) async {
+    try {
+      await rootBundle.load(path);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
@@ -175,7 +184,40 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                 ),
                                 IconButton(
                                   iconSize: 35,
-                                  onPressed: () {}, // TODO: AR / fullscreen
+                                  onPressed: () async {
+                                    const modelPath =
+                                        'lib/3Dmodels/1SDH001295R0008.glb';
+                                    if (!await _assetExists(modelPath)) {
+                                      if (!mounted) return;
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Modello 3D non trovato',
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+
+                                    final ok =
+                                        await ArCoreCheck.ensureAvailable(
+                                          context,
+                                        );
+                                    if (!ok) return;
+
+                                    if (!mounted) return;
+
+                                    context.push(
+                                      '/ar-live',
+                                      extra: {
+                                        'title': _familyTitle(p.categoryId),
+                                        'assetGlb': modelPath,
+                                        'scale': 0.2,
+                                      },
+                                    );
+                                  },
                                   icon: const Icon(
                                     Icons.view_in_ar,
                                     color: Colors.black,

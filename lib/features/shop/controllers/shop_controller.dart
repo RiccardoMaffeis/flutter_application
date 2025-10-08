@@ -1,3 +1,5 @@
+import 'package:flutter_application/features/cart/controllers/cart_controller.dart';
+import 'package:flutter_application/features/shop/domain/product_details.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import '../domain/product.dart';
@@ -49,9 +51,27 @@ final productsRepositoryProvider = Provider<ProductsRepository>((ref) {
   return ProductsRepositoryImpl();
 });
 
-final shopControllerProvider =
-    StateNotifierProvider<ShopController, ShopState>((ref) {
-  return ShopController(ref.read(productsRepositoryProvider))..bootstrap();
+final shopControllerProvider = StateNotifierProvider<ShopController, ShopState>(
+  (ref) {
+    return ShopController(ref.read(productsRepositoryProvider))..bootstrap();
+  },
+);
+
+final productDetailsProvider = FutureProvider.family<ProductDetails, String>((
+  ref,
+  productId,
+) async {
+  final repo = ref.read(productsRepositoryProvider);
+  return repo.fetchProductDetails(productId);
+});
+
+final cartCountProvider = Provider<int>((ref) {
+  final cart = ref.watch(cartControllerProvider);
+  return cart.items.when(
+    data: (items) => items.fold<int>(0, (s, e) => s + e.qty),
+    loading: () => 0,
+    error: (_, __) => 0,
+  );
 });
 
 class ShopController extends StateNotifier<ShopState> {

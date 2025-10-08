@@ -15,8 +15,17 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
+}
+
+subprojects {
+    configurations.configureEach {
+        resolutionStrategy {
+            force("com.google.ar:core:1.44.0")
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {

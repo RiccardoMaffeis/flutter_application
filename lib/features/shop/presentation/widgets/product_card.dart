@@ -1,5 +1,7 @@
+import 'package:flutter/services.dart'; // <-- aggiunto per rootBundle
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_application/core/ar/arcore_check.dart'; // <-- aggiunto
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/product.dart';
 
@@ -16,6 +18,16 @@ class ProductCard extends StatelessWidget {
     required this.onFavToggle,
     required this.onTap,
   });
+
+  // helper come nel ProductDetailsPage
+  static Future<bool> _assetExists(String path) async {
+    try {
+      await rootBundle.load(path);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,20 +118,36 @@ class ProductCard extends StatelessWidget {
                         shape: const CircleBorder(),
                         child: InkWell(
                           customBorder: const CircleBorder(),
-                          onTap: () {
-                            final glb =
-                                'https://…/models/${product.code}.glb';
+                          onTap: () async {
+                            final modelPath =
+                                'lib/3Dmodels/1SDH001295R0008.glb';
 
+                            if (!await _assetExists(modelPath)) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('3D model not found'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                              return;
+                            }
+
+                            final ok = await ArCoreCheck.ensureAvailable(
+                              context,
+                            );
+                            if (!ok) return;
+
+                            if (!context.mounted) return;
                             context.push(
                               '/ar-live',
                               extra: {
                                 'title': product.code,
-                                'glb': glb,
+                                'assetGlb': modelPath, 
                                 'scale': 0.18,
                               },
                             );
                           },
-
                           child: const SizedBox(
                             width: 36,
                             height: 36,

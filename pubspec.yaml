@@ -17,7 +17,8 @@ dependencies:
   cloud_firestore: ^6.0.2
   url_launcher: ^6.3.2
   shared_preferences: ^2.3.2
-  ar_flutter_plugin: ^0.7.3
+  arcore_flutter_plugin: ^0.1.0
+  arkit_plugin: ^1.2.1
   path_provider: ^2.1.5
 
 dev_dependencies:

@@ -36,6 +36,44 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     }
   }
 
+  // Regex per famiglia (XT1, XT2, …) e poli (3p/4p/…)
+  static final _reFamily = RegExp(r'\b(xt\d+)\b', caseSensitive: false);
+  static final _rePoles = RegExp(
+    r'\b([23468])\s*(?:p|poli)\b',
+    caseSensitive: false,
+  );
+
+  Future<String?> _findModelPath(Product p) async {
+    final hay = '${p.categoryId} ${p.code} ${p.displayName}'.toLowerCase();
+    final fam = _reFamily.firstMatch(hay)?.group(1)?.toUpperCase(); // es. XT1
+    final poles = _rePoles.firstMatch(hay)?.group(1); // es. "3" -> "3p"
+    final pp = poles == null ? null : '${poles}p';
+
+    final candidates = <String>[
+      if (fam != null && pp != null) 'lib/3Dmodels/$fam/${fam}_$pp.glb',
+      if (fam != null && pp != null) 'lib/3Dmodels/${fam}_$pp.glb',
+      if (fam != null) 'lib/3Dmodels/$fam/${fam}.glb',
+      if (fam != null) 'lib/3Dmodels/${fam}.glb',
+    ];
+
+    for (final path in candidates) {
+      if (await _assetExists(path)) return path;
+    }
+    return null;
+  }
+
+  // (opzionale) scale AR per famiglia
+  double _arScaleFor(String famUp) {
+    switch (famUp) {
+      case 'XT1':
+        return 0.18;
+      case 'XT2':
+        return 0.18;
+      default:
+        return 0.20;
+    }
+  }
+
   double _familyImageScale(String famUp) => 0.82;
 
   @override
@@ -194,35 +232,40 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                 IconButton(
                                   iconSize: 35,
                                   onPressed: () async {
-                                    final modelPath =
-                                        'lib/3Dmodels/1SDH001295R0008.glb';
-                                    if (!await _assetExists(modelPath)) {
+                                    final modelPath = await _findModelPath(p);
+
+                                    if (modelPath == null) {
                                       if (!mounted) return;
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
-                                        const SnackBar(
+                                        SnackBar(
                                           content: Text(
-                                            'Modello 3D non trovato',
+                                            'Modello 3D non trovato per ${p.code}',
                                           ),
                                         ),
                                       );
                                       return;
                                     }
+
                                     final ok =
                                         await ArCoreCheck.ensureAvailable(
                                           context,
                                         );
                                     if (!ok || !mounted) return;
+
                                     context.push(
                                       '/ar-live',
                                       extra: {
-                                        'title': _familyTitle(p.categoryId),
+                                        'title': p.id,
                                         'assetGlb': modelPath,
-                                        'scale': 0.2,
+                                        'scale': _arScaleFor(
+                                          p.categoryId.toUpperCase(),
+                                        ),
                                       },
                                     );
                                   },
+
                                   icon: const Icon(
                                     Icons.view_in_ar,
                                     color: Colors.black,

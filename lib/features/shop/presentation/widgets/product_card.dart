@@ -19,6 +19,32 @@ class ProductCard extends StatelessWidget {
     required this.onTap,
   });
 
+  static final RegExp _reFamily = RegExp(r'xt\d+', caseSensitive: false);
+  static final RegExp _rePoles = RegExp(
+    r'([23468])\s*(?:p|poli|pole|poles)\b',
+    caseSensitive: false,
+  );
+
+  static Future<String?> _findModelPath(Product p) async {
+    final hay = '${p.categoryId} ${p.code} ${p.displayName}'.toLowerCase();
+
+    final fam = _reFamily.firstMatch(hay)?.group(0)?.toUpperCase();
+    final polesNum = _rePoles.firstMatch(hay)?.group(1);
+    final poles = polesNum == null ? null : '${polesNum}p';
+
+    final candidates = <String>[
+      if (fam != null && poles != null) 'lib/3Dmodels/$fam/${fam}_$poles.glb',
+      if (fam != null && poles != null) 'lib/3Dmodels/${fam}_$poles.glb',
+      if (fam != null) 'lib/3Dmodels/$fam/${fam}.glb',
+      if (fam != null) 'lib/3Dmodels/${fam}.glb',
+    ];
+
+    for (final path in candidates) {
+      if (await _assetExists(path)) return path;
+    }
+    return null;
+  }
+
   static Future<bool> _assetExists(String path) async {
     try {
       await rootBundle.load(path);
@@ -138,15 +164,15 @@ class ProductCard extends StatelessWidget {
                         child: InkWell(
                           customBorder: const CircleBorder(),
                           onTap: () async {
-                            final modelPath =
-                                'lib/3Dmodels/XT1/1SDH001295R0008.glb';
+                            final modelPath = await _findModelPath(product);
 
-                            if (!await _assetExists(modelPath)) {
+                            if (modelPath == null) {
                               if (!context.mounted) return;
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('3D model not found'),
-                                  duration: Duration(seconds: 2),
+                                SnackBar(
+                                  content: Text(
+                                    '3D model not found for ${product.code}',
+                                  ),
                                 ),
                               );
                               return;
@@ -155,9 +181,8 @@ class ProductCard extends StatelessWidget {
                             final ok = await ArCoreCheck.ensureAvailable(
                               context,
                             );
-                            if (!ok) return;
+                            if (!ok || !context.mounted) return;
 
-                            if (!context.mounted) return;
                             context.push(
                               '/ar-live',
                               extra: {
@@ -167,6 +192,7 @@ class ProductCard extends StatelessWidget {
                               },
                             );
                           },
+
                           child: const SizedBox(
                             width: 36,
                             height: 36,

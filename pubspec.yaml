@@ -35,6 +35,7 @@ flutter:
     - lib/images/XT5/
     - lib/images/XT6/
     - lib/images/XT7/
+    - lib/images/general/
     - lib/json/
     - lib/3Dmodels/XT1/
     - lib/3Dmodels/XT2/

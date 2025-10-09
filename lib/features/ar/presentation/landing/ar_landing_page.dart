@@ -1,29 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application/features/cart/presentation/cart_popup.dart';
-import 'package:flutter_application/features/shop/presentation/widgets/cart_icon_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/app_theme.dart';
-import '../../shop/presentation/widgets/product_card.dart';
-import '../controllers/favourites_controller.dart';
-import '../../shop/controllers/shop_controller.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../ar/controllers/ar_landing_controller.dart';
+import '../../../ar/domain/ar_choice.dart';
 
-class FavouritesPage extends ConsumerWidget {
-  const FavouritesPage({super.key});
+class ARLandingPage extends ConsumerWidget {
+  const ARLandingPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final favs = ref.watch(favouritesControllerProvider);
-    final favsCtrl = ref.read(favouritesControllerProvider.notifier);
-
-    final shopState = ref.watch(shopControllerProvider);
-    final shopCtrl = ref.read(shopControllerProvider.notifier);
-
-    ref.listen<Set<String>>(
-      shopControllerProvider.select((s) => s.favourites),
-      (_, __) => favsCtrl.refresh(),
-    );
+    final choices = ref.watch(arLandingControllerProvider).choices;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F7),
@@ -32,35 +20,28 @@ class FavouritesPage extends ConsumerWidget {
           children: [
             Column(
               children: [
+                // Header grande + underline rossa
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
                   child: Row(
                     children: [
-                      const SizedBox(width: 48),
                       Expanded(
-                        child: Center(
-                          child: Text(
-                            'Favourite',
-                            style: Theme.of(context).textTheme.headlineMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 40,
-                                ),
-                          ),
+                        child: Text(
+                          'Augmented Reality',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.headlineMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 39,
+                              ),
                         ),
-                      ),
-                      CartIconButton(
-                        onPressed: () => showCartPopup(context, ref),
                       ),
                     ],
                   ),
                 ),
                 Container(
                   height: 4,
-                  margin: const EdgeInsets.symmetric(horizontal: 12),
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
                     color: AppTheme.accent,
                     borderRadius: BorderRadius.circular(3),
@@ -74,86 +55,64 @@ class FavouritesPage extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
 
-                Expanded(
-                  child: favs.when(
-                    loading: () =>
-                        const Center(child: CircularProgressIndicator()),
-                    error: (e, _) => Center(child: Text('Failed to load: $e')),
-                    data: (items) {
-                      if (items.isEmpty) {
-                        return const Center(child: Text('No favourites yet'));
-                      }
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        child: GridView.builder(
-                          physics: const BouncingScrollPhysics(),
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
-                                mainAxisSpacing: 14,
-                                crossAxisSpacing: 14,
-                                childAspectRatio: 0.52,
-                              ),
-                          itemCount: items.length,
-                          itemBuilder: (_, i) {
-                            final p = items[i];
-                            final isFav = shopState.favourites.contains(p.id);
+                const SizedBox(height: 14),
 
-                            return ProductCard(
-                              product: p,
-                              isFavourite: isFav,
-                              onFavToggle: () async {
-                                await shopCtrl.toggleFavourite(p.id);
-                                await favsCtrl.refresh();
-                              },
-                              onTap: () => context.go(
-                                '/product/${p.id}',
-                              ), // TODO: dettaglio/AR
-                            );
-                          },
+                // Lista scelte (due “big chips”)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: Column(
+                    children: [
+                      for (final c in choices) ...[
+                        _ChoiceTile(
+                          choice: c,
+                          onTap: () => context.push('/ar/select'),
                         ),
-                      );
-                    },
+                        const SizedBox(height: 12),
+                      ],
+                    ],
                   ),
                 ),
-                const SizedBox(height: 76),
+
+                const Spacer(),
+                const SizedBox(height: 86),
               ],
             ),
 
+            // Bubble AI in basso a destra
             Positioned(
               right: 16,
-              bottom: 90,
+              bottom: 96,
               child: Material(
                 color: Colors.white,
                 shape: const CircleBorder(),
                 elevation: 4,
                 child: InkWell(
+                  onTap: () {
+                    // TODO: apri il tuo assistant (es. /assistant)
+                  },
                   customBorder: const CircleBorder(),
-                  onTap: () {}, // TODO
                   child: const SizedBox(
                     width: 44,
                     height: 44,
-                    child: Icon(Icons.psychology_alt_outlined, size: 35),
+                    child: Icon(Icons.psychology_alt_outlined, size: 28),
                   ),
                 ),
               ),
             ),
+
+            // Bottom nav stile “pillola”
             Positioned(
               left: 16,
               right: 16,
               bottom: 16,
               child: _BottomPillNav(
-                index: 1,
+                index: 2,
                 onChanged: (i) {
-                  if (i == 0) context.go('/home');
-                  if (i == 1) return;
+                  if (i == 2) return;
+                  if (i == 1) context.go('/favourites');
                   if (i == 3) context.go('/profile');
-                  if (i == 2) context.go('/ar');
+                  if (i == 0) context.go('/home');
                 },
               ),
             ),
@@ -164,9 +123,71 @@ class FavouritesPage extends ConsumerWidget {
   }
 }
 
+class _ChoiceTile extends StatelessWidget {
+  final ARChoice choice;
+  final VoidCallback onTap;
+
+  const _ChoiceTile({required this.choice, required this.onTap});
+
+  /// Forza: lib/images/general/<basename>.png
+  String get _assetPath {
+    final base = choice.asset.split('/').last; // prendi solo il nome
+    final name = base.endsWith('.png') ? base : '$base.png';
+    return 'lib/images/general/$name';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      elevation: 6,
+      shadowColor: Colors.black12,
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: onTap,
+        child: Container(
+          height: 72,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Text(
+                choice.title,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const Spacer(),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  _assetPath,
+                  width: 56,
+                  height: 40,
+                  fit: BoxFit.contain,
+                  filterQuality: FilterQuality.medium,
+                  errorBuilder: (_, __, ___) => const Icon(
+                    Icons.inventory_2_outlined,
+                    size: 28,
+                    color: Colors.black38,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right, size: 28),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _BottomPillNav extends StatelessWidget {
   final int index;
   final ValueChanged<int> onChanged;
+
   const _BottomPillNav({required this.index, required this.onChanged});
 
   @override
@@ -183,21 +204,21 @@ class _BottomPillNav extends StatelessWidget {
             spreadRadius: 2,
             offset: Offset(0, 10),
           ),
+
           BoxShadow(
             color: Color(0x14000000),
             blurRadius: 8,
             offset: Offset(0, 2),
           ),
         ],
-        border: Border.fromBorderSide(
-          const BorderSide(color: Color(0x11000000)),
-        ),
+        border: Border.fromBorderSide(BorderSide(color: Color(0x11000000))),
       ),
       clipBehavior: Clip.antiAlias,
       child: LayoutBuilder(
         builder: (context, cons) {
           const pad = 6.0;
           final slotW = (cons.maxWidth - pad * 2) / 4;
+
           return Stack(
             children: [
               AnimatedPositioned(
@@ -214,6 +235,7 @@ class _BottomPillNav extends StatelessWidget {
                   ),
                 ),
               ),
+
               Padding(
                 padding: const EdgeInsets.all(pad),
                 child: Row(
@@ -253,6 +275,7 @@ class _NavIcon extends StatelessWidget {
   final IconData icon;
   final bool selected;
   final VoidCallback onTap;
+
   const _NavIcon({
     required this.icon,
     required this.selected,

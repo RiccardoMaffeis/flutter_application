@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/features/ar/presentation/ar_live_page.dart';
+import 'package:flutter_application/features/ar/presentation/select/ar_select_page.dart';
 import 'package:flutter_application/features/favourites/presentation/favourites_page.dart';
 import 'package:flutter_application/features/profile/presentation/profile_page.dart';
 import 'package:flutter_application/features/shop/presentation/product_details_page.dart';
@@ -13,6 +14,7 @@ import 'features/auth/controllers/auth_controller.dart';
 import 'features/auth/presentation/welcome_page.dart';
 import 'features/auth/presentation/login_page.dart';
 import 'features/auth/presentation/signup_page.dart';
+import 'features/ar/presentation/landing/ar_landing_page.dart';
 
 /// Thin adapter that turns a Stream into a Listenable so GoRouter can
 /// refresh its redirect logic whenever the stream emits (e.g., auth changes).
@@ -104,6 +106,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+      GoRoute(
+        path: '/ar/select',
+        builder: (_, __) => const ARSelectPage(),
+      ),
+      GoRoute(path: '/ar', builder: (ctx, state) => const ARLandingPage()),
     ],
   );
 });

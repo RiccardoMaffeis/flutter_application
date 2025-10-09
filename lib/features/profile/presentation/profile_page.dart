@@ -201,11 +201,12 @@ class ProfilePage extends ConsumerWidget {
               right: 16,
               bottom: 16,
               child: _BottomPillNav(
-                index: 2,
+                index: 3,
                 onChanged: (i) {
                   if (i == 0) context.go('/home');
                   if (i == 1) context.go('/favourites');
-                  if (i == 2) return;
+                  if (i == 3) return;
+                  if (i == 2) context.go('/ar');
                 },
               ),
             ),
@@ -337,7 +338,7 @@ class _BottomPillNav extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, cons) {
           const pad = 6.0;
-          final slotW = (cons.maxWidth - pad * 2) / 3;
+          final slotW = (cons.maxWidth - pad * 2) / 4;
           return Stack(
             children: [
               AnimatedPositioned(
@@ -369,9 +370,14 @@ class _BottomPillNav extends StatelessWidget {
                       onTap: () => onChanged(1),
                     ),
                     _NavIcon(
-                      icon: Icons.person_outline,
+                      icon: Icons.view_in_ar,
                       selected: index == 2,
                       onTap: () => onChanged(2),
+                    ),
+                    _NavIcon(
+                      icon: Icons.person_outline,
+                      selected: index == 3,
+                      onTap: () => onChanged(3),
                     ),
                   ],
                 ),

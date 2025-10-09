@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:ar_flutter_plugin/widgets/ar_view.dart';
@@ -18,8 +19,8 @@ import 'package:path/path.dart' as p;
 
 class ArLivePage extends StatefulWidget {
   final String title;
-  final String? glbUrl; // es: https://.../model.glb
-  final String? assetGlb; // es: lib/3Dmodels/ciao.glb
+  final String? glbUrl;
+  final String? assetGlb;
   final double scale;
 
   const ArLivePage({
@@ -60,7 +61,6 @@ class _ArLivePageState extends State<ArLivePage> {
     }
   }
 
-  /// Copia l'asset GLB in Documents e restituisce solo il fileName.
   Future<String> _stageGlbIntoAppFolder(String assetPath) async {
     final data = await rootBundle.load(assetPath);
     final bytes = data.buffer.asUint8List(
@@ -76,7 +76,7 @@ class _ArLivePageState extends State<ArLivePage> {
       await outFile.create(recursive: true);
       await outFile.writeAsBytes(bytes, flush: true);
     }
-    return fileName; // per NodeType.fileSystemAppFolderGLB serve SOLO il nome
+    return fileName;
   }
 
   @override
@@ -110,7 +110,6 @@ class _ArLivePageState extends State<ArLivePage> {
     _objects = objects;
     _anchors = anchors;
 
-    // Abilita gesture: tap/pan/rotate (pinch-to-zoom è supportato come pan+scale dal plugin)
     await _session!.onInitialize(
       showFeaturePoints: false,
       showPlanes: true,
@@ -122,7 +121,6 @@ class _ArLivePageState extends State<ArLivePage> {
     );
     await _objects!.onInitialize();
 
-    // Tap sul piano: piazza/modello
     _session!.onPlaneOrPointTap = (hits) async {
       if (hits.isEmpty) return;
 
@@ -133,7 +131,8 @@ class _ArLivePageState extends State<ArLivePage> {
       final okAnchor = await _anchors!.addAnchor(_anchor!);
       if (okAnchor != true) return;
 
-      // Scegli la sorgente
+      final yaw180 = vm.Vector4(0, 1, 0, math.pi);
+
       ARNode node;
       if (widget.glbUrl != null && widget.glbUrl!.isNotEmpty) {
         node = ARNode(
@@ -141,17 +140,16 @@ class _ArLivePageState extends State<ArLivePage> {
           uri: widget.glbUrl!,
           scale: vm.Vector3(widget.scale, widget.scale, widget.scale),
           position: vm.Vector3.zero(),
-          rotation: vm.Vector4(0, 1, 0, 0),
+          rotation: yaw180,
         );
       } else if (widget.assetGlb != null && widget.assetGlb!.isNotEmpty) {
-        // Copia l’asset nel Documents e usa fileSystemAppFolderGLB
         final fileName = await _stageGlbIntoAppFolder(widget.assetGlb!);
         node = ARNode(
           type: NodeType.fileSystemAppFolderGLB,
-          uri: fileName, // IMPORTANT: solo nome file
+          uri: fileName,
           scale: vm.Vector3(widget.scale, widget.scale, widget.scale),
           position: vm.Vector3.zero(),
-          rotation: vm.Vector4(0, 1, 0, 0),
+          rotation: yaw180,
         );
       } else {
         if (!mounted) return;

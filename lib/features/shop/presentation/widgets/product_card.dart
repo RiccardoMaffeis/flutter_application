@@ -139,7 +139,7 @@ class ProductCard extends StatelessWidget {
                           customBorder: const CircleBorder(),
                           onTap: () async {
                             final modelPath =
-                                'lib/3Dmodels/1SDH001295R0008.glb';
+                                'lib/3Dmodels/XT1/1SDH001295R0008.glb';
 
                             if (!await _assetExists(modelPath)) {
                               if (!context.mounted) return;

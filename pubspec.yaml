@@ -36,7 +36,13 @@ flutter:
     - lib/images/XT6/
     - lib/images/XT7/
     - lib/json/
-    - lib/3Dmodels/
+    - lib/3Dmodels/XT1/
+    - lib/3Dmodels/XT2/
+    - lib/3Dmodels/XT3/
+    - lib/3Dmodels/XT4/
+    - lib/3Dmodels/XT5/
+    - lib/3Dmodels/XT6/
+    - lib/3Dmodels/XT7/
   fonts:
     - family: ABBvoice
       fonts:

@@ -55,33 +55,30 @@ class _ShopPageState extends ConsumerState<ShopPage> {
     final variantRe = RegExp(
       '\\b${RegExp.escape(fam)}\\s*([A-Z])\\b',
     ); // XTn + lettera
-    final fourPRe = RegExp(r'\b4\s*P\b'); // 4P con/ senza spazio
+    final fourPRe = RegExp(r'\b4\s*P\b');
 
     for (final p in items) {
       final up = p.displayName.toUpperCase();
 
-      // variante: XTnA / "XTn A" => "XTnA", altrimenti fallback "XTn"
       final m = variantRe.firstMatch(up);
       final variant = m != null ? '$fam${m.group(1)!}' : fam;
 
-      // poles: se non trovi 4P => default 3p (come prima)
       final poles = fourPRe.hasMatch(up) ? '4p' : '3p';
 
       final key = '$variant $poles';
       map.putIfAbsent(key, () => []).add(p);
     }
 
-    // stesso ordine variante usato prima
     const order = ['N', 'B', 'H', 'S', 'F', 'D'];
 
     int variantRank(String key) {
       final vm = variantRe.firstMatch(key);
-      final v = vm?.group(1) ?? 'Z'; // senza lettera finisce in coda
+      final v = vm?.group(1) ?? 'Z'; 
       final idx = order.indexOf(v);
       return idx == -1 ? 999 : idx;
     }
 
-    int polesRank(String key) => key.endsWith(' 3p') ? 0 : 1; // 3p prima di 4p
+    int polesRank(String key) => key.endsWith(' 3p') ? 0 : 1;
 
     final sortedKeys = map.keys.toList()
       ..sort((a, b) {

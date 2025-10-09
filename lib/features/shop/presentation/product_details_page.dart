@@ -185,8 +185,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                 IconButton(
                                   iconSize: 35,
                                   onPressed: () async {
-                                    const modelPath =
-                                        'lib/3Dmodels/1SDH001295R0008.glb';
+                                    final modelPath = 'assets/3Dmodels/1SDH001295R0008.glb';
                                     if (!await _assetExists(modelPath)) {
                                       if (!mounted) return;
                                       ScaffoldMessenger.of(

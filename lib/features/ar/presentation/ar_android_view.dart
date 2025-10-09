@@ -38,13 +38,12 @@ class _AndroidArViewState extends State<AndroidArView> {
       if (hits.isEmpty) return;
       final hit = hits.first;
 
-      // Carica il modello
       final uri = widget.glbUrl ?? widget.assetGlb;
       if (uri == null) return;
 
       final node = ArCoreReferenceNode(
         name: "model",
-        object3DFileName: uri, // dipende dove è il file — se da asset, potresti dover copiarlo
+        object3DFileName: uri,
         scale: vm.Vector3(widget.scale, widget.scale, widget.scale),
         position: vm.Vector3(
           hit.pose.translation.x,

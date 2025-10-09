@@ -65,33 +65,40 @@ class _ResultsList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.read(productsRepositoryProvider);
-    final selectedCat = ref.read(shopControllerProvider).selectedCategoryId;
 
     return FutureBuilder<List<Product>>(
       future: () async {
-        final items = await repo.fetchProducts(
-          categoryId: selectedCat == 'all' ? null : selectedCat,
-        );
+        final items = await repo.fetchProducts(categoryId: null);
+
         final q = query.trim().toLowerCase();
-        if (q.isEmpty) {
-          // tutti i prodotti (della categoria selezionata, se filtrata sopra)
-          return List<Product>.from(
-            items,
-          ); // oppure semplicemente: return items;
+        if (q.isEmpty) return List<Product>.from(items);
+
+        final tokens = RegExp(
+          r'[a-z0-9]+',
+        ).allMatches(q).map((m) => m.group(0)!).toList();
+
+        if (tokens.isEmpty) return List<Product>.from(items);
+
+        bool matches(Product p) {
+          final hay = ('${p.displayName} ${p.code}').toLowerCase();
+          final hayClean = hay.replaceAll(RegExp(r'[^a-z0-9]'), '');
+          return tokens.every((t) {
+            final tClean = t.replaceAll(RegExp(r'[^a-z0-9]'), '');
+            return hay.contains(t) || hayClean.contains(tClean);
+          });
         }
 
-        return items.where((p) {
-          final name = p.displayName.toLowerCase();
-          final code = p.code.toLowerCase();
-          return name.contains(q) || code.contains(q);
-        }).toList();
+        return items.where(matches).toList();
       }(),
       builder: (context, snap) {
-        if (!snap.hasData)
+        if (!snap.hasData) {
           return const Center(child: CircularProgressIndicator());
+        }
+
         final results = snap.data!;
-        if (results.isEmpty)
-          return const Center(child: Text('Nessun risultato'));
+        if (results.isEmpty) {
+          return const Center(child: Text('No results'));
+        }
 
         final favs = ref.watch(shopControllerProvider).favourites;
         final shopCtrl = ref.read(shopControllerProvider.notifier);
@@ -124,13 +131,10 @@ class _ResultsList extends ConsumerWidget {
               trailing: IconButton(
                 icon: Icon(
                   isFav ? Icons.favorite : Icons.favorite_border,
-                  color: isFav
-                      ? AppTheme.accent
-                      : Colors.black,
+                  color: isFav ? AppTheme.accent : Colors.black,
                 ),
                 onPressed: () => shopCtrl.toggleFavourite(p.id),
               ),
-
               onTap: () => onSelect(context, p),
             );
           },

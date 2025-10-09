@@ -1,7 +1,7 @@
-import 'package:flutter/services.dart'; // <-- aggiunto per rootBundle
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_application/core/ar/arcore_check.dart'; // <-- aggiunto
+import 'package:flutter_application/core/ar/arcore_check.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/product.dart';
 
@@ -30,6 +30,10 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const double titleFontSize = 14;
+    const double titleLineHeight = 1.25;
+    final double twoLinesHeight = titleFontSize * titleLineHeight * 2;
+
     return Material(
       color: Colors.white,
       elevation: 4,
@@ -42,6 +46,7 @@ class ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // product code
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 20, 12, 6),
               child: Text(
@@ -56,6 +61,7 @@ class ProductCard extends StatelessWidget {
               ),
             ),
 
+            // image (ENLARGED)
             Expanded(
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(
@@ -64,20 +70,23 @@ class ProductCard extends StatelessWidget {
                 child: Container(
                   color: Colors.white,
                   alignment: Alignment.center,
-                  child: Image.asset(
-                    product.imageUrl,
-                    fit: BoxFit.contain,
-                    filterQuality: FilterQuality.medium,
-                    errorBuilder: (context, error, stack) {
-                      debugPrint(
-                        'Asset missing: ${product.imageUrl} -> $error',
-                      );
-                      return const Icon(
-                        Icons.broken_image_outlined,
-                        size: 48,
-                        color: Colors.black26,
-                      );
-                    },
+                  child: Transform.scale(
+                    scale: 1.05,
+                    child: Image.asset(
+                      product.imageUrl,
+                      fit: BoxFit.contain,
+                      filterQuality: FilterQuality.medium,
+                      errorBuilder: (context, error, stack) {
+                        debugPrint(
+                          'Asset missing: ${product.imageUrl} -> $error',
+                        );
+                        return const Icon(
+                          Icons.broken_image_outlined,
+                          size: 48,
+                          color: Colors.black26,
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),
@@ -88,14 +97,25 @@ class ProductCard extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    product.displayName,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: twoLinesHeight),
+                    child: Text(
+                      product.displayName,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: titleFontSize,
+                        height: titleLineHeight,
+                      ),
+                      strutStyle: const StrutStyle(
+                        forceStrutHeight: true,
+                        fontSize: titleFontSize,
+                        height: titleLineHeight,
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -118,7 +138,8 @@ class ProductCard extends StatelessWidget {
                         child: InkWell(
                           customBorder: const CircleBorder(),
                           onTap: () async {
-                            final modelPath = 'assets/3Dmodels/1SDH001295R0008.glb';
+                            final modelPath =
+                                'lib/3Dmodels/1SDH001295R0008.glb';
 
                             if (!await _assetExists(modelPath)) {
                               if (!context.mounted) return;
@@ -141,7 +162,7 @@ class ProductCard extends StatelessWidget {
                               '/ar-live',
                               extra: {
                                 'title': product.code,
-                                'assetGlb': modelPath, 
+                                'assetGlb': modelPath,
                                 'scale': 0.18,
                               },
                             );

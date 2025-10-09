@@ -47,33 +47,34 @@ class _ShopPageState extends ConsumerState<ShopPage> {
 
   Map<String, List<Product>> _groupXtByVariantAndPoles(
     List<Product> items,
-    String family, // "XT1", "XT2", ... "XT7"
+    String family, // "XT1"..."XT7"
   ) {
     final fam = family.toUpperCase();
     final map = <String, List<Product>>{};
 
-    final variantRe = RegExp(
-      '\\b${RegExp.escape(fam)}\\s*([A-Z])\\b',
-    ); // XTn + lettera
-    final fourPRe = RegExp(r'\b4\s*P\b');
+    final variantRe = RegExp('${RegExp.escape(fam)}\\s*([A-Z])');
 
     for (final p in items) {
-      final up = p.displayName.toUpperCase();
+      final src = ('${p.displayName} ${p.code}').toUpperCase();
 
-      final m = variantRe.firstMatch(up);
-      final variant = m != null ? '$fam${m.group(1)!}' : fam;
+      final norm = src.replaceAll(RegExp(r'[^A-Z0-9]'), '');
 
-      final poles = fourPRe.hasMatch(up) ? '4p' : '3p';
+      final vm = variantRe.firstMatch(src);
+      final variant = vm != null ? '$fam${vm.group(1)!}' : fam;
+
+      final poles = norm.contains('4P')
+          ? '4p'
+          : (norm.contains('3P') ? '3p' : '3p');
 
       final key = '$variant $poles';
-      map.putIfAbsent(key, () => []).add(p);
+      (map[key] ??= <Product>[]).add(p);
     }
 
     const order = ['N', 'B', 'H', 'S', 'F', 'D'];
 
     int variantRank(String key) {
-      final vm = variantRe.firstMatch(key);
-      final v = vm?.group(1) ?? 'Z'; 
+      final m = RegExp('^${RegExp.escape(fam)}([A-Z])').firstMatch(key);
+      final v = m?.group(1) ?? 'Z';
       final idx = order.indexOf(v);
       return idx == -1 ? 999 : idx;
     }

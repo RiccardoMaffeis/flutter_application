@@ -17,7 +17,7 @@ class _CartDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cart = ref.watch(cartControllerProvider);
-    final ctrl  = ref.read(cartControllerProvider.notifier);
+    final ctrl = ref.read(cartControllerProvider.notifier);
 
     return Dialog(
       backgroundColor: Colors.white,
@@ -38,7 +38,7 @@ class _CartDialog extends ConsumerWidget {
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close),
-                  )
+                  ),
                 ],
               ),
 
@@ -46,11 +46,12 @@ class _CartDialog extends ConsumerWidget {
               SizedBox(
                 height: 260, // scroll area
                 child: cart.items.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Center(child: Text('Errore: $e')),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (e, _) => Center(child: Text('Error: $e')),
                   data: (items) {
                     if (items.isEmpty) {
-                      return const Center(child: Text('Il carrello è vuoto'));
+                      return const Center(child: Text('The cart is empty'));
                     }
                     return ListView.separated(
                       itemCount: items.length,
@@ -79,12 +80,14 @@ class _CartDialog extends ConsumerWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(it.displayName,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w700,
-                                      )),
+                                  Text(
+                                    it.displayName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                   Text(
                                     it.code,
                                     style: const TextStyle(
@@ -108,8 +111,10 @@ class _CartDialog extends ConsumerWidget {
                             // stepper + delete
                             _QtyStepper(
                               qty: it.qty,
-                              onMinus: () => ctrl.setQty(it.productId, it.qty - 1),
-                              onPlus:  () => ctrl.setQty(it.productId, it.qty + 1),
+                              onMinus: () =>
+                                  ctrl.setQty(it.productId, it.qty - 1),
+                              onPlus: () =>
+                                  ctrl.setQty(it.productId, it.qty + 1),
                             ),
                             IconButton(
                               onPressed: () => ctrl.remove(it.productId),
@@ -127,7 +132,7 @@ class _CartDialog extends ConsumerWidget {
 
               // totals
               _TotalRow(label: 'Order Amount', value: cart.subtotal),
-              _TotalRow(label: 'Tax',          value: cart.tax),
+              _TotalRow(label: 'Tax', value: cart.tax),
               const Divider(height: 18, thickness: 1),
               _TotalRow(label: 'Total Payment', value: cart.total, bold: true),
 
@@ -139,7 +144,7 @@ class _CartDialog extends ConsumerWidget {
                 height: 46,
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO: vai a /checkout
+                    // TODO: go to /checkout
                     Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(
@@ -149,8 +154,10 @@ class _CartDialog extends ConsumerWidget {
                     ),
                     elevation: 3,
                   ),
-                  child: const Text('Checkout',
-                      style: TextStyle(color: Colors.white, fontSize: 18)),
+                  child: const Text(
+                    'Checkout',
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                  ),
                 ),
               ),
             ],
@@ -165,7 +172,11 @@ class _QtyStepper extends StatelessWidget {
   final int qty;
   final VoidCallback onMinus;
   final VoidCallback onPlus;
-  const _QtyStepper({required this.qty, required this.onMinus, required this.onPlus});
+  const _QtyStepper({
+    required this.qty,
+    required this.onMinus,
+    required this.onPlus,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -177,7 +188,11 @@ class _QtyStepper extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         boxShadow: const [
-          BoxShadow(color: Color(0x22000000), blurRadius: 6, offset: Offset(0,3)),
+          BoxShadow(
+            color: Color(0x22000000),
+            blurRadius: 6,
+            offset: Offset(0, 3),
+          ),
         ],
       ),
       child: Row(
@@ -185,7 +200,10 @@ class _QtyStepper extends StatelessWidget {
           _iconBtn(Icons.remove, onMinus),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text('$qty', style: const TextStyle(fontWeight: FontWeight.w800)),
+            child: Text(
+              '$qty',
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
           ),
           _iconBtn(Icons.add, onPlus),
         ],
@@ -197,9 +215,13 @@ class _QtyStepper extends StatelessWidget {
     width: 28,
     height: 28,
     child: Material(
-      color: Colors.white, shape: const CircleBorder(),
-      child: InkWell(customBorder: const CircleBorder(), onTap: onTap,
-        child: Icon(icon, size: 18)),
+      color: Colors.white,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onTap,
+        child: Icon(icon, size: 18),
+      ),
     ),
   );
 }
@@ -208,7 +230,11 @@ class _TotalRow extends StatelessWidget {
   final String label;
   final double value;
   final bool bold;
-  const _TotalRow({required this.label, required this.value, this.bold = false});
+  const _TotalRow({
+    required this.label,
+    required this.value,
+    this.bold = false,
+  });
 
   @override
   Widget build(BuildContext context) {

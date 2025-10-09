@@ -11,7 +11,7 @@ class CartState {
 
   const CartState({
     required this.items,
-    this.taxRate = 0.22, // 22% IVA (modifica se vuoi)
+    this.taxRate = 0.22,
   });
 
   CartState copyWith({

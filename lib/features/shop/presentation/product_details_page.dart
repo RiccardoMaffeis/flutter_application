@@ -36,6 +36,8 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     }
   }
 
+  double _familyImageScale(String famUp) => 0.82;
+
   @override
   Widget build(BuildContext context) {
     final details = ref.watch(productDetailsProvider(widget.productId));
@@ -48,10 +50,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
       error: (_, __) => 0,
     );
 
-    const double headerH = 320;
-    const double overlap = 60;
-    const double imageSize = 400;
-
     return details.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
@@ -61,6 +59,16 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
         final p = d.product;
         final isFav = shop.favourites.contains(p.id);
         final famTitle = _familyTitle(p.categoryId);
+
+        final w = MediaQuery.of(context).size.width;
+        final famUp = p.categoryId.toUpperCase();
+        final famScale = _familyImageScale(famUp);
+
+        const double baseFrac = 0.94;
+        final double imageSize = (w * baseFrac * famScale).clamp(240.0, 420.0);
+
+        final double headerH = imageSize * 0.86;
+        final double overlap = imageSize * 0.16;
 
         return Scaffold(
           backgroundColor: const Color(0xFFF5F5F7),
@@ -139,6 +147,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
           body: Stack(
             clipBehavior: Clip.none,
             children: [
+              // Pannello contenuti
               Positioned(
                 top: headerH - overlap,
                 left: 0,
@@ -160,13 +169,13 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                   ),
                   child: Stack(
                     children: [
-                      SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(16, 18, 16, 120),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
+                      // Header fisso (cuore + AR) + contenuto scrollabile sotto
+                      Column(
+                        children: [
+                          // --- HEADER FISSO NEL PANNELLO ---
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                            child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 IconButton(
@@ -185,7 +194,8 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                 IconButton(
                                   iconSize: 35,
                                   onPressed: () async {
-                                    final modelPath = 'assets/3Dmodels/1SDH001295R0008.glb';
+                                    final modelPath =
+                                        'lib/3Dmodels/1SDH001295R0008.glb';
                                     if (!await _assetExists(modelPath)) {
                                       if (!mounted) return;
                                       ScaffoldMessenger.of(
@@ -199,15 +209,11 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                       );
                                       return;
                                     }
-
                                     final ok =
                                         await ArCoreCheck.ensureAvailable(
                                           context,
                                         );
-                                    if (!ok) return;
-
-                                    if (!mounted) return;
-
+                                    if (!ok || !mounted) return;
                                     context.push(
                                       '/ar-live',
                                       extra: {
@@ -224,46 +230,64 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 6),
-                            const Text(
-                              'General Information',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w900,
+                          ),
+                          // --- SOLO DA QUI IN GIÙ SCORRE ---
+                          Expanded(
+                            child: SingleChildScrollView(
+                              physics: const BouncingScrollPhysics(),
+                              padding: const EdgeInsets.fromLTRB(
+                                16,
+                                18,
+                                16,
+                                120,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'General Information',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ...d.specs.entries.map(
+                                    (e) =>
+                                        _SpecRow(title: e.key, value: e.value),
+                                  ),
+                                  const Divider(height: 26, thickness: 1),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        '${d.product.price.toStringAsFixed(2)} €',
+                                        style: const TextStyle(
+                                          fontSize: 26,
+                                          fontWeight: FontWeight.w900,
+                                        ),
+                                      ),
+                                      const Spacer(),
+                                      _SmallQtyStepper(
+                                        value: qty,
+                                        onMinus: () => setState(
+                                          () => qty = qty > 1 ? qty - 1 : 1,
+                                        ),
+                                        onPlus: () => setState(() => qty++),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            ...d.specs.entries.map(
-                              (e) => _SpecRow(title: e.key, value: e.value),
-                            ),
-
-                            const Divider(height: 26, thickness: 1),
-                            Row(
-                              children: [
-                                Text(
-                                  '${d.product.price.toStringAsFixed(2)} €',
-                                  style: const TextStyle(
-                                    fontSize: 26,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                                const Spacer(),
-                                _SmallQtyStepper(
-                                  value: qty,
-                                  onMinus: () => setState(
-                                    () => qty = qty > 1 ? qty - 1 : 1,
-                                  ),
-                                  onPlus: () => setState(() => qty++),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
+
+                      // CTA Add to cart (ancorata in basso)
                       Positioned(
                         left: 80,
                         right: 80,
-                        bottom: 2,
+                        bottom: 20,
                         child: SafeArea(
                           top: false,
                           child: SizedBox(
@@ -304,19 +328,23 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                 ),
               ),
 
+              // Immagine prodotto (sempre contenuta in imageSize x imageSize)
               Positioned(
                 top: headerH - imageSize + overlap,
                 left: 0,
                 right: 0,
                 child: Center(
                   child: IgnorePointer(
-                    child: Image.asset(
-                      d.product.imageUrl,
+                    child: SizedBox(
                       width: imageSize,
                       height: imageSize,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) =>
-                          const Icon(Icons.broken_image_outlined, size: 60),
+                      child: Image.asset(
+                        d.product.imageUrl,
+                        fit: BoxFit.contain,
+                        filterQuality: FilterQuality.medium,
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(Icons.broken_image_outlined, size: 60),
+                      ),
                     ),
                   ),
                 ),
@@ -343,7 +371,7 @@ class _SpecRow extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
           ),
           const SizedBox(height: 4),
           Text(
@@ -389,13 +417,13 @@ class _SmallQtyStepper extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           _TinyIconButton(icon: Icons.remove, onTap: onMinus),
-          const SizedBox(width: 6),
+          const SizedBox(width: 4),
           SizedBox(
             width: 24,
             child: Text(
               '$value',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
             ),
           ),
           const SizedBox(width: 6),
@@ -438,8 +466,7 @@ void showAddToCartSnack(
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       behavior: SnackBarBehavior.floating,
-      backgroundColor:
-          Colors.transparent,
+      backgroundColor: Colors.transparent,
       elevation: 0,
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       duration: const Duration(seconds: 2),
@@ -506,7 +533,6 @@ void showAddToCartSnack(
               ),
             ),
             const SizedBox(width: 8),
-            // bottone "See"
             TextButton(
               onPressed: () => showCartPopup(context, ref),
               style: TextButton.styleFrom(

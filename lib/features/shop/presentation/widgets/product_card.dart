@@ -19,7 +19,6 @@ class ProductCard extends StatelessWidget {
     required this.onTap,
   });
 
-  // helper come nel ProductDetailsPage
   static Future<bool> _assetExists(String path) async {
     try {
       await rootBundle.load(path);

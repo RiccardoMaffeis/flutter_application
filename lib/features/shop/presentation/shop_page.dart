@@ -45,38 +45,49 @@ class _ShopPageState extends ConsumerState<ShopPage> {
     return {for (final k in keys) k: map[k]!};
   }
 
-  String _xt1GroupLabel(String displayName) {
-    final up = displayName.toUpperCase();
-
-    final m = RegExp(r'\bXT1([A-Z])\b').firstMatch(up);
-    final variant = m != null ? 'XT1${m.group(1)!}' : 'XT1';
-
-    final poles = up.contains('4P') ? '4p' : '3p';
-
-    return '$variant $poles';
-  }
-
-  Map<String, List<Product>> _groupXt1(List<Product> items) {
+  Map<String, List<Product>> _groupXtByVariantAndPoles(
+    List<Product> items,
+    String family, // "XT1", "XT2", ... "XT7"
+  ) {
+    final fam = family.toUpperCase();
     final map = <String, List<Product>>{};
+
+    final variantRe = RegExp(
+      '\\b${RegExp.escape(fam)}\\s*([A-Z])\\b',
+    ); // XTn + lettera
+    final fourPRe = RegExp(r'\b4\s*P\b'); // 4P con/ senza spazio
+
     for (final p in items) {
-      final key = _xt1GroupLabel(p.displayName);
+      final up = p.displayName.toUpperCase();
+
+      // variante: XTnA / "XTn A" => "XTnA", altrimenti fallback "XTn"
+      final m = variantRe.firstMatch(up);
+      final variant = m != null ? '$fam${m.group(1)!}' : fam;
+
+      // poles: se non trovi 4P => default 3p (come prima)
+      final poles = fourPRe.hasMatch(up) ? '4p' : '3p';
+
+      final key = '$variant $poles';
       map.putIfAbsent(key, () => []).add(p);
     }
 
-    int _variantRank(String key) {
-      final v = RegExp(r'XT1([A-Z])').firstMatch(key)?.group(1) ?? 'Z';
-      const order = ['N', 'B', 'H', 'S', 'F', 'D'];
+    // stesso ordine variante usato prima
+    const order = ['N', 'B', 'H', 'S', 'F', 'D'];
+
+    int variantRank(String key) {
+      final vm = variantRe.firstMatch(key);
+      final v = vm?.group(1) ?? 'Z'; // senza lettera finisce in coda
       final idx = order.indexOf(v);
       return idx == -1 ? 999 : idx;
     }
 
-    int _polesRank(String key) => key.contains('3p') ? 0 : 1;
+    int polesRank(String key) => key.endsWith(' 3p') ? 0 : 1; // 3p prima di 4p
 
     final sortedKeys = map.keys.toList()
       ..sort((a, b) {
-        final byV = _variantRank(a).compareTo(_variantRank(b));
+        final byV = variantRank(a).compareTo(variantRank(b));
         if (byV != 0) return byV;
-        final byP = _polesRank(a).compareTo(_polesRank(b));
+        final byP = polesRank(a).compareTo(polesRank(b));
         if (byP != 0) return byP;
         return a.compareTo(b);
       });
@@ -235,8 +246,9 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                         const Center(child: CircularProgressIndicator()),
                     error: (e, _) => Center(child: Text('Failed to load: $e')),
                     data: (items) {
-                      final isAll = sectionTitle.toUpperCase() == 'ALL';
-                      final isXt1 = sectionTitle.toUpperCase() == 'XT1';
+                      final titleUp = sectionTitle.toUpperCase();
+                      final isAll = titleUp == 'ALL';
+                      final isXtFamily = RegExp(r'^XT[1-7]$').hasMatch(titleUp);
 
                       if (isAll) {
                         final families = _groupByFamily(items);
@@ -303,8 +315,11 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                         );
                       }
 
-                      if (isXt1) {
-                        final groups = _groupXt1(items);
+                      if (isXtFamily) {
+                        final groups = _groupXtByVariantAndPoles(
+                          items,
+                          titleUp,
+                        );
 
                         return CustomScrollView(
                           physics: const BouncingScrollPhysics(),
@@ -319,7 +334,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                     6,
                                   ),
                                   child: Text(
-                                    entry.key,
+                                    entry.key, // es: "XT2A 3p", "XT1 4p"
                                     style: const TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.w800,

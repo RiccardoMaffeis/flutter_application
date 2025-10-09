@@ -440,7 +440,7 @@ void showAddToCartSnack(
     SnackBar(
       behavior: SnackBarBehavior.floating,
       backgroundColor:
-          Colors.transparent, // lasciamo trasparente e stilizziamo il content
+          Colors.transparent,
       elevation: 0,
       margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       duration: const Duration(seconds: 2),

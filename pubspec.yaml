@@ -29,6 +29,12 @@ flutter:
   uses-material-design: true
   assets:
     - lib/images/XT1/
+    - lib/images/XT2/
+    - lib/images/XT3/
+    - lib/images/XT4/
+    - lib/images/XT5/
+    - lib/images/XT6/
+    - lib/images/XT7/
     - lib/json/
     - lib/3Dmodels/
   fonts:

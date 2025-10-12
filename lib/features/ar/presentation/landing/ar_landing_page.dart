@@ -6,21 +6,25 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../ar/controllers/ar_landing_controller.dart';
 import '../../../ar/domain/ar_choice.dart';
 
+/// Landing screen for the AR section.
+/// Uses Riverpod to read available AR choices and GoRouter for navigation.
 class ARLandingPage extends ConsumerWidget {
   const ARLandingPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Read the list of AR choices from the controller's state.
     final choices = ref.watch(arLandingControllerProvider).choices;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7),
+      backgroundColor: const Color(0xFFF5F5F7), // Light neutral background
       body: SafeArea(
         child: Stack(
           children: [
             Column(
               children: [
                 // Header grande + underline rossa
+                // Top title centered with heavy weight
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 6),
                   child: Row(
@@ -39,6 +43,7 @@ class ARLandingPage extends ConsumerWidget {
                     ],
                   ),
                 ),
+                // Accent underline under the title (ABB-like red bar)
                 Container(
                   height: 4,
                   margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -58,7 +63,7 @@ class ARLandingPage extends ConsumerWidget {
 
                 const SizedBox(height: 14),
 
-                // Lista scelte (due “big chips”)
+                // Vertical list of tappable AR choices (big chip-like tiles)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Column(
@@ -66,7 +71,7 @@ class ARLandingPage extends ConsumerWidget {
                       for (final c in choices) ...[
                         _ChoiceTile(
                           choice: c,
-                          onTap: () => context.push('/ar/select'),
+                          onTap: () => context.push('/ar/select'), // Navigate to selection page
                         ),
                         const SizedBox(height: 12),
                       ],
@@ -74,12 +79,12 @@ class ARLandingPage extends ConsumerWidget {
                   ),
                 ),
 
-                const Spacer(),
-                const SizedBox(height: 86),
+                const Spacer(), // Pushes bottom content to the bottom
+                const SizedBox(height: 86), // Reserve space above bottom pill nav
               ],
             ),
 
-            // Bubble AI in basso a destra
+            // Floating circular button for the assistant, bottom-right
             Positioned(
               right: 16,
               bottom: 96,
@@ -89,7 +94,7 @@ class ARLandingPage extends ConsumerWidget {
                 elevation: 4,
                 child: InkWell(
                   onTap: () {
-                    // TODO: apri il tuo assistant (es. /assistant)
+                    // TODO: open your assistant route (e.g., /assistant)
                   },
                   customBorder: const CircleBorder(),
                   child: const SizedBox(
@@ -102,13 +107,15 @@ class ARLandingPage extends ConsumerWidget {
             ),
 
             // Bottom nav stile “pillola”
+            // Custom "pill" bottom navigation with 4 slots and a sliding highlight
             Positioned(
               left: 16,
               right: 16,
               bottom: 16,
               child: _BottomPillNav(
-                index: 2,
+                index: 2, // AR tab selected
                 onChanged: (i) {
+                  // Map indices to routes; ignore if already selected
                   if (i == 2) return;
                   if (i == 1) context.go('/favourites');
                   if (i == 3) context.go('/profile');
@@ -123,15 +130,18 @@ class ARLandingPage extends ConsumerWidget {
   }
 }
 
+/// Tappable tile representing one AR choice.
+/// Shows the choice title and a right-aligned preview image (if available).
 class _ChoiceTile extends StatelessWidget {
   final ARChoice choice;
   final VoidCallback onTap;
 
   const _ChoiceTile({required this.choice, required this.onTap});
 
-  /// Forza: lib/images/general/<basename>.png
+  /// Build a strict asset path from the choice's asset, forcing it into
+  /// 'lib/images/general' and ensuring the '.png' extension.
   String get _assetPath {
-    final base = choice.asset.split('/').last; // prendi solo il nome
+    final base = choice.asset.split('/').last;
     final name = base.endsWith('.png') ? base : '$base.png';
     return 'lib/images/general/$name';
   }
@@ -140,7 +150,7 @@ class _ChoiceTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      elevation: 6,
+      elevation: 6, // Card-like elevation
       shadowColor: Colors.black12,
       borderRadius: BorderRadius.circular(22),
       child: InkWell(
@@ -151,6 +161,7 @@ class _ChoiceTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(
             children: [
+              // Choice title (bold, prominent)
               Text(
                 choice.title,
                 style: const TextStyle(
@@ -159,6 +170,7 @@ class _ChoiceTile extends StatelessWidget {
                 ),
               ),
               const Spacer(),
+              // Right-side small preview image with graceful fallback icon
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.asset(
@@ -175,7 +187,7 @@ class _ChoiceTile extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Icon(Icons.chevron_right, size: 28),
+              const Icon(Icons.chevron_right, size: 28), // Disclosure arrow
             ],
           ),
         ),
@@ -184,9 +196,11 @@ class _ChoiceTile extends StatelessWidget {
   }
 }
 
+/// Custom bottom navigation styled as a rounded "pill".
+/// Shows 4 icons and animates a colored highlight under the selected one.
 class _BottomPillNav extends StatelessWidget {
-  final int index;
-  final ValueChanged<int> onChanged;
+  final int index; // Currently selected tab index (0..3)
+  final ValueChanged<int> onChanged; // Callback when a tab is tapped
 
   const _BottomPillNav({required this.index, required this.onChanged});
 
@@ -198,6 +212,7 @@ class _BottomPillNav extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
         boxShadow: const [
+          // Soft, elevated shadow stack for a floating effect
           BoxShadow(
             color: Color(0x22000000),
             blurRadius: 22,
@@ -216,11 +231,13 @@ class _BottomPillNav extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: LayoutBuilder(
         builder: (context, cons) {
+          // Compute slot width for the sliding highlight
           const pad = 6.0;
           final slotW = (cons.maxWidth - pad * 2) / 4;
 
           return Stack(
             children: [
+              // Animated colored capsule that moves to the selected slot
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOut,
@@ -236,6 +253,7 @@ class _BottomPillNav extends StatelessWidget {
                 ),
               ),
 
+              // Row of tappable icons; color switches based on selection
               Padding(
                 padding: const EdgeInsets.all(pad),
                 child: Row(
@@ -271,6 +289,7 @@ class _BottomPillNav extends StatelessWidget {
   }
 }
 
+/// Single nav icon that expands to fill its slot and toggles color when selected.
 class _NavIcon extends StatelessWidget {
   final IconData icon;
   final bool selected;
@@ -292,7 +311,7 @@ class _NavIcon extends StatelessWidget {
           child: Icon(
             icon,
             size: 34,
-            color: selected ? Colors.white : Colors.black87,
+            color: selected ? Colors.white : Colors.black87, // Contrast with highlight
           ),
         ),
       ),

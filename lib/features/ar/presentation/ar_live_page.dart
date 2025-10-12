@@ -19,6 +19,8 @@ import 'package:flutter/services.dart' show rootBundle, HapticFeedback;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
+/// Simple descriptor of an AR placeable item.
+/// `title` is for UI, `glbPath` points to a local asset, `scale` is the default 3D scale.
 class ARItem {
   final String title;
   final String glbPath;
@@ -26,6 +28,7 @@ class ARItem {
   const ARItem(this.title, this.glbPath, this.scale);
 }
 
+/// Demo catalog of ABB XT models exposed to the picker dialog.
 const List<ARItem> kXtModels = [
   ARItem('XT1 3 poli', 'lib/3Dmodels/XT1/XT1_3p.glb', 0.20),
   ARItem('XT1 4 poli', 'lib/3Dmodels/XT1/XT1_4p.glb', 0.20),
@@ -41,11 +44,15 @@ const List<ARItem> kXtModels = [
   ARItem('XT7 4 poli', 'lib/3Dmodels/XT7/XT7_4p.glb', 0.20),
 ];
 
+/// Fullscreen AR scene page:
+/// - Displays camera feed and AR planes
+/// - Lets users place one or more GLB models on tapped planes
+/// - Provides a rotation slider for the selected model (X-axis)
 class ArLivePage extends StatefulWidget {
   final String title;
-  final String? glbUrl;
-  final String? assetGlb;
-  final double scale;
+  final String? glbUrl; // Optional: load GLB from the web
+  final String? assetGlb; // Optional: load GLB from bundled assets
+  final double scale; // Default scale used when placing the model
 
   const ArLivePage({
     super.key,
@@ -60,23 +67,30 @@ class ArLivePage extends StatefulWidget {
 }
 
 class _ArLivePageState extends State<ArLivePage> {
+  // AR managers provided by ar_flutter_plugin
   ARSessionManager? _session;
   ARObjectManager? _objectMgr;
   ARAnchorManager? _anchorMgr;
 
+  // Current placed models (node + its plane anchor)
   final List<_Placed> _placed = [];
-  String? _selectedId;
-  double _sliderXDeg = 0;
-  bool _appendMode = false;
-  ARItem? _pendingItem;
+  String? _selectedId; // Name/id of the currently selected node (if any)
+  double _sliderXDeg =
+      0; // Rotation value bound to the slider (degrees around X)
+  bool _appendMode =
+      false; // If true, new placements do not clear previous nodes
+  ARItem?
+  _pendingItem; // The item selected from the picker, to be placed on next tap
 
   @override
   void dispose() {
+    // Clean scene and release session resources on page disposal
     _removeAll();
     _session?.dispose();
     super.dispose();
   }
 
+  /// Removes every placed node and its anchor from the scene and resets UI state.
   Future<void> _removeAll() async {
     for (final e in List<_Placed>.from(_placed)) {
       await _objectMgr?.removeNode(e.node);
@@ -90,6 +104,8 @@ class _ArLivePageState extends State<ArLivePage> {
     setState(() {});
   }
 
+  /// Updates the X-axis rotation for the selected node and syncs the slider value.
+  /// If no node is selected, only the slider value is updated.
   void _setSelectedXDeg(double degrees) {
     if (_selectedId == null || _objectMgr == null) {
       setState(() => _sliderXDeg = degrees);
@@ -104,14 +120,16 @@ class _ArLivePageState extends State<ArLivePage> {
 
     final node = _placed[idx].node;
 
-    // mantieni Y e Z, aggiorna X (pitch) in radianti
+    // Keep Y and Z as-is, replace X with slider value (converted to radians)
     final e = node.eulerAngles;
     final newEuler = vm.Vector3(degrees * math.pi / 180.0, e.y, e.z);
-    node.eulerAngles = newEuler; // l’ObjectManager recepisce il cambio
+    node.eulerAngles = newEuler;
 
     setState(() => _sliderXDeg = degrees);
   }
 
+  /// Copies an asset GLB into the application documents directory and returns the file name.
+  /// ar_flutter_plugin's NodeType.fileSystemAppFolderGLB expects a file located in the app folder.
   Future<String> _stageGlbIntoAppFolder(String assetPath) async {
     final data = await rootBundle.load(assetPath);
     final bytes = data.buffer.asUint8List(
@@ -130,6 +148,8 @@ class _ArLivePageState extends State<ArLivePage> {
     return fileName;
   }
 
+  /// Derives a thumbnail PNG path from the GLB asset path.
+  /// Example: 'lib/3Dmodels/XT2/XT2_4p.glb' -> 'lib/images/XT2/XT2_4p.png'
   String _imagePathFor(ARItem item) {
     var path = item.glbPath.replaceFirst('3Dmodels', 'images');
     path = path.replaceFirst(RegExp(r'\.glb$', caseSensitive: false), '');
@@ -146,11 +166,13 @@ class _ArLivePageState extends State<ArLivePage> {
       appBar: AppBar(title: Text(widget.title)),
       body: Stack(
         children: [
+          // Camera + AR rendering surface
           ARView(
             planeDetectionConfig: PlaneDetectionConfig.horizontal,
             onARViewCreated: _onViewCreated,
           ),
 
+          // Bottom helper card with quick instructions
           const Positioned(
             left: 16,
             right: 16,
@@ -158,6 +180,7 @@ class _ArLivePageState extends State<ArLivePage> {
             child: _BottomHelpCard(),
           ),
 
+          // Add button (opens the model picker dialog)
           Positioned(
             left: 12,
             top: 8,
@@ -172,6 +195,7 @@ class _ArLivePageState extends State<ArLivePage> {
             ),
           ),
 
+          // Delete-all button (clears anchors + nodes, with confirmation)
           Positioned(
             right: 8,
             top: 8,
@@ -206,7 +230,8 @@ class _ArLivePageState extends State<ArLivePage> {
             ),
           ),
 
-          // ── Bottom-center: compact rotation slider for the SELECTED model (X axis) ──
+          // Rotation slider (X-axis) shown centered above the bottom card;
+          // enabled only when a node is selected.
           Positioned(
             left: 0,
             right: 0,
@@ -219,11 +244,6 @@ class _ArLivePageState extends State<ArLivePage> {
                     horizontal: 8,
                     vertical: 6,
                   ),
-                  // Se vuoi un leggero fondo per la leggibilità, puoi scommentare:
-                  // decoration: BoxDecoration(
-                  //   color: Colors.black.withOpacity(0.25),
-                  //   borderRadius: BorderRadius.circular(18),
-                  // ),
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(
                       minWidth: 180,
@@ -296,6 +316,8 @@ class _ArLivePageState extends State<ArLivePage> {
     );
   }
 
+  /// Opens a modal dialog to pick a model to add.
+  /// When confirmed, enables "append mode": next plane tap will place the chosen item.
   Future<void> _onPressAdd() async {
     final picked = await _showModelPickerDialog(context);
     if (picked != null) {
@@ -313,6 +335,8 @@ class _ArLivePageState extends State<ArLivePage> {
     }
   }
 
+  /// Dialog showing the list of available models with thumbnails.
+  /// Returns the chosen `ARItem` or null if cancelled.
   Future<ARItem?> _showModelPickerDialog(BuildContext context) async {
     return showDialog<ARItem>(
       context: context,
@@ -406,6 +430,9 @@ class _ArLivePageState extends State<ArLivePage> {
     );
   }
 
+  /// Called when the ARView is ready. Initializes AR managers and sets callbacks:
+  /// - `onNodeTap` selects a model
+  /// - `onPlaneOrPointTap` places a model (pending or default)
   Future<void> _onViewCreated(
     ARSessionManager session,
     ARObjectManager objectMgr,
@@ -416,6 +443,7 @@ class _ArLivePageState extends State<ArLivePage> {
     _objectMgr = objectMgr;
     _anchorMgr = anchorMgr;
 
+    // Configure AR session visualization and gesture handling.
     await _session!.onInitialize(
       showFeaturePoints: false,
       showPlanes: true,
@@ -426,11 +454,12 @@ class _ArLivePageState extends State<ArLivePage> {
       handleRotation: true,
     );
     await _objectMgr!.onInitialize();
+
+    // When a node is tapped, remember it as "selected" and sync the slider to its X rotation.
     _objectMgr!.onNodeTap = (List<String> nodeNames) {
       if (nodeNames.isEmpty) return;
       final id = nodeNames.first;
 
-      // trova il nodo e leggi l’euler X per aggiornare lo slider
       final idx = _placed.indexWhere((e) => e.id == id);
       if (idx != -1) {
         final node = _placed[idx].node;
@@ -451,9 +480,11 @@ class _ArLivePageState extends State<ArLivePage> {
       );
     };
 
+    // When a plane/point is tapped, create an anchor and add the selected or default GLB node.
     _session!.onPlaneOrPointTap = (hits) async {
       if (hits.isEmpty) return;
 
+      // Unless in append mode, clear existing nodes to keep a single model in the scene.
       if (!_appendMode) {
         await _removeAll();
       }
@@ -463,11 +494,13 @@ class _ArLivePageState extends State<ArLivePage> {
       final okAnchor = await _anchorMgr!.addAnchor(anchor);
       if (okAnchor != true) return;
 
+      // Rotate 180° around Y so front faces the camera by default.
       final yaw180 = vm.Vector4(0, 1, 0, math.pi);
       final newId = 'mdl_${DateTime.now().microsecondsSinceEpoch}';
 
       ARNode node;
       if (_pendingItem != null) {
+        // A catalog item was picked -> stage from assets to app folder and load.
         final fileName = await _stageGlbIntoAppFolder(_pendingItem!.glbPath);
         node = ARNode(
           name: newId,
@@ -482,6 +515,7 @@ class _ArLivePageState extends State<ArLivePage> {
           rotation: yaw180,
         );
       } else if (widget.assetGlb != null && widget.assetGlb!.isNotEmpty) {
+        // A direct asset path was provided by the route -> stage and load.
         final fileName = await _stageGlbIntoAppFolder(widget.assetGlb!);
         node = ARNode(
           name: newId,
@@ -492,6 +526,7 @@ class _ArLivePageState extends State<ArLivePage> {
           rotation: yaw180,
         );
       } else if (widget.glbUrl != null && widget.glbUrl!.isNotEmpty) {
+        // A web URL was provided by the route -> load over network.
         node = ARNode(
           name: newId,
           type: NodeType.webGLB,
@@ -501,6 +536,7 @@ class _ArLivePageState extends State<ArLivePage> {
           rotation: yaw180,
         );
       } else {
+        // Nothing to load -> inform the user.
         if (!mounted) return;
         showArSnack(
           context,
@@ -511,12 +547,13 @@ class _ArLivePageState extends State<ArLivePage> {
         return;
       }
 
+      // Add the node attached to the newly created plane anchor.
       final okNode = await _objectMgr!.addNode(node, planeAnchor: anchor);
       if (okNode == true && mounted) {
         setState(() {
           _placed.add(_Placed(id: newId, anchor: anchor, node: node));
-          _appendMode = false;
-          _pendingItem = null;
+          _appendMode = false; // Exit append mode after first placement
+          _pendingItem = null; // Clear pending item
         });
       } else {
         if (!mounted) return;
@@ -531,6 +568,7 @@ class _ArLivePageState extends State<ArLivePage> {
     };
   }
 
+  /// Ask the user to confirm removal of all nodes/anchors.
   Future<bool?> _confirmClearAll(BuildContext context) async {
     return showDialog<bool>(
       context: context,
@@ -597,6 +635,8 @@ class _ArLivePageState extends State<ArLivePage> {
   }
 }
 
+/// Small holder for a placed model and its anchor.
+/// `id` corresponds to the node name used by ar_flutter_plugin.
 class _Placed {
   final String id;
   final ARPlaneAnchor anchor;
@@ -605,6 +645,7 @@ class _Placed {
   _Placed({required this.id, required this.anchor, required this.node});
 }
 
+/// Bottom helper card with brief usage instructions.
 class _BottomHelpCard extends StatelessWidget {
   const _BottomHelpCard();
 
@@ -638,6 +679,7 @@ class _BottomHelpCard extends StatelessWidget {
   }
 }
 
+/// Compact icon button used inside the custom snackbar.
 class _TinyIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -657,30 +699,36 @@ class _TinyIconButton extends StatelessWidget {
   }
 }
 
+/// Lightweight, custom overlay "snack" banner:
+/// - Uses `OverlayEntry` so it doesn't depend on ScaffoldMessenger
+/// - Vibrates lightly (haptic) on show
+/// - Auto-dismisses after 2 seconds
+/// - Supports optional action icon/callback and centered layout
 void showArSnack(
   BuildContext context, {
   required String title,
   String? subtitle,
   IconData icon = Icons.info_outline,
-  Color? color, // ignorato: niente rosso/verde
+  Color? color, // (Unused in current container but kept for future styling)
   IconData? actionIcon,
   VoidCallback? onAction,
-  bool centered = false, // ← abilita layout centrato
-  bool showIcon = true, // ← puoi nascondere l’icona
+  bool centered = false, // When true, layout is column-centered
+  bool showIcon = true, // Hide icon for ultra-minimal messages
 }) {
   HapticFeedback.lightImpact();
 
+  // Get the overlay layer (assumes presence of an Overlay in the tree).
   final overlay = Overlay.of(context);
 
-  // Allineato alla riga delle icone sotto l’AppBar
+  // Position the banner below the AppBar.
   final topY = MediaQuery.of(context).padding.top + kToolbarHeight + 8;
 
   final entry = OverlayEntry(
     builder: (ctx) {
       return Positioned(
         top: topY,
-        left: 64, // evita sovrapposizione con il "+"
-        right: 64, // evita sovrapposizione con il cestino
+        left: 64, // Side padding for a centered-ish banner
+        right: 64,
         child: Material(
           color: Colors.transparent,
           child: Container(
@@ -781,6 +829,7 @@ void showArSnack(
     },
   );
 
+  // Insert and schedule auto-removal after a short delay.
   overlay.insert(entry);
   Timer(const Duration(seconds: 2), entry.remove);
 }

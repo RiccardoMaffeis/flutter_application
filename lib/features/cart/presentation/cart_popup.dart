@@ -3,20 +3,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../cart/controllers/cart_controller.dart';
 
+/// Shows the cart dialog on top of the current route.
+/// Uses Riverpod [WidgetRef] to access the cart controller/state inside the dialog.
 Future<void> showCartPopup(BuildContext context, WidgetRef ref) async {
   await showDialog(
     context: context,
-    barrierDismissible: true,
+    barrierDismissible: true, // allow tap outside to close
     builder: (_) => const _CartDialog(),
   );
 }
 
+/// Modal dialog that displays cart contents, totals, and a checkout button.
+/// Listens to [cartControllerProvider] for reactive updates.
 class _CartDialog extends ConsumerWidget {
   const _CartDialog();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Read current cart state (AsyncValue<List<CartItem>> + totals).
     final cart = ref.watch(cartControllerProvider);
+    // Controller to perform mutations (set qty, remove, clear, etc.).
     final ctrl = ref.read(cartControllerProvider.notifier);
 
     return Dialog(
@@ -30,7 +36,7 @@ class _CartDialog extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // header close
+              // Header row with only a close button aligned to the right
               Row(
                 children: [
                   const SizedBox(width: 8),
@@ -42,17 +48,19 @@ class _CartDialog extends ConsumerWidget {
                 ],
               ),
 
-              // items
+              // Cart items list (fixed height, scrollable)
               SizedBox(
-                height: 260, // scroll area
+                height: 260,
                 child: cart.items.when(
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
                   error: (e, _) => Center(child: Text('Error: $e')),
                   data: (items) {
                     if (items.isEmpty) {
+                      // Empty state message
                       return const Center(child: Text('The cart is empty'));
                     }
+                    // Render each item with thumbnail, info, price, qty stepper, and delete
                     return ListView.separated(
                       itemCount: items.length,
                       separatorBuilder: (_, __) => const Divider(height: 16),
@@ -61,6 +69,7 @@ class _CartDialog extends ConsumerWidget {
                         return Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
+                            // Circular thumbnail with asset image fallback
                             CircleAvatar(
                               radius: 24,
                               backgroundColor: const Color(0xFFF4F4F4),
@@ -76,6 +85,7 @@ class _CartDialog extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(width: 12),
+                            // Product title, code and unit price
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,7 +118,7 @@ class _CartDialog extends ConsumerWidget {
                             ),
                             const SizedBox(width: 10),
 
-                            // stepper + delete
+                            // Quantity stepper and delete action
                             _QtyStepper(
                               qty: it.qty,
                               onMinus: () =>
@@ -130,7 +140,7 @@ class _CartDialog extends ConsumerWidget {
 
               const SizedBox(height: 12),
 
-              // totals
+              // Totals summary (subtotal, tax, and total)
               _TotalRow(label: 'Order Amount', value: cart.subtotal),
               _TotalRow(label: 'Tax', value: cart.tax),
               const Divider(height: 18, thickness: 1),
@@ -138,7 +148,7 @@ class _CartDialog extends ConsumerWidget {
 
               const SizedBox(height: 12),
 
-              // checkout btn
+              // Checkout button (placeholder action -> just closes the dialog)
               SizedBox(
                 width: 240,
                 height: 46,
@@ -168,6 +178,7 @@ class _CartDialog extends ConsumerWidget {
   }
 }
 
+/// Compact quantity selector with minus/plus buttons.
 class _QtyStepper extends StatelessWidget {
   final int qty;
   final VoidCallback onMinus;
@@ -197,7 +208,9 @@ class _QtyStepper extends StatelessWidget {
       ),
       child: Row(
         children: [
+          // Decrease quantity
           _iconBtn(Icons.remove, onMinus),
+          // Current quantity value
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Text(
@@ -205,12 +218,14 @@ class _QtyStepper extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
           ),
+          // Increase quantity
           _iconBtn(Icons.add, onPlus),
         ],
       ),
     );
   }
 
+  /// Small circular icon button used by the stepper.
   Widget _iconBtn(IconData icon, VoidCallback onTap) => SizedBox(
     width: 28,
     height: 28,
@@ -226,6 +241,7 @@ class _QtyStepper extends StatelessWidget {
   );
 }
 
+/// Row widget to display a label + formatted euro amount (with optional emphasis).
 class _TotalRow extends StatelessWidget {
   final String label;
   final double value;

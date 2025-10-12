@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+/// Simple value object describing an AR item (UI label + GLB asset path + scale).
 class ARItem {
   final String label;
   final String glbPath;
@@ -9,6 +10,8 @@ class ARItem {
   const ARItem(this.label, this.glbPath, this.scale);
 }
 
+/// Catalog of selectable XT models for AR.
+/// Each entry points to a local .glb asset and a default scale factor.
 const List<ARItem> kXtModels = [
   ARItem('XT1 3 poli', 'lib/3Dmodels/XT1/XT1_3p.glb', 0.20),
   ARItem('XT1 4 poli', 'lib/3Dmodels/XT1/XT1_4p.glb', 0.20),
@@ -24,9 +27,12 @@ const List<ARItem> kXtModels = [
   ARItem('XT7 4 poli', 'lib/3Dmodels/XT7/XT7_4p.glb', 0.20),
 ];
 
+/// Page that lets the user pick one of the available AR models.
+/// It shows a header and a scrollable list of buttons with thumbnails.
 class ARSelectPage extends StatelessWidget {
   const ARSelectPage({super.key});
 
+  /// Returns true if the given asset path exists and can be loaded.
   Future<bool> _assetExists(String path) async {
     try {
       await rootBundle.load(path);
@@ -36,6 +42,9 @@ class ARSelectPage extends StatelessWidget {
     }
   }
 
+  /// Handles the back action:
+  /// - If there's a previous route, pop it.
+  /// - Otherwise, go back to '/ar'.
   void _handleBack(BuildContext context) {
     if (Navigator.of(context).canPop()) {
       context.pop();
@@ -44,6 +53,14 @@ class ARSelectPage extends StatelessWidget {
     }
   }
 
+  /// Converts a GLB asset path into a PNG image preview path:
+  /// - Replaces the '3Dmodels' root with 'images'
+  /// - Drops the '.glb' extension
+  /// - Normalizes '3P'/'4P' into lowercase
+  /// - Appends '.png'
+  ///
+  /// Example:
+  /// 'lib/3Dmodels/XT2/XT2_4p.glb' -> 'lib/images/XT2/XT2_4p.png'
   String _imagePathFor(ARItem item) {
     var p = item.glbPath.replaceFirst('3Dmodels', 'images');
     p = p.replaceFirst(RegExp(r'\.glb$', caseSensitive: false), '');
@@ -54,6 +71,8 @@ class ARSelectPage extends StatelessWidget {
     return '$dir$file.png';
   }
 
+  /// Validates the presence of the GLB asset and, if found, navigates
+  /// to the AR live view passing title, asset path and scale via `extra`.
   Future<void> _openModel(BuildContext context, ARItem item) async {
     final ok = await _assetExists(item.glbPath);
     if (!ok) {
@@ -75,11 +94,14 @@ class ARSelectPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F7),
+      backgroundColor: const Color(
+        0xFFF2F2F7,
+      ), // Subtle iOS-like gray background
       body: SafeArea(
         child: Column(
           children: [
             const SizedBox(height: 6),
+            // Header with back button, centered title, and invisible trailing icon for symmetry
             Padding(
               padding: const EdgeInsets.fromLTRB(6, 8, 6, 6),
               child: Row(
@@ -97,6 +119,7 @@ class ARSelectPage extends StatelessWidget {
                           ?.copyWith(fontWeight: FontWeight.w900, fontSize: 31),
                     ),
                   ),
+                  // Placeholder to keep the title centered visually
                   Opacity(
                     opacity: 0,
                     child: IconButton(
@@ -107,6 +130,7 @@ class ARSelectPage extends StatelessWidget {
                 ],
               ),
             ),
+            // Thin accent bar under the header
             Container(
               height: 4,
               margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -117,6 +141,7 @@ class ARSelectPage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
+            // Scrollable list of model buttons with separators
             Expanded(
               child: ListView.separated(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
@@ -141,6 +166,10 @@ class ARSelectPage extends StatelessWidget {
   }
 }
 
+/// Reusable button widget for a single XT model:
+/// - Optional left thumbnail (from local assets)
+/// - Bold label
+/// - Chevron on the right
 class _XtButton extends StatelessWidget {
   final String label;
   final String? imageAsset;
@@ -151,7 +180,7 @@ class _XtButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      elevation: 2,
+      elevation: 2, // Subtle elevation for card-like appearance
       borderRadius: BorderRadius.circular(26),
       child: InkWell(
         onTap: onTap,
@@ -160,7 +189,7 @@ class _XtButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
             children: [
-              // miniatura
+              // Optional preview image; shows a neutral placeholder on error
               if (imageAsset != null) ...[
                 ClipRRect(
                   borderRadius: BorderRadius.circular(16),
@@ -184,7 +213,7 @@ class _XtButton extends StatelessWidget {
                 const SizedBox(width: 12),
               ],
 
-              // testo
+              // Main label
               Expanded(
                 child: Text(
                   label,
@@ -195,6 +224,7 @@ class _XtButton extends StatelessWidget {
                 ),
               ),
 
+              // Trailing chevron to indicate navigation
               const Icon(Icons.chevron_right, size: 28),
             ],
           ),

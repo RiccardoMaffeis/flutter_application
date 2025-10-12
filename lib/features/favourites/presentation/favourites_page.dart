@@ -9,17 +9,24 @@ import '../../shop/presentation/widgets/product_card.dart';
 import '../controllers/favourites_controller.dart';
 import '../../shop/controllers/shop_controller.dart';
 
+/// Favourites page:
+/// - Shows a grid of the user's favourite products
+/// - Reacts to favourites changes from ShopController
+/// - Provides quick access to the cart popup and bottom pill navigation
 class FavouritesPage extends ConsumerWidget {
   const FavouritesPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Derived list of favourite products (AsyncValue<List<Product>>)
     final favs = ref.watch(favouritesControllerProvider);
     final favsCtrl = ref.read(favouritesControllerProvider.notifier);
 
+    // Shop state includes the favourites Set<String> and other shop data
     final shopState = ref.watch(shopControllerProvider);
     final shopCtrl = ref.read(shopControllerProvider.notifier);
 
+    // When the favourites Set changes in ShopController, refresh local list
     ref.listen<Set<String>>(
       shopControllerProvider.select((s) => s.favourites),
       (_, __) => favsCtrl.refresh(),
@@ -32,6 +39,7 @@ class FavouritesPage extends ConsumerWidget {
           children: [
             Column(
               children: [
+                // ----- Header with title and cart button -----
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -39,7 +47,7 @@ class FavouritesPage extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      const SizedBox(width: 48),
+                      const SizedBox(width: 48), // spacer to balance cart icon
                       Expanded(
                         child: Center(
                           child: Text(
@@ -52,12 +60,14 @@ class FavouritesPage extends ConsumerWidget {
                           ),
                         ),
                       ),
+                      // Opens the cart popup dialog
                       CartIconButton(
                         onPressed: () => showCartPopup(context, ref),
                       ),
                     ],
                   ),
                 ),
+                // Accent underline under the title
                 Container(
                   height: 4,
                   margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -76,6 +86,7 @@ class FavouritesPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
 
+                // ----- Content: grid of favourite products or placeholders -----
                 Expanded(
                   child: favs.when(
                     loading: () =>
@@ -104,6 +115,7 @@ class FavouritesPage extends ConsumerWidget {
                             final p = items[i];
                             final isFav = shopState.favourites.contains(p.id);
 
+                            // Product card with favourite toggle and navigation to details
                             return ProductCard(
                               product: p,
                               isFavourite: isFav,
@@ -121,10 +133,11 @@ class FavouritesPage extends ConsumerWidget {
                     },
                   ),
                 ),
-                const SizedBox(height: 76),
+                const SizedBox(height: 76), // space for bottom pill nav overlay
               ],
             ),
 
+            // ----- Floating assistant bubble (placeholder action) -----
             Positioned(
               right: 16,
               bottom: 90,
@@ -143,12 +156,14 @@ class FavouritesPage extends ConsumerWidget {
                 ),
               ),
             ),
+
+            // ----- Bottom "pill" navigation bar -----
             Positioned(
               left: 16,
               right: 16,
               bottom: 16,
               child: _BottomPillNav(
-                index: 1,
+                index: 1, // this page (Favourites) is selected
                 onChanged: (i) {
                   if (i == 0) context.go('/home');
                   if (i == 1) return;
@@ -164,6 +179,8 @@ class FavouritesPage extends ConsumerWidget {
   }
 }
 
+/// Reusable "pill" bottom navigation with an animated highlight.
+/// Accepts the current [index] and an [onChanged] callback for navigation.
 class _BottomPillNav extends StatelessWidget {
   final int index;
   final ValueChanged<int> onChanged;
@@ -196,10 +213,12 @@ class _BottomPillNav extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: LayoutBuilder(
         builder: (context, cons) {
+          // Compute slot width for the sliding highlight (4 icons)
           const pad = 6.0;
           final slotW = (cons.maxWidth - pad * 2) / 4;
           return Stack(
             children: [
+              // Animated highlight under the selected icon
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOut,
@@ -214,6 +233,7 @@ class _BottomPillNav extends StatelessWidget {
                   ),
                 ),
               ),
+              // Row of icons; tapping invokes onChanged with the target index
               Padding(
                 padding: const EdgeInsets.all(pad),
                 child: Row(
@@ -249,6 +269,8 @@ class _BottomPillNav extends StatelessWidget {
   }
 }
 
+/// Single navigation icon within the pill bar.
+/// Adjusts color based on [selected] and triggers [onTap] when pressed.
 class _NavIcon extends StatelessWidget {
   final IconData icon;
   final bool selected;

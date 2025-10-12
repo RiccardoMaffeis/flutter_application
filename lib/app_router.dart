@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/features/ar/presentation/ar_live_page.dart';
 import 'package:flutter_application/features/ar/presentation/select/ar_select_page.dart';
+import 'package:flutter_application/features/assistant/presentation/assistant_page.dart';
 import 'package:flutter_application/features/favourites/presentation/favourites_page.dart';
 import 'package:flutter_application/features/profile/presentation/profile_page.dart';
 import 'package:flutter_application/features/shop/presentation/product_details_page.dart';
@@ -106,11 +107,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      GoRoute(
-        path: '/ar/select',
-        builder: (_, __) => const ARSelectPage(),
-      ),
+      GoRoute(path: '/ar/select', builder: (_, __) => const ARSelectPage()),
       GoRoute(path: '/ar', builder: (ctx, state) => const ARLandingPage()),
+      GoRoute(path: '/assistant', builder: (_, __) => const AssistantPage()),
     ],
   );
 });

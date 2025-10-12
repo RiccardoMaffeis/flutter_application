@@ -19,6 +19,7 @@ dependencies:
   shared_preferences: ^2.3.2
   ar_flutter_plugin: ^0.7.3
   path_provider: ^2.1.5
+  firebase_ai: ^3.3.0
 
 dev_dependencies:
   flutter_test:

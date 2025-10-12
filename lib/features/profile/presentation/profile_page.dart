@@ -182,7 +182,7 @@ class ProfilePage extends ConsumerWidget {
                                 ),
                                 divider,
                                 _ProfileRow(
-                                  label: 'City',
+                                  label: 'City of Birth',
                                   value: p.city.isEmpty ? '—' : p.city,
                                 ),
                               ],

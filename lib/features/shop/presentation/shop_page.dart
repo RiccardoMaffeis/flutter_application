@@ -425,7 +425,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                 elevation: 4,
                 child: InkWell(
                   customBorder: const CircleBorder(),
-                  onTap: () {}, // TODO: AI assistant
+                  onTap: () => context.push('/assistant'),
                   child: const SizedBox(
                     width: 44,
                     height: 44,

@@ -1,1 +1,42 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"tesi-2025-a0d0c","appId":"1:317501248625:android:1ddfc53fb76770ad68b7d0","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"tesi-2025-a0d0c","configurations":{"android":"1:317501248625:android:1ddfc53fb76770ad68b7d0","ios":"1:317501248625:ios:de39ab121775eae068b7d0","macos":"1:317501248625:ios:de39ab121775eae068b7d0","web":"1:317501248625:web:c70ded9c2455f24468b7d0","windows":"1:317501248625:web:45dd21462d6003ba68b7d0"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "tesi-2025-a0d0c",
+          "appId": "1:317501248625:android:1ddfc53fb76770ad68b7d0",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "tesi-2025-a0d0c",
+          "configurations": {
+            "android": "1:317501248625:android:1ddfc53fb76770ad68b7d0",
+            "ios": "1:317501248625:ios:de39ab121775eae068b7d0",
+            "macos": "1:317501248625:ios:de39ab121775eae068b7d0",
+            "web": "1:317501248625:web:c70ded9c2455f24468b7d0",
+            "windows": "1:317501248625:web:45dd21462d6003ba68b7d0"
+          }
+        }
+      }
+    }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix functions run lint",
+        "npm --prefix functions run build"
+      ]
+    }
+  ]
+}

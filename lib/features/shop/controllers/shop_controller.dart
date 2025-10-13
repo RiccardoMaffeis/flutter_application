@@ -1,11 +1,15 @@
-import 'package:flutter_application/features/cart/controllers/cart_controller.dart';
-import 'package:flutter_application/features/shop/domain/product_details.dart';
+import 'package:flutter_application/features/auth/controllers/auth_controller.dart';
+import 'package:flutter_application/features/auth/domain/user.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import '../domain/product_details.dart';
 import '../domain/product.dart';
 import '../domain/category.dart';
 import '../domain/products_repository.dart';
 import '../data/products_repository_impl.dart';
+
+import '../../cart/data/cart_providers.dart';
+import '../../favourites/data/favorites_providers.dart';
 
 class ShopState {
   final List<Category> categories;
@@ -51,12 +55,6 @@ final productsRepositoryProvider = Provider<ProductsRepository>((ref) {
   return ProductsRepositoryImpl();
 });
 
-final shopControllerProvider = StateNotifierProvider<ShopController, ShopState>(
-  (ref) {
-    return ShopController(ref.read(productsRepositoryProvider))..bootstrap();
-  },
-);
-
 final productDetailsProvider = FutureProvider.family<ProductDetails, String>((
   ref,
   productId,
@@ -65,29 +63,54 @@ final productDetailsProvider = FutureProvider.family<ProductDetails, String>((
   return repo.fetchProductDetails(productId);
 });
 
+final shopControllerProvider = StateNotifierProvider<ShopController, ShopState>(
+  (ref) =>
+      ShopController(ref, ref.read(productsRepositoryProvider))..bootstrap(),
+);
+
 final cartCountProvider = Provider<int>((ref) {
-  final cart = ref.watch(cartControllerProvider);
-  return cart.items.when(
-    data: (items) => items.fold<int>(0, (s, e) => s + e.qty),
-    loading: () => 0,
-    error: (_, __) => 0,
-  );
-});
+    return ref.watch(shopControllerProvider).cartCount;
+  });
 
 class ShopController extends StateNotifier<ShopState> {
+  final Ref ref;
   final ProductsRepository _repo;
-  ShopController(this._repo) : super(ShopState.initial());
+
+  ProviderSubscription<AsyncValue<Set<String>>>? _favSub;
+  ProviderSubscription<AsyncValue<int>>? _cartSub;
+
+  ShopController(this.ref, this._repo) : super(ShopState.initial());
 
   Future<void> bootstrap() async {
     final cats = await _repo.fetchCategories();
-    final favs = await _repo.fetchFavourites();
-    final count = await _repo.getCartCount();
+    state = state.copyWith(categories: cats);
 
-    state = state.copyWith(
-      categories: cats,
-      favourites: favs,
-      cartCount: count,
-    );
+    // Reagisci ai cambi di login e collega gli stream per-utente
+    ref.listen<AsyncValue<AppUser?>>(authControllerProvider, (prev, next) {
+      final uid = next.value?.uid; // <-- se il campo è 'uid', cambia qui
+      // chiudi eventuali listener precedenti
+      _favSub?.close();
+      _cartSub?.close();
+
+      if (uid == null) {
+        state = state.copyWith(favourites: {}, cartCount: 0);
+        return;
+      }
+
+      _favSub = ref.listen<AsyncValue<Set<String>>>(
+        favouritesStreamProvider(uid),
+        (_, favs) =>
+            state = state.copyWith(favourites: favs.value ?? <String>{}),
+        fireImmediately: true,
+      );
+
+      _cartSub = ref.listen<AsyncValue<int>>(
+        cartCountStreamProvider(uid),
+        (_, c) => state = state.copyWith(cartCount: c.value ?? 0),
+        fireImmediately: true,
+      );
+    }, fireImmediately: true);
+
     await loadProducts();
   }
 
@@ -105,9 +128,17 @@ class ShopController extends StateNotifier<ShopState> {
     }
   }
 
-  Future<void> toggleFavourite(String id) async {
-    await _repo.toggleFavourite(id);
-    final favs = await _repo.fetchFavourites();
-    state = state.copyWith(favourites: favs);
+  Future<void> toggleFavourite(String productId) async {
+    final uid = ref.read(authControllerProvider).value?.uid; // <- o .uid
+    if (uid == null) return; // eventualmente mostra login
+    await ref.read(favoritesRepoProvider).toggle(uid, productId);
+    // lo stream aggiorna state.favourites
+  }
+
+  @override
+  void dispose() {
+    _favSub?.close();
+    _cartSub?.close();
+    super.dispose();
   }
 }

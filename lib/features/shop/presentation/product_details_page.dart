@@ -62,6 +62,25 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     return null;
   }
 
+  Future<String?> _findPdfPath(Product p) async {
+    final hay = '${p.categoryId} ${p.code} ${p.displayName}'.toLowerCase();
+    final fam = _reFamily.firstMatch(hay)?.group(1)?.toUpperCase(); // es. XT1
+
+    final candidates = <String>[
+      'assets/pdfs/${p.code}.pdf',
+      'lib/pdfs/${p.code}.pdf',
+      if (fam != null) 'assets/pdfs/$fam.pdf',
+      if (fam != null) 'lib/pdfs/$fam.pdf',
+      if (fam != null) 'assets/pdfs/$fam/datasheet.pdf',
+      if (fam != null) 'lib/pdfs/$fam/datasheet.pdf',
+    ];
+
+    for (final path in candidates) {
+      if (await _assetExists(path)) return path;
+    }
+    return null;
+  }
+
   // (opzionale) scale AR per famiglia
   double _arScaleFor(String famUp) {
     switch (famUp) {
@@ -161,6 +180,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                 ],
               ),
             ],
+
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(6),
               child: Container(
@@ -387,6 +407,54 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                         filterQuality: FilterQuality.medium,
                         errorBuilder: (_, __, ___) =>
                             const Icon(Icons.broken_image_outlined, size: 60),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // --- NEW: Bottone PDF nella parte grigia, alto-dx ---
+              Positioned(
+                top: 8, // subito sotto la barra rossa
+                right: 12, // allineato ai margini della barra
+                child: Material(
+                  color: AppTheme.accent, // ROSSO
+                  shape: const CircleBorder(),
+                  elevation: 3,
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () async {
+                      final pdfPath = await _findPdfPath(d.product);
+                      if (pdfPath == null) {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'PDF non trovato per ${d.product.code}',
+                            ),
+                          ),
+                        );
+                        return;
+                      }
+                      if (!mounted) return;
+                      context.push(
+                        '/pdf-viewer',
+                        extra: {
+                          'title': d.product.code,
+                          'pdfAsset': pdfPath, // gestiscilo nella tua viewer
+                        },
+                      );
+                    },
+                    child: const SizedBox(
+                      width: 42,
+                      height: 42,
+                      child: Tooltip(
+                        message: 'Apri PDF / datasheet',
+                        child: Icon(
+                          Icons.picture_as_pdf,
+                          color: Colors.white,
+                          size: 22,
+                        ),
                       ),
                     ),
                   ),

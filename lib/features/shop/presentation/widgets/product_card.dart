@@ -72,7 +72,6 @@ class ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // product code
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 20, 12, 6),
               child: Text(

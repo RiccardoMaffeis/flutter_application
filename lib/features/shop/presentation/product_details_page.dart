@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_application/core/ar/arcore_check.dart';
+import 'package:flutter_application/core/pdf/pdf_cache_service.dart';
 import 'package:flutter_application/features/cart/controllers/cart_controller.dart';
 import 'package:flutter_application/features/cart/presentation/cart_popup.dart';
 import 'package:flutter_application/features/shop/domain/product.dart';
@@ -36,7 +37,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     }
   }
 
-  // Regex per famiglia (XT1, XT2, …) e poli (3p/4p/…)
   static final _reFamily = RegExp(r'\b(xt\d+)\b', caseSensitive: false);
   static final _rePoles = RegExp(
     r'\b([23468])\s*(?:p|poli)\b',
@@ -45,8 +45,8 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
 
   Future<String?> _findModelPath(Product p) async {
     final hay = '${p.categoryId} ${p.code} ${p.displayName}'.toLowerCase();
-    final fam = _reFamily.firstMatch(hay)?.group(1)?.toUpperCase(); // es. XT1
-    final poles = _rePoles.firstMatch(hay)?.group(1); // es. "3" -> "3p"
+    final fam = _reFamily.firstMatch(hay)?.group(1)?.toUpperCase();
+    final poles = _rePoles.firstMatch(hay)?.group(1);
     final pp = poles == null ? null : '${poles}p';
 
     final candidates = <String>[
@@ -62,26 +62,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     return null;
   }
 
-  Future<String?> _findPdfPath(Product p) async {
-    final hay = '${p.categoryId} ${p.code} ${p.displayName}'.toLowerCase();
-    final fam = _reFamily.firstMatch(hay)?.group(1)?.toUpperCase(); // es. XT1
-
-    final candidates = <String>[
-      'assets/pdfs/${p.code}.pdf',
-      'lib/pdfs/${p.code}.pdf',
-      if (fam != null) 'assets/pdfs/$fam.pdf',
-      if (fam != null) 'lib/pdfs/$fam.pdf',
-      if (fam != null) 'assets/pdfs/$fam/datasheet.pdf',
-      if (fam != null) 'lib/pdfs/$fam/datasheet.pdf',
-    ];
-
-    for (final path in candidates) {
-      if (await _assetExists(path)) return path;
-    }
-    return null;
-  }
-
-  // (opzionale) scale AR per famiglia
   double _arScaleFor(String famUp) {
     switch (famUp) {
       case 'XT1':
@@ -133,7 +113,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
             backgroundColor: const Color(0xFFF5F5F7),
             scrolledUnderElevation: 0,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back, size: 35),
+              icon: const Icon(Icons.arrow_back, size: 28),
               onPressed: () => context.go('/home'),
             ),
             centerTitle: true,
@@ -205,7 +185,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
           body: Stack(
             clipBehavior: Clip.none,
             children: [
-              // Pannello contenuti
               Positioned(
                 top: headerH - overlap,
                 left: 0,
@@ -227,10 +206,8 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                   ),
                   child: Stack(
                     children: [
-                      // Header fisso (cuore + AR) + contenuto scrollabile sotto
                       Column(
                         children: [
-                          // --- HEADER FISSO NEL PANNELLO ---
                           Padding(
                             padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
                             child: Row(
@@ -294,7 +271,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                               ],
                             ),
                           ),
-                          // --- SOLO DA QUI IN GIÙ SCORRE ---
                           Expanded(
                             child: SingleChildScrollView(
                               physics: const BouncingScrollPhysics(),
@@ -346,7 +322,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                         ],
                       ),
 
-                      // CTA Add to cart (ancorata in basso)
                       Positioned(
                         left: 80,
                         right: 80,
@@ -391,7 +366,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                 ),
               ),
 
-              // Immagine prodotto (sempre contenuta in imageSize x imageSize)
               Positioned(
                 top: headerH - imageSize + overlap,
                 left: 0,
@@ -412,38 +386,65 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                   ),
                 ),
               ),
-              // --- NEW: Bottone PDF nella parte grigia, alto-dx ---
               Positioned(
-                top: 8, // subito sotto la barra rossa
-                right: 12, // allineato ai margini della barra
+                top: 8,
+                right: 12,
                 child: Material(
-                  color: AppTheme.accent, // ROSSO
+                  color: AppTheme.accent,
                   shape: const CircleBorder(),
                   elevation: 3,
                   clipBehavior: Clip.antiAlias,
                   child: InkWell(
                     customBorder: const CircleBorder(),
                     onTap: () async {
-                      final pdfPath = await _findPdfPath(d.product);
-                      if (pdfPath == null) {
+                      final p = d.product;
+                      final famUpper = _reFamily
+                          .firstMatch(
+                            '${p.categoryId} ${p.code} ${p.displayName}'
+                                .toLowerCase(),
+                          )
+                          ?.group(1)
+                          ?.toUpperCase();
+
+                      if (famUpper == null) {
                         if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Famiglia non riconosciuta'),
+                          ),
+                        );
+                        return;
+                      }
+
+                      final src = await PdfCacheService.instance
+                          .resolveByFamilyAndId(
+                            famUpper: famUpper,
+                            productId: p.id,
+                          );
+
+                      if (!mounted) return;
+                      if (src == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'PDF non trovato per ${d.product.code}',
+                              'PDF non trovato: $famUpper/${p.id}.pdf',
                             ),
                           ),
                         );
                         return;
                       }
-                      if (!mounted) return;
-                      context.push(
-                        '/pdf-viewer',
-                        extra: {
-                          'title': d.product.code,
-                          'pdfAsset': pdfPath, // gestiscilo nella tua viewer
-                        },
-                      );
+
+                      if (src is PdfFile) {
+                        context.push(
+                          '/pdf-viewer',
+                          extra: {'title': p.code, 'pdfFile': src.path},
+                        );
+                      } else if (src is PdfNetwork) {
+                        context.push(
+                          '/pdf-viewer',
+                          extra: {'title': p.code, 'pdfUrl': src.url},
+                        );
+                      }
                     },
                     child: const SizedBox(
                       width: 42,

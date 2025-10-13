@@ -6,6 +6,7 @@ import 'package:flutter_application/features/ar/presentation/select/ar_select_pa
 import 'package:flutter_application/features/assistant/presentation/assistant_page.dart';
 import 'package:flutter_application/features/favourites/presentation/favourites_page.dart';
 import 'package:flutter_application/features/profile/presentation/profile_page.dart';
+import 'package:flutter_application/features/shop/presentation/pdf/pdf_viewer_page.dart';
 import 'package:flutter_application/features/shop/presentation/product_details_page.dart';
 import 'package:flutter_application/features/shop/presentation/shop_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -110,6 +111,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/ar/select', builder: (_, __) => const ARSelectPage()),
       GoRoute(path: '/ar', builder: (ctx, state) => const ARLandingPage()),
       GoRoute(path: '/assistant', builder: (_, __) => const AssistantPage()),
+      GoRoute(
+        path: '/pdf-viewer',
+        builder: (context, state) {
+          final extra = (state.extra ?? {}) as Map;
+          return PdfViewerPage(
+            title: extra['title'] as String? ?? 'PDF',
+            pdfFile: extra['pdfFile'] as String?,
+            pdfUrl: extra['pdfUrl'] as String?,
+          );
+        },
+      ),
     ],
   );
 });

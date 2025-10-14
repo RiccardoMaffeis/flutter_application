@@ -4,11 +4,13 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   cloud_firestore
+  file_saver
   firebase_auth
   firebase_core
   firebase_storage
   geolocator_windows
   permission_handler_windows
+  share_plus
   syncfusion_pdfviewer_windows
   url_launcher_windows
 )

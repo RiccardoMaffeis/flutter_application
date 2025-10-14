@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/core/theme/app_theme.dart';
+import 'package:flutter_application/features/shop/presentation/pdf/pdf_viewer_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../assistant/controllers/ai_chat_controller.dart';
 import '../../assistant/domain/ai_message.dart';
@@ -18,7 +19,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final msgs =
         ref.watch(aiChatControllerProvider).value ?? const <AiMessage>[];
 
-    // Colore di sfondo "grigio" come il dialog
     const bg = Color(0xFFF5F5F7);
 
     return Scaffold(
@@ -27,7 +27,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         child: Center(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              // Larghezza massima della card: simile a un dialog centrato
               final maxW = constraints.maxWidth < 640
                   ? constraints.maxWidth - 24
                   : 640.0;
@@ -81,8 +80,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
                             ConstrainedBox(
                               constraints: const BoxConstraints(
-                                maxHeight:
-                                    480, 
+                                maxHeight: 480,
                                 minHeight: 220,
                               ),
                               child: ClipRRect(
@@ -139,6 +137,50 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                                                   height: 1.25,
                                                 ),
                                               ),
+                                              subtitle:
+                                                  (m.role != 'user' &&
+                                                      m.sources.isNotEmpty)
+                                                  ? Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                            top: 6,
+                                                          ),
+                                                      child: Wrap(
+                                                        spacing: 6,
+                                                        runSpacing: -6,
+                                                        children: [
+                                                          for (final s
+                                                              in m.sources)
+                                                            ActionChip(
+                                                              label: Text(
+                                                                '[${s.idx}] ${s.title} · p.${s.page}',
+                                                                style:
+                                                                    const TextStyle(
+                                                                      fontSize:
+                                                                          12,
+                                                                    ),
+                                                              ),
+                                                              onPressed: () {
+                                                                Navigator.of(
+                                                                  context,
+                                                                ).push(
+                                                                  MaterialPageRoute(
+                                                                    builder: (_) => PdfViewerPage(
+                                                                      title: s
+                                                                          .title,
+                                                                      pdfUrl:
+                                                                          s.url,
+                                                                      initialPage:
+                                                                          s.page, // vedi patch sotto
+                                                                    ),
+                                                                  ),
+                                                                );
+                                                              },
+                                                            ),
+                                                        ],
+                                                      ),
+                                                    )
+                                                  : null,
                                             );
                                           },
                                         ),
@@ -170,7 +212,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                // Bottone Send rosso, stile "primary"
                                 SizedBox(
                                   height: 44,
                                   width: 52,
@@ -195,7 +236,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
                             const SizedBox(height: 12),
 
-                            // Pulsante Cancel come nel dialog
                             Row(
                               children: [
                                 Expanded(
@@ -240,6 +280,17 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final t = text.trim();
     if (t.isEmpty) return;
     final ctrl = ref.read(aiChatControllerProvider.notifier);
+
+    final wantsDocs = RegExp(
+      r'\b(confronta|confronto|differenze|compare|pdf|pagina|scheda|datasheet)\b',
+      caseSensitive: false,
+    ).hasMatch(t);
+
+    if (wantsDocs) {
+      ctrl.askFromDocs(t);
+      _c.clear();
+      return;
+    }
 
     if (RegExp(
       r'\bar\b|\bmodello\b|\b3 poli\b|\b4 poli\b',

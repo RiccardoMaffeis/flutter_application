@@ -1,8 +1,8 @@
 class DeviceCandidate {
-  final String id;       // usa l'ID che hai in app (Product.id o simile)
-  final String code;     // es. "XT3_4p"
-  final String label;    // es. "XT3 4 poli"
-  final List<String> tags; // es. ["3p", "4p", "XT3", "interruttore"]
+  final String id;
+  final String code; 
+  final String label;
+  final List<String> tags;
 
   const DeviceCandidate({
     required this.id,
@@ -17,7 +17,7 @@ class DeviceCandidate {
 }
 
 class AiPickResult {
-  final List<String> picks; // lista di ID scelti (presenti in candidates)
-  final String reason;      // spiegazione testuale breve
+  final List<String> picks;
+  final String reason;
   const AiPickResult({required this.picks, required this.reason});
 }

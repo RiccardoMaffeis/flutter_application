@@ -17,7 +17,6 @@ class FirebaseAiService {
       await a.signInAnonymously();
     }
 
-    // Vertex AI (consigliato) — cambia regione/modello via dart-define se vuoi
     const loc = String.fromEnvironment('VERTEX_LOCATION', defaultValue: 'europe-west1');
     final ai = FirebaseAI.vertexAI(auth: a, location: loc);
 
@@ -38,7 +37,6 @@ class FirebaseAiService {
     return FirebaseAiService._(a, ai, model);
   }
 
-  // ===== Chat “normale”
   Future<String> chat(List<AiMessage> history) async {
     if (history.isEmpty) return 'Say hi 👋';
     final lastUser = history.lastWhere((m) => m.role == 'user', orElse: () => history.last);
@@ -62,17 +60,11 @@ class FirebaseAiService {
     }
   }
 
-  // ===== PICKING “vincolato ai candidati”
-  //
-  // Mostra al modello una lista di candidates presenti in app e chiedi un JSON:
-  // { "picks": ["id1","id2"], "reason": "..." }
-  // Il modello NON deve inventare ID non presenti.
   Future<AiPickResult> pickDevices({
     required String userQuery,
     required List<DeviceCandidate> candidates,
-    int topK = 10, // quanti candidati passare (filtrati prima dal controller)
+    int topK = 10,
   }) async {
-    // Prepara testo candidati in righe tipo: [id] CODE | LABEL | tags=a,b,c
     final lines = candidates.take(topK).map((c) => c.toString()).join('\n');
 
     final prompt = '''
@@ -97,7 +89,6 @@ Return ONLY the JSON, no extra text.
     final resp = await _model.generateContent([Content.text(prompt)]);
     final raw = (resp.text ?? '').trim();
 
-    // Estrai il JSON anche se arrivasse con backticks
     final jsonStr = _firstJsonObject(raw);
     if (jsonStr == null) {
       return const AiPickResult(picks: [], reason: 'parse error');
@@ -107,7 +98,6 @@ Return ONLY the JSON, no extra text.
       final obj = json.decode(jsonStr) as Map<String, dynamic>;
       final picks = (obj['picks'] as List?)?.cast<String>() ?? const <String>[];
       final reason = (obj['reason'] as String?) ?? '';
-      // Filtra eventuali ID non presenti per sicurezza
       final allowed = candidates.map((c) => c.id).toSet();
       final filtered = picks.where(allowed.contains).toList();
       return AiPickResult(picks: filtered, reason: reason);
@@ -117,7 +107,6 @@ Return ONLY the JSON, no extra text.
   }
 
   String? _firstJsonObject(String s) {
-    // Cerca la prima {...} (anche dentro ```json ... ```)
     final fence = RegExp(r'```json\s*([\s\S]*?)```', multiLine: true);
     final m = fence.firstMatch(s);
     if (m != null) return m.group(1)?.trim();

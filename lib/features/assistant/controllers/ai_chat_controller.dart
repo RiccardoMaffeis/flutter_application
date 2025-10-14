@@ -1,4 +1,4 @@
-// lib/features/assistant/controllers/ai_chat_controller.dart
+import 'package:flutter_application/features/assistant/data/ai_rag_providers.dart';
 import 'package:flutter_application/features/assistant/data/ar_candidates.dart';
 import 'package:flutter_application/features/assistant/data/product_candidates.dart';
 import 'package:flutter_application/features/shop/controllers/shop_controller.dart';
@@ -32,7 +32,6 @@ class AiChatController extends StateNotifier<AsyncValue<List<AiMessage>>> {
     state = AsyncValue.data(updated);
 
     try {
-      // Attende il service (inizializzazione + sign-in anonimo + modello)
       final svc = await _ref.read(firebaseAiServiceProvider.future);
 
       final reply = await svc.chat(updated);
@@ -45,7 +44,6 @@ class AiChatController extends StateNotifier<AsyncValue<List<AiMessage>>> {
     }
   }
 
-  /// (Opzionale) versione streaming: aggiorna man mano il messaggio
   Future<void> sendStreaming(String userText) async {
     final history = state.value ?? const <AiMessage>[];
     final updated = [...history, AiMessage('user', userText)];
@@ -55,7 +53,6 @@ class AiChatController extends StateNotifier<AsyncValue<List<AiMessage>>> {
       final svc = await _ref.read(firebaseAiServiceProvider.future);
       final stream = svc.chatStream(updated);
 
-      // Aggiunge un messaggio vuoto dell’assistente, poi lo aggiorna progressivamente
       var partial = '';
       state = AsyncValue.data([...updated, AiMessage('assistant', '')]);
 
@@ -72,7 +69,6 @@ class AiChatController extends StateNotifier<AsyncValue<List<AiMessage>>> {
     }
   }
 
-  // ===== NUOVO: suggerisci dal CATALOGO (ProductsRepository)
   Future<void> suggestFromCatalog(String userText, {int topK = 10}) async {
     final history = state.value ?? const <AiMessage>[];
     final updated = [...history, AiMessage('user', userText)];
@@ -82,7 +78,6 @@ class AiChatController extends StateNotifier<AsyncValue<List<AiMessage>>> {
       final repo = _ref.read(productsRepositoryProvider);
       final all = await repo.fetchProducts();
 
-      // (opzionale) pre-filtro veloce: tieni i più vicini con string match naive
       final prelim = _preFilter(all, userText, limit: 30);
       final candidates = candidatesFromProducts(prelim);
 
@@ -93,7 +88,6 @@ class AiChatController extends StateNotifier<AsyncValue<List<AiMessage>>> {
         topK: topK,
       );
 
-      // costruisci risposta leggibile
       final picked = prelim.where((p) => pick.picks.contains(p.id)).toList();
       String msg;
       if (picked.isEmpty) {
@@ -117,14 +111,13 @@ class AiChatController extends StateNotifier<AsyncValue<List<AiMessage>>> {
     }
   }
 
-  // ===== NUOVO: suggerisci tra i MODELLI AR
   Future<void> suggestFromAR(String userText, {int topK = 10}) async {
     final history = state.value ?? const <AiMessage>[];
     final updated = [...history, AiMessage('user', userText)];
     state = AsyncValue.data(updated);
 
     try {
-      final candidates = allArCandidates(); // dai tuoi kXtModels
+      final candidates = allArCandidates();
       final svc = await _ref.read(firebaseAiServiceProvider.future);
       final pick = await svc.pickDevices(
         userQuery: userText,
@@ -147,9 +140,6 @@ class AiChatController extends StateNotifier<AsyncValue<List<AiMessage>>> {
       }
 
       state = AsyncValue.data([...updated, AiMessage('assistant', msg)]);
-
-      // QUI volendo puoi emettere un evento per aprire direttamente l'AR
-      // con il primo pick.picks[0] (usa il tuo routing /ar-live)
     } catch (e) {
       state = AsyncValue.data([
         ...updated,
@@ -158,7 +148,6 @@ class AiChatController extends StateNotifier<AsyncValue<List<AiMessage>>> {
     }
   }
 
-  // ---- pre-filter testuale semplice
   List<Product> _preFilter(List<Product> all, String q, {int limit = 30}) {
     final Q = q.toLowerCase();
     int score(Product p) {
@@ -177,5 +166,26 @@ class AiChatController extends StateNotifier<AsyncValue<List<AiMessage>>> {
 
     final sorted = [...all]..sort((a, b) => score(b).compareTo(score(a)));
     return sorted.take(limit).toList();
+  }
+
+  Future<void> askFromDocs(String userText) async {
+    final history = state.value ?? const <AiMessage>[];
+    final updated = [...history, AiMessage('user', userText)];
+    state = AsyncValue.data(updated);
+
+    try {
+      final rag = _ref.read(aiRagServiceProvider);
+      final reply = await rag.ask(userText);
+
+      state = AsyncValue.data([
+        ...updated,
+        AiMessage('assistant', reply.text, sources: reply.sources),
+      ]);
+    } catch (e) {
+      state = AsyncValue.data([
+        ...updated,
+        AiMessage('assistant', 'AI error: $e'),
+      ]);
+    }
   }
 }

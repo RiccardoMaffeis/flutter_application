@@ -17,6 +17,59 @@ class ShopPage extends ConsumerStatefulWidget {
 }
 
 class _ShopPageState extends ConsumerState<ShopPage> {
+  // --- Anti double-tap / throttle ---
+  bool _navBusy = false; // blocca navigazioni ripetute
+  DateTime? _cooldownUntil; // breve cooldown UI generico
+  final Set<String> _favBusy = <String>{}; // toggle preferiti in corso
+
+  bool get _cooldownActive =>
+      _cooldownUntil != null && DateTime.now().isBefore(_cooldownUntil!);
+
+  void _startCooldown([int ms = 700]) {
+    _cooldownUntil = DateTime.now().add(Duration(milliseconds: ms));
+  }
+
+  Future<void> _onFavToggle(String productId) async {
+    if (_favBusy.contains(productId)) return; // già in corso
+    _favBusy.add(productId);
+    setState(() {});
+    try {
+      // qualunque cosa ritorni, lo impacchetto in Future per await sicuro
+      await Future<void>.value(
+        ref.read(shopControllerProvider.notifier).toggleFavourite(productId),
+      );
+    } finally {
+      _favBusy.remove(productId);
+      if (mounted) setState(() {});
+    }
+  }
+
+  void _safeGo(BuildContext context, String route, {int cooldownMs = 500}) {
+    if (_navBusy) return;
+    _navBusy = true;
+    _startCooldown(cooldownMs);
+    setState(() {});
+    context.go(route);
+    Future.delayed(Duration(milliseconds: cooldownMs), () {
+      if (!mounted) return;
+      _navBusy = false;
+      setState(() {});
+    });
+  }
+
+  void _safePush(BuildContext context, String route, {int cooldownMs = 500}) {
+    if (_navBusy) return;
+    _navBusy = true;
+    _startCooldown(cooldownMs);
+    setState(() {});
+    context.push(route);
+    Future.delayed(Duration(milliseconds: cooldownMs), () {
+      if (!mounted) return;
+      _navBusy = false;
+      setState(() {});
+    });
+  }
+
   String _familyLabel(Product p) {
     final id = p.categoryId.toUpperCase();
     if (id.startsWith('XT')) return id.toUpperCase();
@@ -47,7 +100,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
 
   Map<String, List<Product>> _groupXtByVariantAndPoles(
     List<Product> items,
-    String family, // "XT1"..."XT7"
+    String family,
   ) {
     final fam = family.toUpperCase();
     final map = <String, List<Product>>{};
@@ -96,6 +149,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(shopControllerProvider);
+    final isProductsLoading = state.products.isLoading;
     final ctrl = ref.read(shopControllerProvider.notifier);
 
     const categoryLabels = [
@@ -135,6 +189,8 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                     children: [
                       IconButton(
                         onPressed: () {
+                          if (_cooldownActive) return;
+                          _startCooldown(500);
                           showSearch(
                             context: context,
                             delegate: ProductSearchDelegate(ref),
@@ -156,7 +212,11 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                         ),
                       ),
                       CartIconButton(
-                        onPressed: () => showCartPopup(context, ref),
+                        onPressed: () {
+                          if (_cooldownActive) return;
+                          _startCooldown(500);
+                          showCartPopup(context, ref);
+                        },
                       ),
                     ],
                   ),
@@ -219,7 +279,13 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                         backgroundColor: Colors.white,
                         selectedColor: AppTheme.accent,
                         selected: selected,
-                        onSelected: (_) => ctrl.loadProducts(categoryId: c.id),
+                        onSelected: (_) {
+                          if (selected) return;
+                          if (isProductsLoading) return;
+                          if (_cooldownActive) return;
+                          _startCooldown(600);
+                          ctrl.loadProducts(categoryId: c.id);
+                        },
                         shape: const StadiumBorder(side: BorderSide.none),
                         elevation: 3,
                         showCheckmark: false,
@@ -292,10 +358,11 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                         child: ProductCard(
                                           product: p,
                                           isFavourite: fav,
-                                          onFavToggle: () =>
-                                              ctrl.toggleFavourite(p.id),
-                                          onTap: () =>
-                                              context.go('/product/${p.id}'),
+                                          onFavToggle: () => _onFavToggle(p.id),
+                                          onTap: () => _safeGo(
+                                            context,
+                                            '/product/${p.id}',
+                                          ),
                                         ),
                                       );
                                     },
@@ -332,7 +399,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                     6,
                                   ),
                                   child: Text(
-                                    entry.key, // es: "XT2A 3p", "XT1 4p"
+                                    entry.key,
                                     style: const TextStyle(
                                       fontSize: 22,
                                       fontWeight: FontWeight.w800,
@@ -415,7 +482,6 @@ class _ShopPageState extends ConsumerState<ShopPage> {
               ],
             ),
 
-            // bubble AI in basso a destra
             Positioned(
               right: 16,
               bottom: 90,
@@ -425,7 +491,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                 elevation: 4,
                 child: InkWell(
                   customBorder: const CircleBorder(),
-                  onTap: () => context.push('/assistant'),
+                  onTap: () => _safePush(context, '/assistant'),
                   child: const SizedBox(
                     width: 44,
                     height: 44,
@@ -435,7 +501,6 @@ class _ShopPageState extends ConsumerState<ShopPage> {
               ),
             ),
 
-            // bottom nav stile “pillola”
             Positioned(
               left: 16,
               right: 16,
@@ -443,10 +508,12 @@ class _ShopPageState extends ConsumerState<ShopPage> {
               child: _BottomPillNav(
                 index: 0,
                 onChanged: (i) {
+                  if (_navBusy || _cooldownActive) return;
+                  _startCooldown(500);
                   if (i == 0) return;
-                  if (i == 1) context.go('/favourites');
-                  if (i == 3) context.go('/profile');
-                  if (i == 2) context.go('/ar');
+                  if (i == 1) _safeGo(context, '/favourites');
+                  if (i == 3) _safeGo(context, '/profile');
+                  if (i == 2) _safeGo(context, '/ar');
                 },
               ),
             ),

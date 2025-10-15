@@ -72,15 +72,21 @@ class _ArLivePageState extends State<ArLivePage> {
   ARObjectManager? _objectMgr;
   ARAnchorManager? _anchorMgr;
 
+  // Lock that prevents multiple placements from rapid taps
+  bool _placeBusy = false;
+
   // Current placed models (node + its plane anchor)
   final List<_Placed> _placed = [];
   String? _selectedId; // Name/id of the currently selected node (if any)
-  double _sliderXDeg =
-      0; // Rotation value bound to the slider (degrees around X)
-  bool _appendMode =
-      false; // If true, new placements do not clear previous nodes
-  ARItem?
-  _pendingItem; // The item selected from the picker, to be placed on next tap
+
+  // Rotation value bound to the slider (degrees around X)
+  double _sliderXDeg = 0;
+
+  // If true, new placements do not clear previous nodes
+  bool _appendMode = false;
+
+  // The item selected from the picker, to be placed on next tap
+  ARItem? _pendingItem;
 
   @override
   void dispose() {
@@ -92,9 +98,11 @@ class _ArLivePageState extends State<ArLivePage> {
 
   /// Removes every placed node and its anchor from the scene and resets UI state.
   Future<void> _removeAll() async {
+    // Remove nodes first (they reference anchors)
     for (final e in List<_Placed>.from(_placed)) {
       await _objectMgr?.removeNode(e.node);
     }
+    // Then remove anchors
     for (final e in List<_Placed>.from(_placed)) {
       await _anchorMgr?.removeAnchor(e.anchor);
     }
@@ -141,6 +149,7 @@ class _ArLivePageState extends State<ArLivePage> {
     final fileName = p.basename(assetPath);
     final outFile = File(p.join(docs.path, fileName));
 
+    // Stage the file only once to save IO
     if (!await outFile.exists()) {
       await outFile.create(recursive: true);
       await outFile.writeAsBytes(bytes, flush: true);
@@ -156,6 +165,7 @@ class _ArLivePageState extends State<ArLivePage> {
     final lastSlash = path.lastIndexOf('/');
     final dir = path.substring(0, lastSlash + 1);
     var file = path.substring(lastSlash + 1);
+    // Asset naming normalization (ensure lower-case p)
     file = file.replaceAll('3P', '3p').replaceAll('4P', '4p');
     return '$dir$file.png';
   }
@@ -310,6 +320,11 @@ class _ArLivePageState extends State<ArLivePage> {
                 ),
               ),
             ),
+          ),
+
+          // Simple loading overlay shown while placing an item (prevents double taps)
+          Positioned.fill(
+            child: _BusyOverlay(visible: _placeBusy, message: 'Placing…'),
           ),
         ],
       ),
@@ -482,88 +497,99 @@ class _ArLivePageState extends State<ArLivePage> {
 
     // When a plane/point is tapped, create an anchor and add the selected or default GLB node.
     _session!.onPlaneOrPointTap = (hits) async {
-      if (hits.isEmpty) return;
+      // Prevent double placements while we process the previous one
+      if (_placeBusy) return;
+      setState(() => _placeBusy = true);
+      try {
+        // Small debounce to absorb micro double taps
+        await Future.delayed(const Duration(milliseconds: 120));
 
-      // Unless in append mode, clear existing nodes to keep a single model in the scene.
-      if (!_appendMode) {
-        await _removeAll();
-      }
+        if (hits.isEmpty) return;
 
-      final hit = hits.first;
-      final anchor = ARPlaneAnchor(transformation: hit.worldTransform);
-      final okAnchor = await _anchorMgr!.addAnchor(anchor);
-      if (okAnchor != true) return;
+        // Unless in append mode, clear existing nodes to keep a single model.
+        if (!_appendMode) {
+          await _removeAll();
+        }
 
-      // Rotate 180° around Y so front faces the camera by default.
-      final yaw180 = vm.Vector4(0, 1, 0, math.pi);
-      final newId = 'mdl_${DateTime.now().microsecondsSinceEpoch}';
+        final hit = hits.first;
+        final anchor = ARPlaneAnchor(transformation: hit.worldTransform);
+        final okAnchor = await _anchorMgr!.addAnchor(anchor);
+        if (okAnchor != true) return;
 
-      ARNode node;
-      if (_pendingItem != null) {
-        // A catalog item was picked -> stage from assets to app folder and load.
-        final fileName = await _stageGlbIntoAppFolder(_pendingItem!.glbPath);
-        node = ARNode(
-          name: newId,
-          type: NodeType.fileSystemAppFolderGLB,
-          uri: fileName,
-          scale: vm.Vector3(
-            _pendingItem!.scale,
-            _pendingItem!.scale,
-            _pendingItem!.scale,
-          ),
-          position: vm.Vector3.zero(),
-          rotation: yaw180,
-        );
-      } else if (widget.assetGlb != null && widget.assetGlb!.isNotEmpty) {
-        // A direct asset path was provided by the route -> stage and load.
-        final fileName = await _stageGlbIntoAppFolder(widget.assetGlb!);
-        node = ARNode(
-          name: newId,
-          type: NodeType.fileSystemAppFolderGLB,
-          uri: fileName,
-          scale: vm.Vector3(widget.scale, widget.scale, widget.scale),
-          position: vm.Vector3.zero(),
-          rotation: yaw180,
-        );
-      } else if (widget.glbUrl != null && widget.glbUrl!.isNotEmpty) {
-        // A web URL was provided by the route -> load over network.
-        node = ARNode(
-          name: newId,
-          type: NodeType.webGLB,
-          uri: widget.glbUrl!,
-          scale: vm.Vector3(widget.scale, widget.scale, widget.scale),
-          position: vm.Vector3.zero(),
-          rotation: yaw180,
-        );
-      } else {
-        // Nothing to load -> inform the user.
-        if (!mounted) return;
-        showArSnack(
-          context,
-          title: 'No 3D model provided',
-          centered: true,
-          showIcon: false,
-        );
-        return;
-      }
+        // Rotate 180° around Y so front faces the camera by default.
+        final yaw180 = vm.Vector4(0, 1, 0, math.pi);
+        final newId = 'mdl_${DateTime.now().microsecondsSinceEpoch}';
 
-      // Add the node attached to the newly created plane anchor.
-      final okNode = await _objectMgr!.addNode(node, planeAnchor: anchor);
-      if (okNode == true && mounted) {
-        setState(() {
-          _placed.add(_Placed(id: newId, anchor: anchor, node: node));
-          _appendMode = false; // Exit append mode after first placement
-          _pendingItem = null; // Clear pending item
-        });
-      } else {
-        if (!mounted) return;
-        showArSnack(
-          context,
-          title: 'Failed to place the model',
-          subtitle: 'Try again or pick another file',
-          icon: Icons.error_outline,
-          centered: true,
-        );
+        ARNode node;
+        if (_pendingItem != null) {
+          // Load from catalog (bundled asset staged into app folder)
+          final fileName = await _stageGlbIntoAppFolder(_pendingItem!.glbPath);
+          node = ARNode(
+            name: newId,
+            type: NodeType.fileSystemAppFolderGLB,
+            uri: fileName,
+            scale: vm.Vector3(
+              _pendingItem!.scale,
+              _pendingItem!.scale,
+              _pendingItem!.scale,
+            ),
+            position: vm.Vector3.zero(),
+            rotation: yaw180,
+          );
+        } else if (widget.assetGlb != null && widget.assetGlb!.isNotEmpty) {
+          // Load a specific asset passed via route
+          final fileName = await _stageGlbIntoAppFolder(widget.assetGlb!);
+          node = ARNode(
+            name: newId,
+            type: NodeType.fileSystemAppFolderGLB,
+            uri: fileName,
+            scale: vm.Vector3(widget.scale, widget.scale, widget.scale),
+            position: vm.Vector3.zero(),
+            rotation: yaw180,
+          );
+        } else if (widget.glbUrl != null && widget.glbUrl!.isNotEmpty) {
+          // Load a GLB from network
+          node = ARNode(
+            name: newId,
+            type: NodeType.webGLB,
+            uri: widget.glbUrl!,
+            scale: vm.Vector3(widget.scale, widget.scale, widget.scale),
+            position: vm.Vector3.zero(),
+            rotation: yaw180,
+          );
+        } else {
+          // Nothing to load -> inform the user.
+          if (!mounted) return;
+          showArSnack(
+            context,
+            title: 'No 3D model provided',
+            centered: true,
+            showIcon: false,
+          );
+          return;
+        }
+
+        // Add the node attached to the newly created plane anchor.
+        final okNode = await _objectMgr!.addNode(node, planeAnchor: anchor);
+        if (okNode == true && mounted) {
+          setState(() {
+            _placed.add(_Placed(id: newId, anchor: anchor, node: node));
+            _appendMode = false; // Exit append mode after first placement
+            _pendingItem = null; // Clear pending item
+          });
+        } else {
+          if (!mounted) return;
+          showArSnack(
+            context,
+            title: 'Failed to place the model',
+            subtitle: 'Try again or pick another file',
+            icon: Icons.error_outline,
+            centered: true,
+          );
+        }
+      } finally {
+        // Always release the lock and hide the overlay
+        if (mounted) setState(() => _placeBusy = false);
       }
     };
   }
@@ -672,6 +698,64 @@ class _BottomHelpCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Lightweight fullscreen busy overlay with a small progress indicator.
+/// Blocks interaction (via IgnorePointer) only while visible.
+class _BusyOverlay extends StatelessWidget {
+  final bool visible;
+  final String message;
+  const _BusyOverlay({required this.visible, this.message = 'Loading…'});
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      ignoring: !visible, // pass through taps when not visible
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 150),
+        opacity: visible ? 1 : 0,
+        child: Container(
+          color: Colors.black.withOpacity(0.15), // subtle dim background
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x22000000),
+                    blurRadius: 16,
+                    offset: Offset(0, 8),
+                  ),
+                ],
+                border: Border.all(color: const Color(0x11000000)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    message,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

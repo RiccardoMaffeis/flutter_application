@@ -23,6 +23,8 @@ class ProductDetailsPage extends ConsumerStatefulWidget {
 class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
   int qty = 1;
 
+  bool _pdfBusy = false;
+
   String _familyTitle(String categoryId) {
     final up = categoryId.toUpperCase();
     return up.startsWith('XT') ? up : 'Product';
@@ -396,65 +398,94 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                   clipBehavior: Clip.antiAlias,
                   child: InkWell(
                     customBorder: const CircleBorder(),
-                    onTap: () async {
-                      final p = d.product;
-                      final famUpper = _reFamily
-                          .firstMatch(
-                            '${p.categoryId} ${p.code} ${p.displayName}'
-                                .toLowerCase(),
-                          )
-                          ?.group(1)
-                          ?.toUpperCase();
+                    onTap: _pdfBusy
+                        ? null
+                        : () async {
+                            setState(() => _pdfBusy = true);
+                            try {
+                              // (facoltativo) piccolo delay anti-tap impulsivo
+                              await Future.delayed(
+                                const Duration(milliseconds: 120),
+                              );
 
-                      if (famUpper == null) {
-                        if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Famiglia non riconosciuta'),
-                          ),
-                        );
-                        return;
-                      }
+                              final p = d.product;
+                              final famUpper = _reFamily
+                                  .firstMatch(
+                                    '${p.categoryId} ${p.code} ${p.displayName}'
+                                        .toLowerCase(),
+                                  )
+                                  ?.group(1)
+                                  ?.toUpperCase();
 
-                      final src = await PdfCacheService.instance
-                          .resolveByFamilyAndId(
-                            famUpper: famUpper,
-                            productId: p.id,
-                          );
+                              if (famUpper == null) {
+                                if (!mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Family not recognized'),
+                                  ),
+                                );
+                                return;
+                              }
 
-                      if (!mounted) return;
-                      if (src == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'PDF non trovato: $famUpper/${p.id}.pdf',
-                            ),
-                          ),
-                        );
-                        return;
-                      }
+                              final src = await PdfCacheService.instance
+                                  .resolveByFamilyAndId(
+                                    famUpper: famUpper,
+                                    productId: p.id,
+                                  );
 
-                      if (src is PdfFile) {
-                        context.push(
-                          '/pdf-viewer',
-                          extra: {'title': p.code, 'pdfFile': src.path},
-                        );
-                      } else if (src is PdfNetwork) {
-                        context.push(
-                          '/pdf-viewer',
-                          extra: {'title': p.code, 'pdfUrl': src.url},
-                        );
-                      }
-                    },
-                    child: const SizedBox(
+                              if (!mounted) return;
+                              if (src == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'PDF not found: $famUpper/${p.id}.pdf',
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+
+                              if (src is PdfFile) {
+                                await context.push(
+                                  '/pdf-viewer',
+                                  extra: {'title': p.code, 'pdfFile': src.path},
+                                );
+                              } else if (src is PdfNetwork) {
+                                await context.push(
+                                  '/pdf-viewer',
+                                  extra: {'title': p.code, 'pdfUrl': src.url},
+                                );
+                              }
+                            } finally {
+                              if (mounted) setState(() => _pdfBusy = false);
+                            }
+                          },
+
+                    child: SizedBox(
                       width: 42,
                       height: 42,
                       child: Tooltip(
-                        message: 'Apri PDF / datasheet',
-                        child: Icon(
-                          Icons.picture_as_pdf,
-                          color: Colors.white,
-                          size: 22,
+                        message: 'Open PDF / datasheet',
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 120),
+                          child: _pdfBusy
+                              ? const SizedBox(
+                                  key: ValueKey('pdfbusy'),
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : const Icon(
+                                  key: ValueKey('pdficon'),
+                                  Icons.picture_as_pdf,
+                                  color: Colors.white,
+                                  size: 22,
+                                ),
                         ),
                       ),
                     ),

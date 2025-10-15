@@ -127,7 +127,12 @@ class _CartDialog extends ConsumerWidget {
                                   ctrl.setQty(it.productId, it.qty + 1),
                             ),
                             IconButton(
-                              onPressed: () => ctrl.remove(it.productId),
+                              onPressed: () async {
+                                await Future.delayed(
+                                  const Duration(milliseconds: 350),
+                                );
+                                await ctrl.remove(it.productId);
+                              },
                               icon: const Icon(Icons.delete_outline),
                             ),
                           ],
@@ -154,7 +159,6 @@ class _CartDialog extends ConsumerWidget {
                 height: 46,
                 child: ElevatedButton(
                   onPressed: () {
-                    // TODO: go to /checkout
                     Navigator.of(context).pop();
                   },
                   style: ElevatedButton.styleFrom(

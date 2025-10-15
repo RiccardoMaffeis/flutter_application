@@ -5,7 +5,7 @@ import 'package:flutter_application/core/ar/arcore_check.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/product.dart';
 
-class ProductCard extends StatelessWidget {
+class ProductCard extends StatefulWidget {
   final Product product;
   final bool isFavourite;
   final VoidCallback onFavToggle;
@@ -19,6 +19,21 @@ class ProductCard extends StatelessWidget {
     required this.onTap,
   });
 
+  @override
+  State<ProductCard> createState() => _ProductCardState();
+}
+
+class _ProductCardState extends State<ProductCard> {
+  bool _cardBusy = false; 
+  bool _favBusy = false; 
+  bool _arBusy = false; 
+
+  DateTime? _cooldownUntil;
+  bool get _cooldownActive =>
+      _cooldownUntil != null && DateTime.now().isBefore(_cooldownUntil!);
+  void _startCooldown([int ms = 600]) =>
+      _cooldownUntil = DateTime.now().add(Duration(milliseconds: ms));
+
   static final RegExp _reFamily = RegExp(r'xt\d+', caseSensitive: false);
   static final RegExp _rePoles = RegExp(
     r'([23468])\s*(?:p|poli|pole|poles)\b',
@@ -27,7 +42,6 @@ class ProductCard extends StatelessWidget {
 
   static Future<String?> _findModelPath(Product p) async {
     final hay = '${p.categoryId} ${p.code} ${p.displayName}'.toLowerCase();
-
     final fam = _reFamily.firstMatch(hay)?.group(0)?.toUpperCase();
     final polesNum = _rePoles.firstMatch(hay)?.group(1);
     final poles = polesNum == null ? null : '${polesNum}p';
@@ -54,11 +68,77 @@ class ProductCard extends StatelessWidget {
     }
   }
 
+  void _safeCardTap() {
+    if (_cardBusy || _cooldownActive) return;
+    _cardBusy = true;
+    _startCooldown(500);
+    setState(() {});
+    widget.onTap();
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (!mounted) return;
+      _cardBusy = false;
+      setState(() {});
+    });
+  }
+
+  Future<void> _safeFavToggle() async {
+    if (_favBusy || _cooldownActive) return;
+    setState(() {
+      _favBusy = true;
+      _startCooldown(500);
+    });
+    try {
+      widget.onFavToggle();
+    } finally {
+      if (mounted) {
+        await Future.delayed(const Duration(milliseconds: 300));
+        setState(() => _favBusy = false);
+      }
+    }
+  }
+
+  Future<void> _openAR() async {
+    if (_arBusy || _cooldownActive) return;
+    setState(() {
+      _arBusy = true;
+      _startCooldown(600);
+    });
+    try {
+      final modelPath = await _findModelPath(widget.product);
+      if (modelPath == null) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('3D model not found for ${widget.product.code}'),
+          ),
+        );
+        return;
+      }
+
+      final ok = await ArCoreCheck.ensureAvailable(context);
+      if (!ok || !context.mounted) return;
+
+      await context.push(
+        '/ar-live',
+        extra: {
+          'title': widget.product.code,
+          'assetGlb': modelPath,
+          'scale': 0.18,
+        },
+      );
+    } finally {
+      if (mounted) setState(() => _arBusy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const double titleFontSize = 14;
     const double titleLineHeight = 1.25;
     final double twoLinesHeight = titleFontSize * titleLineHeight * 2;
+
+    final isFavourite = widget.isFavourite;
+    final product = widget.product;
 
     return Material(
       color: Colors.white,
@@ -68,7 +148,7 @@ class ProductCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         borderRadius: BorderRadius.circular(24),
-        onTap: onTap,
+        onTap: _cardBusy ? null : _safeCardTap,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -86,7 +166,6 @@ class ProductCard extends StatelessWidget {
               ),
             ),
 
-            // image (ENLARGED)
             Expanded(
               child: ClipRRect(
                 borderRadius: const BorderRadius.vertical(
@@ -150,52 +229,54 @@ class ProductCard extends StatelessWidget {
                           width: 36,
                           height: 36,
                         ),
-                        onPressed: onFavToggle,
-                        icon: Icon(
-                          isFavourite ? Icons.favorite : Icons.favorite_border,
-                          color: isFavourite ? AppTheme.accent : Colors.black,
-                          size: 35,
-                        ),
+                        onPressed: _favBusy ? null : _safeFavToggle,
+                        icon: _favBusy
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Icon(
+                                isFavourite
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
+                                color: isFavourite
+                                    ? AppTheme.accent
+                                    : Colors.black,
+                                size: 35,
+                              ),
                       ),
+
                       Material(
                         color: Colors.white,
                         shape: const CircleBorder(),
                         child: InkWell(
                           customBorder: const CircleBorder(),
-                          onTap: () async {
-                            final modelPath = await _findModelPath(product);
-
-                            if (modelPath == null) {
-                              if (!context.mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    '3D model not found for ${product.code}',
-                                  ),
-                                ),
-                              );
-                              return;
-                            }
-
-                            final ok = await ArCoreCheck.ensureAvailable(
-                              context,
-                            );
-                            if (!ok || !context.mounted) return;
-
-                            context.push(
-                              '/ar-live',
-                              extra: {
-                                'title': product.code,
-                                'assetGlb': modelPath,
-                                'scale': 0.18,
-                              },
-                            );
-                          },
-
-                          child: const SizedBox(
+                          onTap: _arBusy ? null : _openAR,
+                          child: SizedBox(
                             width: 36,
                             height: 36,
-                            child: Icon(Icons.view_in_ar, size: 35),
+                            child: Center(
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 150),
+                                child: _arBusy
+                                    ? const SizedBox(
+                                        key: ValueKey('arbusy'),
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Icon(
+                                        key: ValueKey('aricon'),
+                                        Icons.view_in_ar,
+                                        size: 35,
+                                      ),
+                              ),
+                            ),
                           ),
                         ),
                       ),

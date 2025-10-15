@@ -125,7 +125,7 @@ class FavouritesPage extends ConsumerWidget {
                               },
                               onTap: () => context.go(
                                 '/product/${p.id}',
-                              ), // TODO: dettaglio/AR
+                              ),
                             );
                           },
                         ),

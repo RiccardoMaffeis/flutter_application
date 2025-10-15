@@ -4,8 +4,9 @@ import '../../shop/domain/product.dart';
 import '../../shop/domain/products_repository.dart';
 import '../../shop/controllers/shop_controller.dart';
 
-/// Espone i preferiti come AsyncValue<List<Product>>, ricalcolando
-/// quando cambiano (1) l'insieme degli ID preferiti o (2) la lista prodotti.
+/// Exposes the favourites list as an AsyncValue<List<Product>>.
+/// IMPORTANT: This controller ignores any product filters applied in other pages
+/// (e.g., Home) by always recomputing against the full catalog from the repository.
 final favouritesControllerProvider = StateNotifierProvider.autoDispose<
     FavouritesController,
     AsyncValue<List<Product>>>((ref) {
@@ -15,68 +16,56 @@ final favouritesControllerProvider = StateNotifierProvider.autoDispose<
 
 class FavouritesController extends StateNotifier<AsyncValue<List<Product>>> {
   FavouritesController(this._ref, this._repo) : super(const AsyncLoading()) {
-    // Prima computazione
-    _recompute();
-
-    // Riascolta quando cambia l'insieme di preferiti
+    // Recompute whenever the favourites Set changes in ShopController.
     _favSub = _ref.listen<Set<String>>(
       shopControllerProvider.select((s) => s.favourites),
       (_, __) => _recompute(),
     );
 
-    // Riascolta quando cambia la lista prodotti (loading/data/error)
-    _prodSub = _ref.listen<AsyncValue<List<Product>>>(
-      shopControllerProvider.select((s) => s.products),
-      (_, __) => _recompute(),
-    );
+    // Initial computation.
+    _recompute();
   }
 
   final Ref _ref;
   final ProductsRepository _repo;
   late final ProviderSubscription<Set<String>> _favSub;
-  late final ProviderSubscription<AsyncValue<List<Product>>> _prodSub;
 
-  /// Ricalcola la lista preferiti:
-  /// - prova a usare i prodotti già presenti nello ShopController;
-  /// - se non disponibili, fa fallback su fetchProducts() del repository.
+  /// Rebuilds the favourites list from the full, unfiltered product catalog.
+  /// This ensures the Favourites page is independent from any filters applied elsewhere.
   Future<void> _recompute() async {
     try {
-      // 1) ID preferiti aggiornati (già per-utente via Firestore)
       final favIds = _ref.read(shopControllerProvider).favourites;
 
-      // 2) Prova a usare quelli già caricati nello ShopController
-      final productsAV = _ref.read(shopControllerProvider).products;
-      final cached = productsAV.maybeWhen<List<Product>?>(
-        data: (list) => list,
-        orElse: () => null,
-      );
+      // Fast path: nothing to show.
+      if (favIds.isEmpty) {
+        state = const AsyncData(<Product>[]);
+        return;
+      }
 
-      final all = cached ?? await _repo.fetchProducts();
+      // Always load the full catalog, or (preferably) fetch only the required IDs if supported.
+      final allProducts = await _repo.fetchProducts();
 
-      // 3) Filtra
-      final favs = all.where((p) => favIds.contains(p.id)).toList();
+      // Build the favourites list by intersecting the full catalog with the favourite IDs.
+      final favs = allProducts.where((p) => favIds.contains(p.id)).toList();
+
       state = AsyncData(favs);
     } catch (e, st) {
       state = AsyncError(e, st);
     }
   }
 
-  /// Forza un ricalcolo (utile su pull-to-refresh). Non interroga più
-  /// il repository dei preferiti: la fonte è lo stream del ShopController.
+  /// Manual refresh trigger (useful after external mutations).
   Future<void> refresh() => _recompute();
 
-  /// Toggle preferito: delega allo ShopController (che persiste su Firestore).
-  /// Lo stream aggiornerà i preferiti e scatenerà _recompute().
+  /// Convenience toggle that also recomputes the favourites list.
   Future<void> toggle(Product p) async {
     await _ref.read(shopControllerProvider.notifier).toggleFavourite(p.id);
-    // opzionale: feedback immediato
     await _recompute();
   }
 
   @override
   void dispose() {
     _favSub.close();
-    _prodSub.close();
     super.dispose();
   }
 }

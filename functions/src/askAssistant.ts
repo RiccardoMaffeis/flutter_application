@@ -1,65 +1,75 @@
 import { onRequest } from "firebase-functions/v2/https";
 import { GoogleGenAI } from "@google/genai";
 
+const PROJECT = process.env.GOOGLE_CLOUD_PROJECT || "tesi-2025-a0d0c";
+const LOCATION = process.env.GOOGLE_CLOUD_LOCATION || "us-central1";
 const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
-const DATA_STORE = process.env.VERTEX_DATA_STORE!;
+const DATASTORE = process.env.VERTEX_DATA_STORE!;
 
-export const askAssistant = onRequest({ cors: true }, async (req, res) => {
+export const askAssistant = onRequest({ cors: true, region: "us-central1" }, async (req, res) => {
   try {
-    const { query } = (req.body ?? {}) as { query?: string };
-    if (!query) {
-      res.status(400).json({ error: "missing query" });
+    if (req.method === "OPTIONS") {
+      res.set("Access-Control-Allow-Origin", "*");
+      res.set("Access-Control-Allow-Headers", "content-type");
+      res.status(204).send("");
       return;
     }
 
-    const ai = new GoogleGenAI({ apiVersion: "v1" });
+    const { query } = (req.body ?? {}) as { query?: string };
+    if (!query) { res.status(400).json({ error: "missing query" }); return; }
 
-    const tool = {
-      retrieval: {
-        vertexAiSearch: { datastore: DATA_STORE },
-      },
-    } as const;
-
-    const sys = [
-      "Sei un assistente tecnico. Rispondi SOLO usando i documenti recuperati.",
-      "Se un'informazione non è nei documenti, scrivi: 'Non disponibile nei documenti'.",
-      "Per confronti, usa tabella Markdown: Modello | In | V | Poli | Icu/Ics | Protezioni | Dimensioni | Note",
-    ].join("\n");
-
-    const response = await ai.models.generateContent({
-      model: MODEL,
-      contents: [
-        { role: "system", parts: [{ text: sys }] },
-        { role: "user", parts: [{ text: query }] },
-      ],
-      config: { tools: [tool], temperature: 0.2 },
+    const ai = new GoogleGenAI({
+      vertexai: true,
+      project: PROJECT,
+      location: LOCATION,
+      apiVersion: "v1",
     });
 
-    const answer = (response as any).text ?? "";
+    const retrievalTool = { retrieval: { vertexAiSearch: { datastore: DATASTORE } } } as const;
+
+    const resp = await ai.models.generateContent({
+      model: MODEL,
+      contents: [{ role: "user", parts: [{ text: query }] }],
+      config: {
+        systemInstruction: "Answer ONLY from the documents; if not found: 'Not available in the documents'.",
+        tools: [retrievalTool],
+        temperature: 0.2,
+      },
+    });
+
+    const answer =
+      (resp as any).text ??
+      resp?.candidates?.[0]?.content?.parts?.map((p: any) => p?.text ?? "").join("") ??
+      "";
 
     const gm: any =
-      (response as any).groundingMetadata ??
-      (response as any).response?.groundingMetadata ??
+      (resp as any).groundingMetadata ??
+      resp?.candidates?.[0]?.groundingMetadata ??
       {};
-    const chunks: any[] = gm.groundingChunks ?? [];
+
+    const chunks = gm.groundingChunks ?? gm.groundingSupports ?? [];
     const sources = chunks
-      .map((c, i) => {
-        const rc = c.retrievedContext;
-        if (rc?.source) {
-          const title = rc.source.title || rc.source.uri || "Documento";
-          const url = rc.source.uri || "";
-          const page = rc.pageNumber || rc.metadata?.pageNumber || 1;
-          return { idx: i + 1, title, page, url };
-        }
-        return null;
+      .map((c: any, i: number) => {
+        const rc = c.retrievedContext || c.context || {};
+        const src = rc.source || {};
+        const url = src.uri || rc.uri || "";
+        const title = src.title || rc.title || url || "Document";
+        if (!url && !title) return null;
+        return {
+          idx: i + 1,
+          title,
+          url,
+          page: rc.pageNumber ?? rc.metadata?.pageNumber ?? c.pageNumber ?? 1,
+        };
       })
       .filter(Boolean);
 
-    res.json({ answer, sources });
-    return;
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: String(e) });
-    return;
+    res.set("Access-Control-Allow-Origin", "*").json({ answer, sources });
+  } catch (e: any) {
+    console.error("askAssistant error:", e?.response ?? e);
+    res.status(e?.status || e?.code || 500).json({
+      error: e?.message || String(e),
+      details: e?.response || e?.result || null,
+    });
   }
 });

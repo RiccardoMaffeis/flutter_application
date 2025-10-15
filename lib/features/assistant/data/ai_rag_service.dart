@@ -10,7 +10,7 @@ class AiReply {
 }
 
 class AiRagService {
-  final String endpoint; // es. https://<region>-<project>.cloudfunctions.net/askAssistant
+  final String endpoint;
   const AiRagService(this.endpoint);
 
   Future<AiReply> ask(String query) async {

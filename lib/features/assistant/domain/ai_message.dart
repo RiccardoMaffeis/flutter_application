@@ -1,10 +1,9 @@
-// features/assistant/domain/ai_message.dart
 import 'ai_source.dart';
 
 class AiMessage {
   final String role;
   final String content;
-  final List<AiSource> sources; // <-- NEW (opzionale)
+  final List<AiSource> sources;
 
   const AiMessage(this.role, this.content, {this.sources = const []});
 

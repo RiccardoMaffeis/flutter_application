@@ -54,7 +54,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                               ),
                             ),
                             const SizedBox(height: 6),
-                            // --- Sottolineatura rossa in stile app ---
                             Container(
                               height: 4,
                               margin: const EdgeInsets.symmetric(
@@ -92,7 +91,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                                           child: Padding(
                                             padding: EdgeInsets.all(16.0),
                                             child: Text(
-                                              'Scrivi un messaggio qui sotto…',
+                                              'Type a message below…',
                                               style: TextStyle(
                                                 color: Colors.black54,
                                               ),
@@ -171,7 +170,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                                                                       pdfUrl:
                                                                           s.url,
                                                                       initialPage:
-                                                                          s.page, // vedi patch sotto
+                                                                          s.page,
                                                                     ),
                                                                   ),
                                                                 );
@@ -190,7 +189,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
                             const SizedBox(height: 12),
 
-                            // Input + Send (integrati nella card)
                             Row(
                               children: [
                                 Expanded(
@@ -282,7 +280,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     final ctrl = ref.read(aiChatControllerProvider.notifier);
 
     final wantsDocs = RegExp(
-      r'\b(confronta|confronto|differenze|compare|pdf|pagina|scheda|datasheet)\b',
+      r'\b(compare|comparison|differences?|pdf|page|sheet|datasheet|manual|'
+      r'weight|mass|dimensions?|size|width|height|depth|'
+      r'icu|ics|current|voltage|breaking|power|curve|range|adjust(ment)?)\b',
       caseSensitive: false,
     ).hasMatch(t);
 
@@ -293,7 +293,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     }
 
     if (RegExp(
-      r'\bar\b|\bmodello\b|\b3 poli\b|\b4 poli\b',
+      r'\bar\b|\bmodel\b|\b3[-\s]?pole(s)?\b|\b4[-\s]?pole(s)?\b',
       caseSensitive: false,
     ).hasMatch(t)) {
       ctrl.suggestFromAR(t);

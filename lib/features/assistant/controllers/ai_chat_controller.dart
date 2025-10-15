@@ -91,7 +91,8 @@ class AiChatController extends StateNotifier<AsyncValue<List<AiMessage>>> {
       final picked = prelim.where((p) => pick.picks.contains(p.id)).toList();
       String msg;
       if (picked.isEmpty) {
-        msg = 'I did not find a good match among your catalog.';
+        await askFromDocs(userText);
+        return;
       } else {
         final bullet = picked
             .map((p) => '• ${p.displayName} (${p.code})')

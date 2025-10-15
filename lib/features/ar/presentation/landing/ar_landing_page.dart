@@ -93,9 +93,7 @@ class ARLandingPage extends ConsumerWidget {
                 shape: const CircleBorder(),
                 elevation: 4,
                 child: InkWell(
-                  onTap: () {
-                    // TODO: open your assistant route (e.g., /assistant)
-                  },
+                  onTap: () => context.push('/assistant'),
                   customBorder: const CircleBorder(),
                   child: const SizedBox(
                     width: 44,

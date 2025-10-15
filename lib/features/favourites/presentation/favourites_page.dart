@@ -147,7 +147,7 @@ class FavouritesPage extends ConsumerWidget {
                 elevation: 4,
                 child: InkWell(
                   customBorder: const CircleBorder(),
-                  onTap: () {}, // TODO
+                  onTap: () => context.push('/assistant'),
                   child: const SizedBox(
                     width: 44,
                     height: 44,

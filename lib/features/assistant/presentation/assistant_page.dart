@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application/core/theme/app_theme.dart';
-import 'package:flutter_application/features/shop/presentation/pdf/pdf_viewer_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../assistant/controllers/ai_chat_controller.dart';
 import '../../assistant/domain/ai_message.dart';
@@ -124,7 +123,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                                                   isUser
                                                       ? Icons.person
                                                       : Icons
-                                                            .smart_toy_outlined,
+                                                          .smart_toy_outlined,
                                                   color: Colors.black87,
                                                 ),
                                               ),
@@ -136,50 +135,8 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                                                   height: 1.25,
                                                 ),
                                               ),
-                                              subtitle:
-                                                  (m.role != 'user' &&
-                                                      m.sources.isNotEmpty)
-                                                  ? Padding(
-                                                      padding:
-                                                          const EdgeInsets.only(
-                                                            top: 6,
-                                                          ),
-                                                      child: Wrap(
-                                                        spacing: 6,
-                                                        runSpacing: -6,
-                                                        children: [
-                                                          for (final s
-                                                              in m.sources)
-                                                            ActionChip(
-                                                              label: Text(
-                                                                '[${s.idx}] ${s.title} · p.${s.page}',
-                                                                style:
-                                                                    const TextStyle(
-                                                                      fontSize:
-                                                                          12,
-                                                                    ),
-                                                              ),
-                                                              onPressed: () {
-                                                                Navigator.of(
-                                                                  context,
-                                                                ).push(
-                                                                  MaterialPageRoute(
-                                                                    builder: (_) => PdfViewerPage(
-                                                                      title: s
-                                                                          .title,
-                                                                      pdfUrl:
-                                                                          s.url,
-                                                                      initialPage:
-                                                                          s.page,
-                                                                    ),
-                                                                  ),
-                                                                );
-                                                              },
-                                                            ),
-                                                        ],
-                                                      ),
-                                                    )
-                                                  : null,
+                                              // 🔕 No links to PDF reports anymore
+                                              subtitle: null,
                                             );
                                           },
                                         ),
@@ -196,7 +153,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                                     controller: _c,
                                     decoration: InputDecoration(
                                       hintText:
-                                          'Ask about products, AR, orders...',
+                                          'Ask about datasheets, manuals, specs…',
                                       contentPadding:
                                           const EdgeInsets.symmetric(
                                             horizontal: 14,
@@ -277,37 +234,14 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   void _onSend(String text) {
     final t = text.trim();
     if (t.isEmpty) return;
+
     final ctrl = ref.read(aiChatControllerProvider.notifier);
-
-    final wantsDocs = RegExp(
-      r'\b(compare|comparison|differences?|pdf|page|sheet|datasheet|manual|'
-      r'weight|mass|dimensions?|size|width|height|depth|'
-      r'icu|ics|current|voltage|breaking|power|curve|range|adjust(ment)?)\b',
-      caseSensitive: false,
-    ).hasMatch(t);
-
-    if (wantsDocs) {
-      ctrl.askFromDocs(t);
-      _c.clear();
-      return;
-    }
-
-    if (RegExp(
-      r'\bar\b|\bmodel\b|\b3[-\s]?pole(s)?\b|\b4[-\s]?pole(s)?\b',
-      caseSensitive: false,
-    ).hasMatch(t)) {
-      ctrl.suggestFromAR(t);
-    } else {
-      ctrl.suggestFromCatalog(t);
-    }
+    ctrl.send(t); // RAG-only
     _c.clear();
   }
 }
 
-/// UI-only: renderizza testo con elenchi in ordine “pulito”
-/// - elenchi con "-", "*", "•", "–" => ordinati alfabeticamente (case-insensitive)
-/// - elenchi "1.", "2)", ecc. => ordinati numericamente
-/// Il resto del testo resta identico. Nessun cambio alla logica del controller.
+/// UI-only: clean lists rendering
 class _MessageContent extends StatelessWidget {
   final String text;
   final TextStyle? textStyle;
@@ -315,8 +249,7 @@ class _MessageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final style =
-        textStyle ??
+    final style = textStyle ??
         const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -337,7 +270,6 @@ class _MessageContent extends StatelessWidget {
         final items = <_ListItem>[];
         final isUnordered = u != null;
 
-        // raccoglie il blocco contiguo dello stesso tipo (unordered/ordered)
         while (i < lines.length) {
           final lu = _matchUnordered(lines[i]);
           final lo = _matchOrdered(lines[i]);
@@ -352,7 +284,6 @@ class _MessageContent extends StatelessWidget {
           i++;
         }
 
-        // ordina
         if (isUnordered) {
           items.sort(
             (a, b) => a.text.toLowerCase().compareTo(b.text.toLowerCase()),
@@ -361,7 +292,6 @@ class _MessageContent extends StatelessWidget {
           items.sort((a, b) => (a.number ?? 1).compareTo(b.number ?? 1));
         }
 
-        // render list
         children.add(
           _ListBlock(
             items: items,
@@ -369,11 +299,9 @@ class _MessageContent extends StatelessWidget {
             textStyle: style.copyWith(fontWeight: FontWeight.w500),
           ),
         );
-        // non incrementare i qui: già avanzato nel while interno
         continue;
       }
 
-      // paragrafo normale (finché non trova un elenco)
       final buf = <String>[];
       while (i < lines.length &&
           _matchUnordered(lines[i]) == null &&
@@ -387,7 +315,6 @@ class _MessageContent extends StatelessWidget {
       }
     }
 
-    // spaziatura verticale morbida tra blocchi
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -399,14 +326,12 @@ class _MessageContent extends StatelessWidget {
     );
   }
 
-  // match "-" "*" "•" "–" + testo
   _U? _matchUnordered(String line) {
     final m = RegExp(r'^\s*([\-*\u2022\u2013])\s+(.*\S)\s*$').firstMatch(line);
     if (m == null) return null;
     return _U(m.group(2)!.trim());
   }
 
-  // match "1." "2)" ecc. + testo
   _O? _matchOrdered(String line) {
     final m = RegExp(r'^\s*(\d+)[\.\)]\s+(.*\S)\s*$').firstMatch(line);
     if (m == null) return null;

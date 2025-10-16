@@ -1,21 +1,30 @@
-import 'package:flutter_application/features/assistant/data/ai_rag_providers.dart';
-import 'package:flutter_application/features/assistant/data/ar_candidates.dart';
-import 'package:flutter_application/features/assistant/data/product_candidates.dart';
-import 'package:flutter_application/features/shop/controllers/shop_controller.dart';
-import 'package:flutter_application/features/shop/domain/product.dart';
+import 'dart:async';
+import 'dart:io';
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+
+import '../data/ai_rag_providers.dart';
 import '../domain/ai_message.dart';
-import '../data/firebase_ai_providers.dart';
 
 final aiChatControllerProvider =
     StateNotifierProvider<AiChatController, AsyncValue<List<AiMessage>>>(
       (ref) => AiChatController(ref)..reset(),
     );
 
+class _Err {
+  final String code;
+  final String userMsg;
+  final String? devMsg;
+  const _Err(this.code, this.userMsg, [this.devMsg]);
+}
+
 class AiChatController extends StateNotifier<AsyncValue<List<AiMessage>>> {
   AiChatController(this._ref) : super(const AsyncValue.loading());
   final Ref _ref;
+
+  String _fallbackMessage([String? _]) =>
+      "I couldn't find relevant results. Please try to be more specific.";
 
   void reset() {
     state = const AsyncValue.data([
@@ -26,169 +35,116 @@ class AiChatController extends StateNotifier<AsyncValue<List<AiMessage>>> {
     ]);
   }
 
+  _Err _classifyError(Object e) {
+    final s = e.toString();
+    final ls = s.toLowerCase();
+
+    if (e is SocketException) {
+      return _Err(
+        'E_NET',
+        'Network error. Please check your internet connection and try again.',
+        s,
+      );
+    }
+    if (e is TimeoutException || ls.contains('timeout')) {
+      return _Err(
+        'E_TIMEOUT',
+        'The request took too long. Please try again.',
+        s,
+      );
+    }
+
+    final httpMatch = RegExp(r'\b(\d{3})\b').firstMatch(s);
+    final http = httpMatch != null ? int.tryParse(httpMatch.group(1)!) : null;
+
+    if (ls.contains('rate limit') || ls.contains('quota') || http == 429) {
+      return _Err(
+        'E_RATE_LIMIT',
+        'Too many requests or quota reached. Please wait and try again.',
+        s,
+      );
+    }
+    if (ls.contains('permission-denied') ||
+        ls.contains('unauthorized') ||
+        ls.contains('invalid api key') ||
+        http == 401 ||
+        http == 403) {
+      return _Err(
+        'E_AUTH',
+        'Authentication or permissions issue. Please sign in again or contact support.',
+        s,
+      );
+    }
+    if (ls.contains('not found') || http == 404) {
+      return _Err('E_NOT_FOUND', 'Requested resource is not available.', s);
+    }
+    if (http == 413 || ls.contains('payload too large')) {
+      return _Err(
+        'E_TOO_LARGE',
+        'Your request is too large. Try shortening the message.',
+        s,
+      );
+    }
+    if (ls.contains('invalid argument') ||
+        ls.contains('bad request') ||
+        http == 400 ||
+        http == 422) {
+      return _Err(
+        'E_INPUT',
+        'The request seems invalid. Please rephrase and try again.',
+        s,
+      );
+    }
+    if ((ls.contains('safety') && ls.contains('block')) ||
+        ls.contains('content policy')) {
+      return _Err(
+        'E_SAFETY',
+        'The request was blocked by safety rules. Please rephrase your question.',
+        s,
+      );
+    }
+    if (http == 500 ||
+        http == 502 ||
+        http == 503 ||
+        http == 504 ||
+        ls.contains('internal error')) {
+      return _Err(
+        'E_UPSTREAM',
+        'The AI service is temporarily unavailable. Please try again shortly.',
+        s,
+      );
+    }
+    return _Err('E_UNKNOWN', 'Something went wrong. Please try again.', s);
+  }
+
+  void _emitError(Object e, List<AiMessage> base) {
+    final err = _classifyError(e);
+    var text = '${err.userMsg} (code: ${err.code})';
+    if (kDebugMode && (err.devMsg?.isNotEmpty ?? false)) {
+      text += '\n\n[debug] ${err.devMsg}';
+    }
+    state = AsyncValue.data([...base, AiMessage('assistant', text)]);
+  }
+
   Future<void> send(String userText) async {
     final history = state.value ?? const <AiMessage>[];
     final updated = [...history, AiMessage('user', userText)];
     state = AsyncValue.data(updated);
 
     try {
-      final svc = await _ref.read(firebaseAiServiceProvider.future);
-
-      final reply = await svc.chat(updated);
-      state = AsyncValue.data([...updated, AiMessage('assistant', reply)]);
-    } catch (e) {
-      state = AsyncValue.data([
-        ...updated,
-        AiMessage('assistant', 'AI error: $e'),
-      ]);
-    }
-  }
-
-  Future<void> sendStreaming(String userText) async {
-    final history = state.value ?? const <AiMessage>[];
-    final updated = [...history, AiMessage('user', userText)];
-    state = AsyncValue.data(updated);
-
-    try {
-      final svc = await _ref.read(firebaseAiServiceProvider.future);
-      final stream = svc.chatStream(updated);
-
-      var partial = '';
-      state = AsyncValue.data([...updated, AiMessage('assistant', '')]);
-
-      await for (final acc in stream) {
-        partial = acc;
-        final msgs = [...updated, AiMessage('assistant', partial)];
-        state = AsyncValue.data(msgs);
-      }
-    } catch (e) {
-      state = AsyncValue.data([
-        ...updated,
-        AiMessage('assistant', 'AI error: $e'),
-      ]);
-    }
-  }
-
-  Future<void> suggestFromCatalog(String userText, {int topK = 10}) async {
-    final history = state.value ?? const <AiMessage>[];
-    final updated = [...history, AiMessage('user', userText)];
-    state = AsyncValue.data(updated);
-
-    try {
-      final repo = _ref.read(productsRepositoryProvider);
-      final all = await repo.fetchProducts();
-
-      final prelim = _preFilter(all, userText, limit: 30);
-      final candidates = candidatesFromProducts(prelim);
-
-      final svc = await _ref.read(firebaseAiServiceProvider.future);
-      final pick = await svc.pickDevices(
-        userQuery: userText,
-        candidates: candidates,
-        topK: topK,
-      );
-
-      final picked = prelim.where((p) => pick.picks.contains(p.id)).toList();
-      String msg;
-      if (picked.isEmpty) {
-        await askFromDocs(userText, alreadyAppended: true);
-        return;
-      } else {
-        final bullet = picked
-            .map((p) => '• ${p.displayName} (${p.code})')
-            .join('\n');
-        msg = 'Based on your request, I suggest:\n$bullet';
-      }
-      if (pick.reason.isNotEmpty) {
-        msg += '\n\nReason: ${pick.reason}';
-      }
-
-      state = AsyncValue.data([...updated, AiMessage('assistant', msg)]);
-    } catch (e) {
-      state = AsyncValue.data([
-        ...updated,
-        AiMessage('assistant', 'AI error: $e'),
-      ]);
-    }
-  }
-
-  Future<void> suggestFromAR(String userText, {int topK = 10}) async {
-    final history = state.value ?? const <AiMessage>[];
-    final updated = [...history, AiMessage('user', userText)];
-    state = AsyncValue.data(updated);
-
-    try {
-      final candidates = allArCandidates();
-      final svc = await _ref.read(firebaseAiServiceProvider.future);
-      final pick = await svc.pickDevices(
-        userQuery: userText,
-        candidates: candidates,
-        topK: topK,
-      );
-
-      String msg;
-      if (pick.picks.isEmpty) {
-        msg = 'I did not find a matching AR device among your models.';
-      } else {
-        final map = {for (final c in candidates) c.id: c};
-        final chosen = pick.picks.map((id) => map[id]!).toList();
-        final bullet = chosen.map((c) => '• ${c.label} (${c.code})').join('\n');
-        msg =
-            'AR models I can place now:\n$bullet\n\nSay "open in AR" to place one.';
-      }
-      if (pick.reason.isNotEmpty) {
-        msg += '\n\nReason: ${pick.reason}';
-      }
-
-      state = AsyncValue.data([...updated, AiMessage('assistant', msg)]);
-    } catch (e) {
-      state = AsyncValue.data([
-        ...updated,
-        AiMessage('assistant', 'AI error: $e'),
-      ]);
-    }
-  }
-
-  List<Product> _preFilter(List<Product> all, String q, {int limit = 30}) {
-    final Q = q.toLowerCase();
-    int score(Product p) {
-      int s = 0;
-      final n = p.displayName.toLowerCase();
-      final c = p.code.toLowerCase();
-      if (n.contains(Q)) s += 5;
-      if (c.contains(Q)) s += 6;
-      final tokens = Q.split(RegExp(r'[^a-z0-9]+')).where((t) => t.isNotEmpty);
-      for (final t in tokens) {
-        if (n.contains(t)) s += 1;
-        if (c.contains(t)) s += 2;
-      }
-      return s;
-    }
-
-    final sorted = [...all]..sort((a, b) => score(b).compareTo(score(a)));
-    return sorted.take(limit).toList();
-  }
-
-  Future<void> askFromDocs(
-    String userText, {
-    bool alreadyAppended = false,
-  }) async {
-    final history = state.value ?? const <AiMessage>[];
-    final updated = alreadyAppended
-        ? history
-        : [...history, AiMessage('user', userText)];
-    state = AsyncValue.data(updated);
-
-    try {
       final rag = _ref.read(aiRagServiceProvider);
       final reply = await rag.ask(userText);
+      final text = reply.text.trim();
+      final out = text.isEmpty ? _fallbackMessage(userText) : text;
 
-      state = AsyncValue.data([...updated, AiMessage('assistant', reply.text)]);
-    } catch (e) {
       state = AsyncValue.data([
         ...updated,
-        AiMessage('assistant', 'AI error: $e'),
+        AiMessage('assistant', out, sources: reply.sources),
       ]);
+    } catch (e) {
+      _emitError(e, updated);
     }
   }
+
+  Future<void> sendStreaming(String userText) => send(userText);
 }

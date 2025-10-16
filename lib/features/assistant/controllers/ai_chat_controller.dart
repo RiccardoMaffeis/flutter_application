@@ -91,7 +91,7 @@ class AiChatController extends StateNotifier<AsyncValue<List<AiMessage>>> {
       final picked = prelim.where((p) => pick.picks.contains(p.id)).toList();
       String msg;
       if (picked.isEmpty) {
-        await askFromDocs(userText);
+        await askFromDocs(userText, alreadyAppended: true);
         return;
       } else {
         final bullet = picked
@@ -169,19 +169,21 @@ class AiChatController extends StateNotifier<AsyncValue<List<AiMessage>>> {
     return sorted.take(limit).toList();
   }
 
-  Future<void> askFromDocs(String userText) async {
+  Future<void> askFromDocs(
+    String userText, {
+    bool alreadyAppended = false,
+  }) async {
     final history = state.value ?? const <AiMessage>[];
-    final updated = [...history, AiMessage('user', userText)];
+    final updated = alreadyAppended
+        ? history
+        : [...history, AiMessage('user', userText)];
     state = AsyncValue.data(updated);
 
     try {
       final rag = _ref.read(aiRagServiceProvider);
       final reply = await rag.ask(userText);
 
-      state = AsyncValue.data([
-        ...updated,
-        AiMessage('assistant', reply.text, sources: reply.sources),
-      ]);
+      state = AsyncValue.data([...updated, AiMessage('assistant', reply.text)]);
     } catch (e) {
       state = AsyncValue.data([
         ...updated,

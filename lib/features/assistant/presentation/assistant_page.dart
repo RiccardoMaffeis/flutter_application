@@ -128,9 +128,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                                                   color: Colors.black87,
                                                 ),
                                               ),
-                                              title: Text(
-                                                m.content,
-                                                style: const TextStyle(
+                                              title: _MessageContent(
+                                                text: m.content,
+                                                textStyle: const TextStyle(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.w600,
                                                   height: 1.25,
@@ -302,4 +302,163 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     }
     _c.clear();
   }
+}
+
+/// UI-only: renderizza testo con elenchi in ordine “pulito”
+/// - elenchi con "-", "*", "•", "–" => ordinati alfabeticamente (case-insensitive)
+/// - elenchi "1.", "2)", ecc. => ordinati numericamente
+/// Il resto del testo resta identico. Nessun cambio alla logica del controller.
+class _MessageContent extends StatelessWidget {
+  final String text;
+  final TextStyle? textStyle;
+  const _MessageContent({required this.text, this.textStyle});
+
+  @override
+  Widget build(BuildContext context) {
+    final style =
+        textStyle ??
+        const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          height: 1.25,
+        );
+
+    final lines = text.split(RegExp(r'\r?\n'));
+    final children = <Widget>[];
+
+    int i = 0;
+    while (i < lines.length) {
+      final line = lines[i];
+
+      final u = _matchUnordered(line);
+      final o = _matchOrdered(line);
+
+      if (u != null || o != null) {
+        final items = <_ListItem>[];
+        final isUnordered = u != null;
+
+        // raccoglie il blocco contiguo dello stesso tipo (unordered/ordered)
+        while (i < lines.length) {
+          final lu = _matchUnordered(lines[i]);
+          final lo = _matchOrdered(lines[i]);
+          if (isUnordered && lu == null) break;
+          if (!isUnordered && lo == null) break;
+
+          if (isUnordered) {
+            items.add(_ListItem(null, lu!.item));
+          } else {
+            items.add(_ListItem(lo!.number, lo.item));
+          }
+          i++;
+        }
+
+        // ordina
+        if (isUnordered) {
+          items.sort(
+            (a, b) => a.text.toLowerCase().compareTo(b.text.toLowerCase()),
+          );
+        } else {
+          items.sort((a, b) => (a.number ?? 1).compareTo(b.number ?? 1));
+        }
+
+        // render list
+        children.add(
+          _ListBlock(
+            items: items,
+            ordered: !isUnordered,
+            textStyle: style.copyWith(fontWeight: FontWeight.w500),
+          ),
+        );
+        // non incrementare i qui: già avanzato nel while interno
+        continue;
+      }
+
+      // paragrafo normale (finché non trova un elenco)
+      final buf = <String>[];
+      while (i < lines.length &&
+          _matchUnordered(lines[i]) == null &&
+          _matchOrdered(lines[i]) == null) {
+        buf.add(lines[i]);
+        i++;
+      }
+      final paragraph = buf.join('\n').trimRight();
+      if (paragraph.isNotEmpty) {
+        children.add(SelectableText(paragraph, style: style));
+      }
+    }
+
+    // spaziatura verticale morbida tra blocchi
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (int j = 0; j < children.length; j++) ...[
+          if (j > 0) const SizedBox(height: 6),
+          children[j],
+        ],
+      ],
+    );
+  }
+
+  // match "-" "*" "•" "–" + testo
+  _U? _matchUnordered(String line) {
+    final m = RegExp(r'^\s*([\-*\u2022\u2013])\s+(.*\S)\s*$').firstMatch(line);
+    if (m == null) return null;
+    return _U(m.group(2)!.trim());
+  }
+
+  // match "1." "2)" ecc. + testo
+  _O? _matchOrdered(String line) {
+    final m = RegExp(r'^\s*(\d+)[\.\)]\s+(.*\S)\s*$').firstMatch(line);
+    if (m == null) return null;
+    return _O(int.tryParse(m.group(1)!) ?? 0, m.group(2)!.trim());
+  }
+}
+
+class _ListItem {
+  final int? number;
+  final String text;
+  _ListItem(this.number, this.text);
+}
+
+class _ListBlock extends StatelessWidget {
+  final List<_ListItem> items;
+  final bool ordered;
+  final TextStyle textStyle;
+  const _ListBlock({
+    required this.items,
+    required this.ordered,
+    required this.textStyle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bulletStyle = textStyle.copyWith(fontWeight: FontWeight.w600);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: items.map((it) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 2),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(ordered ? '${it.number ?? 1}.' : '•', style: bulletStyle),
+              const SizedBox(width: 8),
+              Expanded(child: SelectableText(it.text, style: textStyle)),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _U {
+  final String item;
+  _U(this.item);
+}
+
+class _O {
+  final int number;
+  final String item;
+  _O(this.number, this.item);
 }

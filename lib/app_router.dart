@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application/features/ar/presentation/ar_live_page.dart';
+import 'package:flutter_application/features/ar/presentation/ar_switch_page.dart';
 import 'package:flutter_application/features/ar/presentation/select/ar_coming_soon_page.dart';
 import 'package:flutter_application/features/ar/presentation/select/ar_xt_page.dart';
 import 'package:flutter_application/features/assistant/presentation/assistant_page.dart';
@@ -101,7 +101,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/ar-live',
         builder: (ctx, state) {
           final extra = (state.extra as Map?) ?? {};
-          return ArLivePage(
+          return ArSwitchPage(
             title: extra['title'] as String? ?? 'AR Preview',
             glbUrl: extra['glb'] as String?,
             assetGlb: extra['assetGlb'] as String?,

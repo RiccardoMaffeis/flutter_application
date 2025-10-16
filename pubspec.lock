@@ -28,10 +28,9 @@ packages:
   ar_flutter_plugin:
     dependency: "direct main"
     description:
-      name: ar_flutter_plugin
-      sha256: "52b6b2ccec4b624ca3fb8d7cc68128f11126580b412c3da2da82c41ddfd6d6ae"
-      url: "https://pub.dev"
-    source: hosted
+      path: "plugins/ar_flutter_plugin_android_only"
+      relative: true
+    source: path
     version: "0.7.3"
   args:
     dependency: transitive
@@ -41,6 +40,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.7.0"
+  arkit_plugin:
+    dependency: "direct main"
+    description:
+      name: arkit_plugin
+      sha256: db53cecb9caf18dfc789b63e67ed78506dfa26f95aa3646955007b51448575be
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.1"
   async:
     dependency: transitive
     description:
@@ -146,7 +153,7 @@ packages:
     source: hosted
     version: "3.0.6"
   device_info_plus:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: device_info_plus
       sha256: "49413c8ca514dea7633e8def233b25efdf83ec8522955cc2c0e3ad802927e7c6"

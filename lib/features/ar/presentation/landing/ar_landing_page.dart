@@ -71,7 +71,7 @@ class ARLandingPage extends ConsumerWidget {
                       for (final c in choices) ...[
                         _ChoiceTile(
                           choice: c,
-                          onTap: () => context.push('/ar/select'), // Navigate to selection page
+                          onTap: () => context.push('/ar/${c.route}'), // Navigate to selection page
                         ),
                         const SizedBox(height: 12),
                       ],

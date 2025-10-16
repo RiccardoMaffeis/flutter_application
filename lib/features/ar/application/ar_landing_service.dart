@@ -19,14 +19,14 @@ class ARLandingService {
       id: 'xt',
       title: 'Select an XT',
       asset: 'lib/images/general/XT.png',
-      route: '/ar/xt',
+      route: 'xt',
     ),
     // Emax product family entry
     ARChoice(
       id: 'emax',
       title: 'Select an Emax',
       asset: 'lib/images/general/Emax2.png',
-      route: '/ar/emax',
+      route: 'emax',
     ),
   ];
 }

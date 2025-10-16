@@ -2,7 +2,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/features/ar/presentation/ar_live_page.dart';
-import 'package:flutter_application/features/ar/presentation/select/ar_select_page.dart';
+import 'package:flutter_application/features/ar/presentation/select/ar_coming_soon_page.dart';
+import 'package:flutter_application/features/ar/presentation/select/ar_xt_page.dart';
 import 'package:flutter_application/features/assistant/presentation/assistant_page.dart';
 import 'package:flutter_application/features/favourites/presentation/favourites_page.dart';
 import 'package:flutter_application/features/profile/presentation/profile_page.dart';
@@ -108,8 +109,21 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
-      GoRoute(path: '/ar/select', builder: (_, __) => const ARSelectPage()),
-      GoRoute(path: '/ar', builder: (ctx, state) => const ARLandingPage()),
+      GoRoute(
+        path: '/ar',
+        builder: (context, state) => const ARLandingPage(),
+        routes: [
+          GoRoute(
+            path: 'xt',
+            builder: (context, state) => const ARXTPage(),
+          ),
+          GoRoute(
+            path: 'emax',
+            builder: (context, state) =>
+                const ComingSoonPage(title: 'Emax AR — Coming soon'),
+          ),
+        ],
+      ),
       GoRoute(path: '/assistant', builder: (_, __) => const AssistantPage()),
       GoRoute(
         path: '/pdf-viewer',

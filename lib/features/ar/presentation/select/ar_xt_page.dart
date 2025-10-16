@@ -29,8 +29,8 @@ const List<ARItem> kXtModels = [
 
 /// Page that lets the user pick one of the available AR models.
 /// It shows a header and a scrollable list of buttons with thumbnails.
-class ARSelectPage extends StatelessWidget {
-  const ARSelectPage({super.key});
+class ARXTPage extends StatelessWidget {
+  const ARXTPage({super.key});
 
   /// Returns true if the given asset path exists and can be loaded.
   Future<bool> _assetExists(String path) async {
@@ -58,9 +58,6 @@ class ARSelectPage extends StatelessWidget {
   /// - Drops the '.glb' extension
   /// - Normalizes '3P'/'4P' into lowercase
   /// - Appends '.png'
-  ///
-  /// Example:
-  /// 'lib/3Dmodels/XT2/XT2_4p.glb' -> 'lib/images/XT2/XT2_4p.png'
   String _imagePathFor(ARItem item) {
     var p = item.glbPath.replaceFirst('3Dmodels', 'images');
     p = p.replaceFirst(RegExp(r'\.glb$', caseSensitive: false), '');

@@ -1,4 +1,4 @@
-import '../../ar/presentation/select/ar_select_page.dart' show ARItem, kXtModels;
+import '../../ar/presentation/select/ar_xt_page.dart' show ARItem, kXtModels;
 import '../domain/ai_pick.dart';
 
 List<DeviceCandidate> candidatesFromAR(List<ARItem> items) {

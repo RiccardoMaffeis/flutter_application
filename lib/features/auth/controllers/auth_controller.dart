@@ -72,12 +72,6 @@ class AuthController extends StateNotifier<AsyncValue<AppUser?>> {
     }
   }
 
-  /// Signs out the current user and updates state accordingly.
-  Future<void> signOut() async {
-    await _service.signOut();
-    state = const AsyncData(null);
-  }
-
   /// Triggers a password reset email for the given address.
   /// The controller doesn't change [state] here; UI remains as-is.
   Future<void> sendPasswordReset(String email) =>

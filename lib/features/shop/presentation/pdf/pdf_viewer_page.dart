@@ -9,6 +9,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_saver/file_saver.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:flutter_application/core/theme/app_theme.dart'; // for accent color
 
 class PdfViewerPage extends StatelessWidget {
   final String title;
@@ -31,9 +32,9 @@ class PdfViewerPage extends StatelessWidget {
     if (pdfUrl != null && pdfUrl!.isNotEmpty) {
       final res = await http.get(Uri.parse(pdfUrl!));
       if (res.statusCode == 200) return res.bodyBytes;
-      throw Exception('Download fallito (HTTP ${res.statusCode}).');
+      throw Exception('Download failed (HTTP ${res.statusCode}).');
     }
-    throw Exception('Nessuna sorgente PDF disponibile.');
+    throw Exception('No PDF source available.');
   }
 
   String _suggestedFileName() {
@@ -59,23 +60,16 @@ class PdfViewerPage extends StatelessWidget {
       );
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('PDF salvato: $name'),
-            action: (savedPath.toString().isNotEmpty)
-                ? SnackBarAction(
-                    label: 'APRI',
-                    onPressed: () => OpenFilex.open(savedPath.toString()),
-                  )
-                : null,
-          ),
+        final pathStr = savedPath.toString();
+        showPdfSavedSnack(
+          context,
+          fileName: name,
+          openPath: pathStr.isNotEmpty ? pathStr : null,
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Errore salvataggio: $e')));
+        showPdfErrorSnack(context, message: 'Save error: $e');
       }
     }
   }
@@ -103,17 +97,21 @@ class PdfViewerPage extends StatelessWidget {
       }
 
       await Share.shareXFiles([xfile], text: title);
+      // (Niente snack di successo qui: la condivisione apre il foglio di sistema)
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Errore condivisione: $e')));
+        showPdfErrorSnack(context, message: 'Share error: $e');
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // ---------- Responsive metrics ----------
+    final w = MediaQuery.of(context).size.width;
+    final double titleFont = (w * 0.055).clamp(18.0, 22.0);
+    final double iconSize = (w * 0.075).clamp(22.0, 28.0);
+
     final Widget viewer = (pdfFile != null && File(pdfFile!).existsSync())
         ? SfPdfViewer.file(
             File(pdfFile!),
@@ -121,24 +119,30 @@ class PdfViewerPage extends StatelessWidget {
           )
         : (pdfUrl != null && pdfUrl!.isNotEmpty)
         ? SfPdfViewer.network(pdfUrl!, initialPageNumber: (initialPage ?? 1))
-        : const Center(child: Text('Nessun PDF da mostrare'));
-        
+        : const Center(child: Text('No PDF to display'));
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
+        title: Text(
+          title,
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: titleFont),
+          overflow: TextOverflow.ellipsis,
+        ),
         centerTitle: true,
+        actionsIconTheme: IconThemeData(size: iconSize),
+        iconTheme: IconThemeData(size: iconSize, color: Colors.black87),
         actions: [
-          // Scarica
+          // Download
           IconButton(
             tooltip: 'Download PDF',
-            icon: const Icon(Icons.download),
+            icon: Icon(Icons.download, size: iconSize),
             onPressed: () => _downloadPdf(context),
           ),
-          // Condividi
+          // Share
           IconButton(
             tooltip: 'Share PDF',
-            icon: const Icon(Icons.share),
+            icon: Icon(Icons.share, size: iconSize),
             onPressed: () => _sharePdf(context),
           ),
         ],
@@ -146,4 +150,199 @@ class PdfViewerPage extends StatelessWidget {
       body: viewer,
     );
   }
+}
+
+/// Fancy success snack (matches the style of "added to cart")
+void showPdfSavedSnack(
+  BuildContext context, {
+  required String fileName,
+  String? openPath,
+}) {
+  final w = MediaQuery.of(context).size.width;
+
+  final double badge = (w * 0.085).clamp(26.0, 34.0);
+  final double check = (badge * 0.6).clamp(16.0, 20.0);
+  final double titleFont = (w * 0.04).clamp(13.0, 15.0);
+  final double subFont = (w * 0.035).clamp(11.0, 13.0);
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      duration: const Duration(seconds: 2),
+      content: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x22000000),
+              blurRadius: 16,
+              offset: Offset(0, 8),
+            ),
+          ],
+          border: Border.all(color: const Color(0x11000000)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: badge,
+              height: badge,
+              decoration: BoxDecoration(
+                color: Colors.green,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.35),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: Icon(Icons.check, size: check, color: Colors.white),
+            ),
+            const SizedBox(width: 12),
+            // Texts
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'PDF saved',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: titleFont,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    fileName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: subFont,
+                      color: Colors.black54,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            if (openPath != null)
+              TextButton(
+                onPressed: () => OpenFilex.open(openPath),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  'OPEN',
+                  style: TextStyle(
+                    color: AppTheme.accent,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+/// Error snack with same visual language
+void showPdfErrorSnack(BuildContext context, {required String message}) {
+  final w = MediaQuery.of(context).size.width;
+
+  final double badge = (w * 0.085).clamp(26.0, 34.0);
+  final double icon = (badge * 0.6).clamp(16.0, 20.0);
+  final double titleFont = (w * 0.04).clamp(13.0, 15.0);
+  final double subFont = (w * 0.035).clamp(11.0, 13.0);
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      duration: const Duration(seconds: 3),
+      content: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x22000000),
+              blurRadius: 16,
+              offset: Offset(0, 8),
+            ),
+          ],
+          border: Border.all(color: const Color(0x11000000)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: badge,
+              height: badge,
+              decoration: BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.red.withOpacity(0.35),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: Icon(Icons.error_outline, size: icon, color: Colors.white),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Something went wrong',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: titleFont,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    message,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: subFont,
+                      color: Colors.black54,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }

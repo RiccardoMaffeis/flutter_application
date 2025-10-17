@@ -11,31 +11,46 @@ class CartIconButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final count = ref.watch(cartCountProvider);
 
+    // ---- Responsive metrics ----
+    final w = MediaQuery.of(context).size.width;
+    final double iconSize = (w * 0.085).clamp(26.0, 35.0);
+    final double badgeMin = (iconSize * 0.52).clamp(16.0, 20.0);
+    final double badgeFont = (iconSize * 0.31).clamp(9.0, 12.0);
+    final double padH = (iconSize * 0.17).clamp(4.0, 6.0);
+    final double padV = (iconSize * 0.09).clamp(2.0, 3.0);
+    final double badgeRight = (iconSize * 0.08).clamp(1.0, 4.0);
+    final double badgeTop = (iconSize * 0.08).clamp(1.0, 4.0);
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
         IconButton(
           onPressed: onPressed,
-          icon: const Icon(Icons.shopping_cart_outlined, size: 35),
+          iconSize: iconSize,
+          icon: Icon(Icons.shopping_cart_outlined, size: iconSize),
         ),
         if (count > 0)
           Positioned(
-            right: 2,
-            top: 2,
+            right: badgeRight,
+            top: badgeTop,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+              padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+              constraints: BoxConstraints(
+                minWidth: badgeMin,
+                minHeight: badgeMin,
+              ),
               decoration: BoxDecoration(
                 color: AppTheme.accent,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(badgeMin * 0.55),
               ),
               alignment: Alignment.center,
               child: Text(
                 count > 99 ? '99+' : '$count',
-                style: const TextStyle(
+                style: TextStyle(
                   color: Colors.white,
-                  fontSize: 11,
+                  fontSize: badgeFont,
                   fontWeight: FontWeight.w800,
+                  height: 1.0,
                 ),
               ),
             ),

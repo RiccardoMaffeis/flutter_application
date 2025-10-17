@@ -20,6 +20,13 @@ class ArSwitchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // ---- Responsive metrics ----
+    final mq = MediaQuery.of(context);
+    final w = mq.size.width;
+    final h = mq.size.height;
+    final double titleFont = (w * 0.06).clamp(18.0, 24.0);
+    final double toolbarH = (h * 0.08).clamp(48.0, 64.0);
+
     if (Platform.isAndroid) {
       return ArLivePage(
         title: title,
@@ -31,14 +38,32 @@ class ArSwitchPage extends StatelessWidget {
 
     if (Platform.isIOS) {
       return Scaffold(
-        appBar: AppBar(title: Text(title)),
-        body: const _ArKitSimpleView(),
+        appBar: AppBar(
+          toolbarHeight: toolbarH,
+          title: Text(
+            title,
+            style: TextStyle(fontSize: titleFont, fontWeight: FontWeight.w800),
+            overflow: TextOverflow.ellipsis,
+          ),
+          centerTitle: true,
+        ),
+        body: const SafeArea(child: _ArKitSimpleView()),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: const Center(child: Text('AR not supported on this platform')),
+      appBar: AppBar(
+        toolbarHeight: toolbarH,
+        title: Text(
+          title,
+          style: TextStyle(fontSize: titleFont, fontWeight: FontWeight.w800),
+          overflow: TextOverflow.ellipsis,
+        ),
+        centerTitle: true,
+      ),
+      body: const SafeArea(
+        child: Center(child: Text('AR not supported on this platform')),
+      ),
     );
   }
 }
@@ -61,6 +86,7 @@ class _ArKitSimpleViewState extends State<_ArKitSimpleView> {
 
   @override
   Widget build(BuildContext context) {
+    // Manteniamo la logica intatta; il widget occupa tutto lo spazio disponibile
     return ARKitSceneView(
       onARKitViewCreated: (controller) {
         arkitController = controller;
@@ -82,10 +108,7 @@ class _ArKitSimpleViewState extends State<_ArKitSimpleView> {
       length: 0.1,
     );
 
-    final node = ARKitNode(
-      geometry: box,
-      position: vm.Vector3(0, 0, -0.5),
-    );
+    final node = ARKitNode(geometry: box, position: vm.Vector3(0, 0, -0.5));
 
     arkitController.add(node);
   }

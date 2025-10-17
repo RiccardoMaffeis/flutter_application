@@ -99,401 +99,466 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
         final isFav = shop.favourites.contains(p.id);
         final famTitle = _familyTitle(p.categoryId);
 
-        final w = MediaQuery.of(context).size.width;
-        final famUp = p.categoryId.toUpperCase();
-        final famScale = _familyImageScale(famUp);
+        return LayoutBuilder(
+          builder: (context, cons) {
+            final w = cons.maxWidth;
+            final h = cons.maxHeight;
 
-        const double baseFrac = 0.94;
-        final double imageSize = (w * baseFrac * famScale).clamp(240.0, 420.0);
+            // -------- Responsive metrics --------
+            final double titleFont = (w * 0.09).clamp(24.0, 40.0);
+            final double iconSize = (w * 0.085).clamp(26.0, 35.0);
+            final double barH = (w * 0.01).clamp(3.0, 4.0);
 
-        final double headerH = imageSize * 0.86;
-        final double overlap = imageSize * 0.16;
+            // Product image sizing
+            const double baseFrac = 0.94;
+            final famUp = p.categoryId.toUpperCase();
+            final famScale = _familyImageScale(famUp);
+            final double imageSize = (w * baseFrac * famScale).clamp(
+              220.0,
+              440.0,
+            );
 
-        return Scaffold(
-          backgroundColor: const Color(0xFFF5F5F7),
-          appBar: AppBar(
-            backgroundColor: const Color(0xFFF5F5F7),
-            scrolledUnderElevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, size: 28),
-              onPressed: () => context.go('/home'),
-            ),
-            centerTitle: true,
-            title: Text(
-              famTitle,
-              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 40),
-            ),
-            actions: [
-              Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  IconButton(
-                    onPressed: () => showCartPopup(context, ref),
-                    icon: const Icon(Icons.shopping_cart_outlined, size: 35),
-                  ),
-                  if (cartCount > 0)
-                    Positioned(
-                      right: 4,
-                      top: 6,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 18,
-                          minHeight: 18,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.accent,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          cartCount > 99 ? '99+' : '$cartCount',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
+            // Header block & overlap
+            final double headerH = (imageSize * 0.86).clamp(180.0, 380.0);
+            final double overlap = (imageSize * 0.16).clamp(20.0, 90.0);
 
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(6),
-              child: Container(
-                height: 4,
-                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppTheme.accent,
-                  borderRadius: BorderRadius.circular(3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.accent.withOpacity(0.45),
-                      blurRadius: 3,
-                      spreadRadius: 0.4,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+            // Bottom "Add to cart" CTA paddings and sizes
+            final double ctaSidePad = (w * 0.12).clamp(16.0, 120.0);
+            final double ctaHeight = (h * 0.06).clamp(44.0, 52.0);
+            final double ctaFont = (w * 0.055).clamp(18.0, 22.0);
+
+            // Section fonts
+            final double sectionTitle = (w * 0.055).clamp(18.0, 22.0);
+            final double priceFont = (w * 0.07).clamp(22.0, 28.0);
+            final double specTitleFont = (w * 0.045).clamp(14.0, 16.0);
+            final double specValueFont = (w * 0.04).clamp(13.0, 14.0);
+
+            // Floating PDF button size
+            final double pdfBtn = (w * 0.11).clamp(38.0, 46.0);
+            final double pdfIcon = (pdfBtn * 0.52).clamp(18.0, 24.0);
+
+            // Fav / AR icons
+            final double actionIcon = iconSize;
+
+            return Scaffold(
+              backgroundColor: const Color(0xFFF5F5F7),
+              appBar: AppBar(
+                backgroundColor: const Color(0xFFF5F5F7),
+                scrolledUnderElevation: 0,
+                leading: IconButton(
+                  icon: Icon(Icons.arrow_back, size: iconSize),
+                  onPressed: () => context.go('/home'),
                 ),
-              ),
-            ),
-          ),
-
-          body: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned(
-                top: headerH - overlap,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(22),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0x22000000),
-                        blurRadius: 16,
-                        offset: Offset(0, -6),
-                      ),
-                    ],
+                centerTitle: true,
+                title: Text(
+                  famTitle,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: titleFont,
                   ),
-                  child: Stack(
+                ),
+                actions: [
+                  Stack(
+                    clipBehavior: Clip.none,
                     children: [
-                      Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                IconButton(
-                                  iconSize: 35,
-                                  onPressed: () =>
-                                      shopCtrl.toggleFavourite(d.product.id),
-                                  icon: Icon(
-                                    isFav
-                                        ? Icons.favorite
-                                        : Icons.favorite_border,
-                                    color: isFav
-                                        ? AppTheme.accent
-                                        : Colors.black,
-                                  ),
-                                ),
-                                IconButton(
-                                  iconSize: 35,
-                                  onPressed: () async {
-                                    final modelPath = await _findModelPath(p);
-
-                                    if (modelPath == null) {
-                                      if (!mounted) return;
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Modello 3D non trovato per ${p.code}',
-                                          ),
-                                        ),
-                                      );
-                                      return;
-                                    }
-
-                                    final ok =
-                                        await ArCoreCheck.ensureAvailable(
-                                          context,
-                                        );
-                                    if (!ok || !mounted) return;
-
-                                    context.push(
-                                      '/ar-live',
-                                      extra: {
-                                        'title': p.id,
-                                        'assetGlb': modelPath,
-                                        'scale': _arScaleFor(
-                                          p.categoryId.toUpperCase(),
-                                        ),
-                                      },
-                                    );
-                                  },
-
-                                  icon: const Icon(
-                                    Icons.view_in_ar,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
+                      IconButton(
+                        onPressed: () => showCartPopup(context, ref),
+                        icon: Icon(
+                          Icons.shopping_cart_outlined,
+                          size: iconSize,
+                        ),
+                      ),
+                      if (cartCount > 0)
+                        Positioned(
+                          right: 4,
+                          top: 6,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            constraints: const BoxConstraints(
+                              minWidth: 18,
+                              minHeight: 18,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.accent,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              cartCount > 99 ? '99+' : '$cartCount',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
-                          Expanded(
-                            child: SingleChildScrollView(
-                              physics: const BouncingScrollPhysics(),
-                              padding: const EdgeInsets.fromLTRB(
-                                16,
-                                18,
-                                16,
-                                120,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'General Information',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.w900,
+                        ),
+                    ],
+                  ),
+                ],
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(6),
+                  child: Container(
+                    height: barH,
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accent,
+                      borderRadius: BorderRadius.circular(3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.accent.withOpacity(0.45),
+                          blurRadius: 3,
+                          spreadRadius: 0.4,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              body: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // White rounded sheet below the header
+                  Positioned(
+                    top: headerH - overlap,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(22),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0x22000000),
+                            blurRadius: 16,
+                            offset: Offset(0, -6),
+                          ),
+                        ],
+                      ),
+                      child: Stack(
+                        children: [
+                          Column(
+                            children: [
+                              // Favourites + AR actions
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    IconButton(
+                                      iconSize: actionIcon,
+                                      onPressed: () => shopCtrl.toggleFavourite(
+                                        d.product.id,
+                                      ),
+                                      icon: Icon(
+                                        isFav
+                                            ? Icons.favorite
+                                            : Icons.favorite_border,
+                                        color: isFav
+                                            ? AppTheme.accent
+                                            : Colors.black,
+                                      ),
                                     ),
+                                    IconButton(
+                                      iconSize: actionIcon,
+                                      onPressed: () async {
+                                        final modelPath = await _findModelPath(
+                                          p,
+                                        );
+
+                                        if (modelPath == null) {
+                                          if (!mounted) return;
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                '3D model not found for ${p.code}',
+                                              ),
+                                            ),
+                                          );
+                                          return;
+                                        }
+
+                                        final ok =
+                                            await ArCoreCheck.ensureAvailable(
+                                              context,
+                                            );
+                                        if (!ok || !mounted) return;
+
+                                        context.push(
+                                          '/ar-live',
+                                          extra: {
+                                            'title': p.id,
+                                            'assetGlb': modelPath,
+                                            'scale': _arScaleFor(
+                                              p.categoryId.toUpperCase(),
+                                            ),
+                                          },
+                                        );
+                                      },
+                                      icon: const Icon(
+                                        Icons.view_in_ar,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Scrollable content
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  physics: const BouncingScrollPhysics(),
+                                  padding: EdgeInsets.fromLTRB(
+                                    16,
+                                    (h * 0.02).clamp(12.0, 20.0),
+                                    16,
+                                    (h * 0.16).clamp(100.0, 140.0),
                                   ),
-                                  const SizedBox(height: 8),
-                                  ...d.specs.entries.map(
-                                    (e) =>
-                                        _SpecRow(title: e.key, value: e.value),
-                                  ),
-                                  const Divider(height: 26, thickness: 1),
-                                  Row(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        '${d.product.price.toStringAsFixed(2)} €',
-                                        style: const TextStyle(
-                                          fontSize: 26,
+                                        'General Information',
+                                        style: TextStyle(
+                                          fontSize: sectionTitle,
                                           fontWeight: FontWeight.w900,
                                         ),
                                       ),
-                                      const Spacer(),
-                                      _SmallQtyStepper(
-                                        value: qty,
-                                        onMinus: () => setState(
-                                          () => qty = qty > 1 ? qty - 1 : 1,
+                                      const SizedBox(height: 8),
+                                      ...d.specs.entries.map(
+                                        (e) => _SpecRow(
+                                          title: e.key,
+                                          value: e.value,
+                                          titleSize: specTitleFont,
+                                          valueSize: specValueFont,
                                         ),
-                                        onPlus: () => setState(() => qty++),
+                                      ),
+                                      const Divider(height: 26, thickness: 1),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            '${d.product.price.toStringAsFixed(2)} €',
+                                            style: TextStyle(
+                                              fontSize: priceFont,
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          _SmallQtyStepper(
+                                            value: qty,
+                                            onMinus: () => setState(
+                                              () => qty = qty > 1 ? qty - 1 : 1,
+                                            ),
+                                            onPlus: () => setState(() => qty++),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                ],
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          // Add to cart CTA (bottom, centered)
+                          Positioned(
+                            left: ctaSidePad,
+                            right: ctaSidePad,
+                            bottom: 20,
+                            child: SafeArea(
+                              top: false,
+                              child: SizedBox(
+                                height: ctaHeight,
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    await ref
+                                        .read(cartControllerProvider.notifier)
+                                        .add(p, qty: qty);
+                                    if (!context.mounted) return;
+                                    showAddToCartSnack(
+                                      context,
+                                      ref: ref,
+                                      product: p,
+                                      qty: qty,
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.accent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(26),
+                                    ),
+                                    elevation: 3,
+                                  ),
+                                  child: Text(
+                                    'Add to cart',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: ctaFont,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
                         ],
                       ),
+                    ),
+                  ),
 
-                      Positioned(
-                        left: 80,
-                        right: 80,
-                        bottom: 20,
-                        child: SafeArea(
-                          top: false,
-                          child: SizedBox(
-                            height: 45,
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                await ref
-                                    .read(cartControllerProvider.notifier)
-                                    .add(p, qty: qty);
-                                if (!context.mounted) return;
-                                showAddToCartSnack(
-                                  context,
-                                  ref: ref,
-                                  product: p,
-                                  qty: qty,
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.accent,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(26),
-                                ),
-                                elevation: 3,
-                              ),
-                              child: const Text(
-                                'Add to cart',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 22,
-                                ),
-                              ),
+                  // Product image (overlapping the header)
+                  Positioned(
+                    top: headerH - imageSize + overlap,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: IgnorePointer(
+                        child: SizedBox(
+                          width: imageSize,
+                          height: imageSize,
+                          child: Image.asset(
+                            d.product.imageUrl,
+                            fit: BoxFit.contain,
+                            filterQuality: FilterQuality.medium,
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.broken_image_outlined,
+                              size: 60,
                             ),
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-
-              Positioned(
-                top: headerH - imageSize + overlap,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: IgnorePointer(
-                    child: SizedBox(
-                      width: imageSize,
-                      height: imageSize,
-                      child: Image.asset(
-                        d.product.imageUrl,
-                        fit: BoxFit.contain,
-                        filterQuality: FilterQuality.medium,
-                        errorBuilder: (_, __, ___) =>
-                            const Icon(Icons.broken_image_outlined, size: 60),
-                      ),
                     ),
                   ),
-                ),
-              ),
-              Positioned(
-                top: 8,
-                right: 12,
-                child: Material(
-                  color: AppTheme.accent,
-                  shape: const CircleBorder(),
-                  elevation: 3,
-                  clipBehavior: Clip.antiAlias,
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: _pdfBusy
-                        ? null
-                        : () async {
-                            setState(() => _pdfBusy = true);
-                            try {
-                              // (facoltativo) piccolo delay anti-tap impulsivo
-                              await Future.delayed(
-                                const Duration(milliseconds: 120),
-                              );
 
-                              final p = d.product;
-                              final famUpper = _reFamily
-                                  .firstMatch(
-                                    '${p.categoryId} ${p.code} ${p.displayName}'
-                                        .toLowerCase(),
-                                  )
-                                  ?.group(1)
-                                  ?.toUpperCase();
-
-                              if (famUpper == null) {
-                                if (!mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Family not recognized'),
-                                  ),
-                                );
-                                return;
-                              }
-
-                              final src = await PdfCacheService.instance
-                                  .resolveByFamilyAndId(
-                                    famUpper: famUpper,
-                                    productId: p.id,
+                  // Floating PDF button
+                  Positioned(
+                    top: 8,
+                    right: 12,
+                    child: Material(
+                      color: AppTheme.accent,
+                      shape: const CircleBorder(),
+                      elevation: 3,
+                      clipBehavior: Clip.antiAlias,
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: _pdfBusy
+                            ? null
+                            : () async {
+                                setState(() => _pdfBusy = true);
+                                try {
+                                  // Optional: tiny delay to soften double taps
+                                  await Future.delayed(
+                                    const Duration(milliseconds: 120),
                                   );
 
-                              if (!mounted) return;
-                              if (src == null) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'PDF not found: $famUpper/${p.id}.pdf',
-                                    ),
-                                  ),
-                                );
-                                return;
-                              }
+                                  final prod = d.product;
+                                  final famUpper = _reFamily
+                                      .firstMatch(
+                                        '${prod.categoryId} ${prod.code} ${prod.displayName}'
+                                            .toLowerCase(),
+                                      )
+                                      ?.group(1)
+                                      ?.toUpperCase();
 
-                              if (src is PdfFile) {
-                                await context.push(
-                                  '/pdf-viewer',
-                                  extra: {'title': p.code, 'pdfFile': src.path},
-                                );
-                              } else if (src is PdfNetwork) {
-                                await context.push(
-                                  '/pdf-viewer',
-                                  extra: {'title': p.code, 'pdfUrl': src.url},
-                                );
-                              }
-                            } finally {
-                              if (mounted) setState(() => _pdfBusy = false);
-                            }
-                          },
+                                  if (famUpper == null) {
+                                    if (!mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Family not recognized'),
+                                      ),
+                                    );
+                                    return;
+                                  }
 
-                    child: SizedBox(
-                      width: 42,
-                      height: 42,
-                      child: Tooltip(
-                        message: 'Open PDF / datasheet',
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 120),
-                          child: _pdfBusy
-                              ? const SizedBox(
-                                  key: ValueKey('pdfbusy'),
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
+                                  final src = await PdfCacheService.instance
+                                      .resolveByFamilyAndId(
+                                        famUpper: famUpper,
+                                        productId: prod.id,
+                                      );
+
+                                  if (!mounted) return;
+                                  if (src == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'PDF not found: $famUpper/${prod.id}.pdf',
+                                        ),
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  if (src is PdfFile) {
+                                    await context.push(
+                                      '/pdf-viewer',
+                                      extra: {
+                                        'title': prod.code,
+                                        'pdfFile': src.path,
+                                      },
+                                    );
+                                  } else if (src is PdfNetwork) {
+                                    await context.push(
+                                      '/pdf-viewer',
+                                      extra: {
+                                        'title': prod.code,
+                                        'pdfUrl': src.url,
+                                      },
+                                    );
+                                  }
+                                } finally {
+                                  if (mounted) setState(() => _pdfBusy = false);
+                                }
+                              },
+                        child: SizedBox(
+                          width: pdfBtn,
+                          height: pdfBtn,
+                          child: Tooltip(
+                            message: 'Open PDF / datasheet',
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 120),
+                              child: _pdfBusy
+                                  ? SizedBox(
+                                      key: const ValueKey('pdfbusy'),
+                                      width: pdfIcon,
+                                      height: pdfIcon,
+                                      child: const CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                      ),
+                                    )
+                                  : Icon(
+                                      key: const ValueKey('pdficon'),
+                                      Icons.picture_as_pdf,
+                                      color: Colors.white,
+                                      size: pdfIcon,
                                     ),
-                                  ),
-                                )
-                              : const Icon(
-                                  key: ValueKey('pdficon'),
-                                  Icons.picture_as_pdf,
-                                  color: Colors.white,
-                                  size: 22,
-                                ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -503,7 +568,14 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
 class _SpecRow extends StatelessWidget {
   final String title;
   final String value;
-  const _SpecRow({required this.title, required this.value});
+  final double titleSize;
+  final double valueSize;
+  const _SpecRow({
+    required this.title,
+    required this.value,
+    required this.titleSize,
+    required this.valueSize,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -514,14 +586,14 @@ class _SpecRow extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: titleSize),
           ),
           const SizedBox(height: 4),
           Text(
             value,
             textAlign: TextAlign.start,
             softWrap: true,
-            style: const TextStyle(fontSize: 14, height: 1.3),
+            style: TextStyle(fontSize: valueSize, height: 1.3),
           ),
         ],
       ),
@@ -542,8 +614,14 @@ class _SmallQtyStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+    final double h = (w * 0.09).clamp(34.0, 40.0);
+    final double iconBox = (h * 0.7).clamp(24.0, 28.0);
+    final double iconSize = (iconBox * 0.6).clamp(14.0, 16.0);
+    final double qtyFont = (w * 0.045).clamp(16.0, 18.0);
+
     return Container(
-      height: 36,
+      height: h,
       padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -559,18 +637,28 @@ class _SmallQtyStepper extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _TinyIconButton(icon: Icons.remove, onTap: onMinus),
+          _TinyIconButton(
+            icon: Icons.remove,
+            onTap: onMinus,
+            size: iconBox,
+            iconSize: iconSize,
+          ),
           const SizedBox(width: 4),
           SizedBox(
-            width: 24,
+            width: (w * 0.09).clamp(24.0, 32.0),
             child: Text(
               '$value',
               textAlign: TextAlign.center,
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: qtyFont),
             ),
           ),
           const SizedBox(width: 6),
-          _TinyIconButton(icon: Icons.add, onTap: onPlus),
+          _TinyIconButton(
+            icon: Icons.add,
+            onTap: onPlus,
+            size: iconBox,
+            iconSize: iconSize,
+          ),
         ],
       ),
     );
@@ -580,17 +668,26 @@ class _SmallQtyStepper extends StatelessWidget {
 class _TinyIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
+  final double? size;
+  final double? iconSize;
 
-  const _TinyIconButton({required this.icon, required this.onTap});
+  const _TinyIconButton({
+    required this.icon,
+    required this.onTap,
+    this.size,
+    this.iconSize,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final s = size ?? 28.0;
+    final isz = iconSize ?? 16.0;
     return IconButton(
       onPressed: onTap,
       padding: EdgeInsets.zero,
-      constraints: const BoxConstraints.tightFor(width: 28, height: 28),
-      iconSize: 16,
-      splashRadius: 18,
+      constraints: BoxConstraints.tightFor(width: s, height: s),
+      iconSize: isz,
+      splashRadius: (s * 0.65).clamp(16.0, 22.0),
       icon: Icon(icon),
     );
   }

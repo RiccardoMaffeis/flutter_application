@@ -35,7 +35,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
   @override
   void dispose() {
-    // Always dispose controllers to prevent memory leaks
     _name.dispose();
     _city.dispose();
     _email.dispose();
@@ -85,7 +84,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     );
 
     if (picked != null) {
-      // Update local state and the user-facing text field
       setState(() {
         _dob = picked;
         _dobText.text =
@@ -137,254 +135,308 @@ class _SignupPageState extends ConsumerState<SignupPage> {
       color: Color(0x44000000),
     );
 
-    // Main card that contains the entire sign-up form
-    final card = Card(
-      color: Colors.white,
-      surfaceTintColor: Colors.transparent,
-      elevation: 6,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 6),
-              const Text(
-                'Signup',
-                style: TextStyle(fontSize: 50, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 18),
-
-              // Name
-              TextFormField(
-                controller: _name,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  border: InputBorder.none,
-                ),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Name is required' : null,
-              ),
-              divider,
-
-              // Date of Birth
-              TextFormField(
-                controller: _dobText,
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText: 'Date of Birth',
-                  border: InputBorder.none,
-                  suffixIcon: IconButton(
-                    onPressed: _pickDobMaterial,
-                    icon: const Icon(Icons.calendar_today_outlined),
-                    tooltip: 'Select date',
-                  ),
-                ),
-                onTap: _pickDobMaterial,
-                validator: (_) =>
-                    _dob == null ? 'Please select your date of birth' : null,
-              ),
-              const Divider(
-                height: 1,
-                thickness: 1.2,
-                color: Color(0x44000000),
-              ),
-
-              divider,
-
-              // City
-              TextFormField(
-                controller: _city,
-                decoration: const InputDecoration(
-                  labelText: 'City of Birth',
-                  border: InputBorder.none,
-                ),
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'City is required' : null,
-              ),
-              divider,
-
-              // Email
-              TextFormField(
-                controller: _email,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: InputBorder.none,
-                ),
-                validator: (v) => (v == null || !v.contains('@'))
-                    ? 'Enter a valid email'
-                    : null,
-              ),
-              divider,
-
-              // Password (with strength requirements)
-              TextFormField(
-                controller: _password,
-                obscureText: _obscurePwd,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  border: InputBorder.none,
-                  suffixIcon: IconButton(
-                    tooltip: _obscurePwd ? 'Show password' : 'Hide password',
-                    onPressed: () => setState(() => _obscurePwd = !_obscurePwd),
-                    icon: Icon(
-                      _obscurePwd
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                    ),
-                  ),
-                ),
-                validator: (v) {
-                  final s = v ?? '';
-                  final ok =
-                      s.length >= 8 &&
-                      RegExp(r'[A-Z]').hasMatch(s) &&
-                      RegExp(r'[a-z]').hasMatch(s) &&
-                      RegExp(r'\d').hasMatch(s) &&
-                      RegExp(r'[^A-Za-z0-9]').hasMatch(s);
-                  return ok ? null : 'Password does not match the requirements';
-                },
-                autocorrect: false,
-                enableSuggestions: false,
-              ),
-              divider,
-              _PasswordChecklist(controller: _password),
-
-              const SizedBox(height: 2),
-
-              // Confirm Password (must match primary password)
-              TextFormField(
-                controller: _confirm,
-                obscureText: _obscureConfirm,
-                decoration: InputDecoration(
-                  labelText: 'Confirm Password',
-                  border: InputBorder.none,
-                  suffixIcon: IconButton(
-                    tooltip: _obscureConfirm
-                        ? 'Show password'
-                        : 'Hide password',
-                    onPressed: () =>
-                        setState(() => _obscureConfirm = !_obscureConfirm),
-                    icon: Icon(
-                      _obscureConfirm
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                    ),
-                  ),
-                ),
-                validator: (v) =>
-                    v != _password.text ? 'Passwords do not match' : null,
-                autocorrect: false,
-                enableSuggestions: false,
-              ),
-              divider,
-
-              const SizedBox(height: 24),
-
-              if (auth.isLoading)
-                const CircularProgressIndicator()
-              else
-                _pillButton(
-                  label: 'Next',
-                  onPressed: () async {
-                    if (!_formKey.currentState!.validate()) return;
-
-                    try {
-                      await ref
-                          .read(authControllerProvider.notifier)
-                          .signUp(
-                            _email.text.trim(),
-                            _password.text,
-                            name: _name.text.trim(),
-                            city: _city.text.trim(),
-                            dateOfBirth: _dob,
-                          );
-                      if (!mounted) return;
-                    } on fb.FirebaseAuthException catch (e) {
-                      if (!mounted) return;
-                      final msg = switch (e.code) {
-                        'weak-password' =>
-                          'Password too weak (min 8 characters).',
-                        'email-already-in-use' => 'Email already registered.',
-                        'invalid-email' => 'Invalid email.',
-                        _ => 'Sign up failed: ${e.code}',
-                      };
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text(msg)));
-                    }
-                  },
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-
-    // Scaffold with a scrollable center (to play well with small screens / keyboard)
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: SafeArea(
-        child: Stack(
-          children: [
-            Align(
-              alignment: Alignment.center,
-              child: SingleChildScrollView(
-                padding: EdgeInsets.fromLTRB(
-                  5,
-                  20,
-                  5,
-                  MediaQuery.of(context).viewInsets.bottom + 50,
-                ),
-                physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics(),
-                ),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 460),
-                    child: card,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final w = constraints.maxWidth;
+            final h = constraints.maxHeight;
+            final kbOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+
+            // ---- Responsive metrics ----
+            final double maxContentW = (w - 32).clamp(300.0, 460.0);
+            final double titleSize = (w * 0.11).clamp(28.0, 50.0);
+
+            final double mainBtnW = (w * 0.60).clamp(180.0, 320.0);
+            final double mainBtnH = (h * 0.055).clamp(40.0, 54.0);
+            final double mainBtnFont = (w * 0.06).clamp(18.0, 24.0);
+
+            final double footerFont = (w * 0.045).clamp(13.0, 16.0);
+            final double footerBtnW = (w * 0.36).clamp(120.0, 200.0);
+            final double footerBtnH = (h * 0.05).clamp(36.0, 48.0);
+            final double footerBtnFont = (w * 0.05).clamp(16.0, 20.0);
+            final double topPad = (h * 0.02).clamp(12.0, 24.0);
+            final double betweenTitlePad = (h * 0.02).clamp(12.0, 20.0);
+            final double afterFormPad = (h * 0.02).clamp(12.0, 24.0);
+
+            // ---- Main card (responsive) ----
+            final card = Card(
+              color: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              elevation: 6,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              margin: const EdgeInsets.all(16),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(height: (h * 0.007).clamp(4.0, 10.0)),
+                      Text(
+                        'Signup',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: titleSize,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      SizedBox(height: betweenTitlePad),
+
+                      // Name
+                      TextFormField(
+                        controller: _name,
+                        decoration: const InputDecoration(
+                          labelText: 'Name',
+                          border: InputBorder.none,
+                        ),
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Name is required'
+                            : null,
+                      ),
+                      divider,
+
+                      // Date of Birth
+                      TextFormField(
+                        controller: _dobText,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          labelText: 'Date of Birth',
+                          border: InputBorder.none,
+                          suffixIcon: IconButton(
+                            onPressed: _pickDobMaterial,
+                            icon: const Icon(Icons.calendar_today_outlined),
+                            tooltip: 'Select date',
+                          ),
+                        ),
+                        onTap: _pickDobMaterial,
+                        validator: (_) => _dob == null
+                            ? 'Please select your date of birth'
+                            : null,
+                      ),
+                      const Divider(
+                        height: 1,
+                        thickness: 1.2,
+                        color: Color(0x44000000),
+                      ),
+
+                      divider,
+
+                      // City
+                      TextFormField(
+                        controller: _city,
+                        decoration: const InputDecoration(
+                          labelText: 'City of Birth',
+                          border: InputBorder.none,
+                        ),
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'City is required'
+                            : null,
+                      ),
+                      divider,
+
+                      // Email
+                      TextFormField(
+                        controller: _email,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          border: InputBorder.none,
+                        ),
+                        validator: (v) => (v == null || !v.contains('@'))
+                            ? 'Enter a valid email'
+                            : null,
+                      ),
+                      divider,
+
+                      // Password
+                      TextFormField(
+                        controller: _password,
+                        obscureText: _obscurePwd,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          border: InputBorder.none,
+                          suffixIcon: IconButton(
+                            tooltip: _obscurePwd
+                                ? 'Show password'
+                                : 'Hide password',
+                            onPressed: () =>
+                                setState(() => _obscurePwd = !_obscurePwd),
+                            icon: Icon(
+                              _obscurePwd
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                            ),
+                          ),
+                        ),
+                        validator: (v) {
+                          final s = v ?? '';
+                          final ok =
+                              s.length >= 8 &&
+                              RegExp(r'[A-Z]').hasMatch(s) &&
+                              RegExp(r'[a-z]').hasMatch(s) &&
+                              RegExp(r'\d').hasMatch(s) &&
+                              RegExp(r'[^A-Za-z0-9]').hasMatch(s);
+                          return ok
+                              ? null
+                              : 'Password does not match the requirements';
+                        },
+                        autocorrect: false,
+                        enableSuggestions: false,
+                      ),
+                      divider,
+                      _PasswordChecklist(controller: _password),
+
+                      const SizedBox(height: 2),
+
+                      // Confirm Password
+                      TextFormField(
+                        controller: _confirm,
+                        obscureText: _obscureConfirm,
+                        decoration: InputDecoration(
+                          labelText: 'Confirm Password',
+                          border: InputBorder.none,
+                          suffixIcon: IconButton(
+                            tooltip: _obscureConfirm
+                                ? 'Show password'
+                                : 'Hide password',
+                            onPressed: () => setState(
+                              () => _obscureConfirm = !_obscureConfirm,
+                            ),
+                            icon: Icon(
+                              _obscureConfirm
+                                  ? Icons.visibility_off_outlined
+                                  : Icons.visibility_outlined,
+                            ),
+                          ),
+                        ),
+                        validator: (v) => v != _password.text
+                            ? 'Passwords do not match'
+                            : null,
+                        autocorrect: false,
+                        enableSuggestions: false,
+                      ),
+                      divider,
+
+                      SizedBox(height: afterFormPad),
+
+                      if (auth.isLoading)
+                        const CircularProgressIndicator()
+                      else
+                        _pillButton(
+                          label: 'Next',
+                          onPressed: () async {
+                            if (!_formKey.currentState!.validate()) return;
+                            try {
+                              await ref
+                                  .read(authControllerProvider.notifier)
+                                  .signUp(
+                                    _email.text.trim(),
+                                    _password.text,
+                                    name: _name.text.trim(),
+                                    city: _city.text.trim(),
+                                    dateOfBirth: _dob,
+                                  );
+                              if (!mounted) return;
+                            } on fb.FirebaseAuthException catch (e) {
+                              if (!mounted) return;
+                              final msg = switch (e.code) {
+                                'weak-password' =>
+                                  'Password too weak (min 8 characters).',
+                                'email-already-in-use' =>
+                                  'Email already registered.',
+                                'invalid-email' => 'Invalid email.',
+                                _ => 'Sign up failed: ${e.code}',
+                              };
+                              ScaffoldMessenger.of(
+                                context,
+                              ).showSnackBar(SnackBar(content: Text(msg)));
+                            }
+                          },
+                          width: mainBtnW,
+                          height: mainBtnH,
+                          fontSize: mainBtnFont,
+                          radius: 24,
+                        ),
+                    ],
                   ),
                 ),
               ),
-            ),
-            AnimatedPositioned(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOut,
-              left: 16,
-              right: 16,
-              bottom: 20 - MediaQuery.of(context).viewInsets.bottom,
-              child: Offstage(
-                offstage: MediaQuery.of(context).viewInsets.bottom > 0,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Already have an account?',
-                      style: TextStyle(
-                        fontSize: 14,
-                        decoration: TextDecoration.underline,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.black87,
+            );
+
+            // ---- Page layout: scrollable center + bottom CTA ----
+            return Stack(
+              children: [
+                Align(
+                  alignment: Alignment.center,
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.fromLTRB(
+                      5,
+                      topPad,
+                      5,
+                      (kbOpen ? topPad : 84.0),
+                    ),
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: maxContentW),
+                        child: card,
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    _pillButton(
-                      label: 'Login',
-                      onPressed: () => context.go('/login'),
-                      width: 140,
-                      height: 40,
-                      fontSize: 20,
-                      radius: 24,
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ],
+
+                // Bottom CTA to navigate to login (hidden when keyboard is open)
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 180),
+                  curve: Curves.easeOut,
+                  left: 16,
+                  right: 16,
+                  bottom: kbOpen ? -200 : 20,
+                  child: Offstage(
+                    offstage: kbOpen,
+                    child: Center(
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 10,
+                        runSpacing: 8,
+                        children: [
+                          Text(
+                            'Already have an account?',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: footerFont,
+                              decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          SizedBox(
+                            width: footerBtnW,
+                            child: _pillButton(
+                              label: 'Login',
+                              onPressed: () => context.go('/login'),
+                              width: footerBtnW,
+                              height: footerBtnH,
+                              fontSize: footerBtnFont,
+                              radius: 24,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -440,7 +492,6 @@ class _PasswordChecklist extends StatelessWidget {
           ),
         );
 
-        // Checklist container with subtle background and border
         return Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

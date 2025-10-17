@@ -20,7 +20,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
 /// Simple descriptor of an AR placeable item.
-/// `title` is for UI, `glbPath` points to a local asset, `scale` is the default 3D scale.
 class ARItem {
   final String title;
   final String glbPath;
@@ -44,10 +43,7 @@ const List<ARItem> kXtModels = [
   ARItem('XT7 4 poli', 'lib/3Dmodels/XT7/XT7_4p.glb', 0.20),
 ];
 
-/// Fullscreen AR scene page:
-/// - Displays camera feed and AR planes
-/// - Lets users place one or more GLB models on tapped planes
-/// - Provides a rotation slider for the selected model (X-axis)
+/// Fullscreen AR scene page
 class ArLivePage extends StatefulWidget {
   final String title;
   final String? glbUrl; // Optional: load GLB from the web
@@ -67,42 +63,30 @@ class ArLivePage extends StatefulWidget {
 }
 
 class _ArLivePageState extends State<ArLivePage> {
-  // AR managers provided by ar_flutter_plugin
   ARSessionManager? _session;
   ARObjectManager? _objectMgr;
   ARAnchorManager? _anchorMgr;
 
-  // Lock that prevents multiple placements from rapid taps
   bool _placeBusy = false;
 
-  // Current placed models (node + its plane anchor)
   final List<_Placed> _placed = [];
-  String? _selectedId; // Name/id of the currently selected node (if any)
+  String? _selectedId;
 
-  // Rotation value bound to the slider (degrees around X)
   double _sliderXDeg = 0;
-
-  // If true, new placements do not clear previous nodes
   bool _appendMode = false;
-
-  // The item selected from the picker, to be placed on next tap
   ARItem? _pendingItem;
 
   @override
   void dispose() {
-    // Clean scene and release session resources on page disposal
     _removeAll();
     _session?.dispose();
     super.dispose();
   }
 
-  /// Removes every placed node and its anchor from the scene and resets UI state.
   Future<void> _removeAll() async {
-    // Remove nodes first (they reference anchors)
     for (final e in List<_Placed>.from(_placed)) {
       await _objectMgr?.removeNode(e.node);
     }
-    // Then remove anchors
     for (final e in List<_Placed>.from(_placed)) {
       await _anchorMgr?.removeAnchor(e.anchor);
     }
@@ -112,32 +96,22 @@ class _ArLivePageState extends State<ArLivePage> {
     setState(() {});
   }
 
-  /// Updates the X-axis rotation for the selected node and syncs the slider value.
-  /// If no node is selected, only the slider value is updated.
   void _setSelectedXDeg(double degrees) {
     if (_selectedId == null || _objectMgr == null) {
       setState(() => _sliderXDeg = degrees);
       return;
     }
-
     final idx = _placed.indexWhere((e) => e.id == _selectedId);
     if (idx == -1) {
       setState(() => _sliderXDeg = degrees);
       return;
     }
-
     final node = _placed[idx].node;
-
-    // Keep Y and Z as-is, replace X with slider value (converted to radians)
     final e = node.eulerAngles;
-    final newEuler = vm.Vector3(degrees * math.pi / 180.0, e.y, e.z);
-    node.eulerAngles = newEuler;
-
+    node.eulerAngles = vm.Vector3(degrees * math.pi / 180.0, e.y, e.z);
     setState(() => _sliderXDeg = degrees);
   }
 
-  /// Copies an asset GLB into the application documents directory and returns the file name.
-  /// ar_flutter_plugin's NodeType.fileSystemAppFolderGLB expects a file located in the app folder.
   Future<String> _stageGlbIntoAppFolder(String assetPath) async {
     final data = await rootBundle.load(assetPath);
     final bytes = data.buffer.asUint8List(
@@ -149,7 +123,6 @@ class _ArLivePageState extends State<ArLivePage> {
     final fileName = p.basename(assetPath);
     final outFile = File(p.join(docs.path, fileName));
 
-    // Stage the file only once to save IO
     if (!await outFile.exists()) {
       await outFile.create(recursive: true);
       await outFile.writeAsBytes(bytes, flush: true);
@@ -157,32 +130,51 @@ class _ArLivePageState extends State<ArLivePage> {
     return fileName;
   }
 
-  /// Derives a thumbnail PNG path from the GLB asset path.
-  /// Example: 'lib/3Dmodels/XT2/XT2_4p.glb' -> 'lib/images/XT2/XT2_4p.png'
   String _imagePathFor(ARItem item) {
     var path = item.glbPath.replaceFirst('3Dmodels', 'images');
     path = path.replaceFirst(RegExp(r'\.glb$', caseSensitive: false), '');
     final lastSlash = path.lastIndexOf('/');
     final dir = path.substring(0, lastSlash + 1);
     var file = path.substring(lastSlash + 1);
-    // Asset naming normalization (ensure lower-case p)
     file = file.replaceAll('3P', '3p').replaceAll('4P', '4p');
     return '$dir$file.png';
   }
 
   @override
   Widget build(BuildContext context) {
+    // Responsive metrics
+    final mq = MediaQuery.of(context);
+    final w = mq.size.width;
+    final h = mq.size.height;
+    final double toolbarH = (h * 0.08).clamp(48.0, 64.0);
+    final double titleFont = (w * 0.06).clamp(18.0, 24.0);
+
+    final double cornerIcon = (w * 0.10).clamp(28.0, 40.0);
+    final double cornerPad = (w * 0.032).clamp(8.0, 14.0);
+    final double cornerTop = (mq.padding.top * 0.1 + 8).clamp(6.0, 12.0);
+
+    final double sliderBottom = (h * 0.14).clamp(84.0, 120.0);
+    final double sliderMinW = (w * 0.45).clamp(180.0, 240.0);
+    final double sliderMaxW = (w * 0.70).clamp(220.0, 320.0);
+    final double sliderValueFont = (w * 0.035).clamp(12.0, 16.0);
+
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: AppBar(
+        toolbarHeight: toolbarH,
+        title: Text(
+          widget.title,
+          style: TextStyle(fontSize: titleFont, fontWeight: FontWeight.w800),
+          overflow: TextOverflow.ellipsis,
+        ),
+        centerTitle: true,
+      ),
       body: Stack(
         children: [
-          // Camera + AR rendering surface
           ARView(
             planeDetectionConfig: PlaneDetectionConfig.horizontal,
             onARViewCreated: _onViewCreated,
           ),
 
-          // Bottom helper card with quick instructions
           const Positioned(
             left: 16,
             right: 16,
@@ -190,31 +182,29 @@ class _ArLivePageState extends State<ArLivePage> {
             child: _BottomHelpCard(),
           ),
 
-          // Add button (opens the model picker dialog)
           Positioned(
-            left: 12,
-            top: 8,
+            left: cornerPad,
+            top: cornerTop,
             child: Material(
               type: MaterialType.transparency,
               child: IconButton(
-                icon: const Icon(Icons.add, size: 40, color: Colors.white),
+                icon: Icon(Icons.add, size: cornerIcon, color: Colors.white),
                 tooltip: 'Add a model',
                 onPressed: _onPressAdd,
-                splashRadius: 24,
+                splashRadius: (cornerIcon * 0.6).clamp(20.0, 28.0),
               ),
             ),
           ),
 
-          // Delete-all button (clears anchors + nodes, with confirmation)
           Positioned(
-            right: 8,
-            top: 8,
+            right: cornerPad,
+            top: cornerTop,
             child: Material(
               type: MaterialType.transparency,
               child: IconButton(
                 icon: Icon(
                   Icons.delete_outline,
-                  size: 40,
+                  size: cornerIcon,
                   color: _placed.isEmpty
                       ? Colors.white.withOpacity(0.4)
                       : Colors.white,
@@ -235,17 +225,15 @@ class _ArLivePageState extends State<ArLivePage> {
                           }
                         }
                       },
-                splashRadius: 24,
+                splashRadius: (cornerIcon * 0.6).clamp(20.0, 28.0),
               ),
             ),
           ),
 
-          // Rotation slider (X-axis) shown centered above the bottom card;
-          // enabled only when a node is selected.
           Positioned(
             left: 0,
             right: 0,
-            bottom: 92,
+            bottom: sliderBottom,
             child: Center(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(18),
@@ -255,9 +243,9 @@ class _ArLivePageState extends State<ArLivePage> {
                     vertical: 6,
                   ),
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      minWidth: 180,
-                      maxWidth: 260,
+                    constraints: BoxConstraints(
+                      minWidth: sliderMinW,
+                      maxWidth: sliderMaxW,
                     ),
                     child: Opacity(
                       opacity: _selectedId == null ? 0.5 : 1,
@@ -268,7 +256,7 @@ class _ArLivePageState extends State<ArLivePage> {
                           children: [
                             const Icon(
                               Icons.screen_rotation_alt_outlined,
-                              size: 16,
+                              size: 18,
                               color: Colors.white,
                             ),
                             const SizedBox(width: 6),
@@ -301,12 +289,12 @@ class _ArLivePageState extends State<ArLivePage> {
                             ),
                             const SizedBox(width: 6),
                             SizedBox(
-                              width: 40,
+                              width: 44,
                               child: Text(
                                 '${_sliderXDeg.toStringAsFixed(0)}°',
                                 textAlign: TextAlign.right,
-                                style: const TextStyle(
-                                  fontSize: 14,
+                                style: TextStyle(
+                                  fontSize: sliderValueFont,
                                   fontWeight: FontWeight.w600,
                                   color: Colors.white,
                                 ),
@@ -322,7 +310,6 @@ class _ArLivePageState extends State<ArLivePage> {
             ),
           ),
 
-          // Simple loading overlay shown while placing an item (prevents double taps)
           Positioned.fill(
             child: _BusyOverlay(visible: _placeBusy, message: 'Placing…'),
           ),
@@ -331,8 +318,6 @@ class _ArLivePageState extends State<ArLivePage> {
     );
   }
 
-  /// Opens a modal dialog to pick a model to add.
-  /// When confirmed, enables "append mode": next plane tap will place the chosen item.
   Future<void> _onPressAdd() async {
     final picked = await _showModelPickerDialog(context);
     if (picked != null) {
@@ -350,104 +335,116 @@ class _ArLivePageState extends State<ArLivePage> {
     }
   }
 
-  /// Dialog showing the list of available models with thumbnails.
-  /// Returns the chosen `ARItem` or null if cancelled.
   Future<ARItem?> _showModelPickerDialog(BuildContext context) async {
     return showDialog<ARItem>(
       context: context,
       barrierDismissible: true,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 6),
-              const Text(
-                'Pick a device',
-                style: TextStyle(fontSize: 40, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 12),
-              ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxHeight: 420,
-                  minHeight: 200,
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Material(
-                    color: Colors.white,
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      itemCount: kXtModels.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemBuilder: (_, i) {
-                        final it = kXtModels[i];
-                        final thumb = _imagePathFor(it);
-                        return ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 6,
-                          ),
-                          leading: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.asset(
-                              thumb,
-                              width: 44,
-                              height: 44,
-                              fit: BoxFit.contain,
-                              errorBuilder: (c, e, s) =>
-                                  const Icon(Icons.precision_manufacturing),
-                            ),
-                          ),
-                          title: Text(
-                            it.title,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          onTap: () => Navigator.of(ctx).pop(it),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(ctx).pop(null),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(0, 44),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        side: const BorderSide(color: Color(0x22000000)),
-                      ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+      builder: (ctx) {
+        final mq = MediaQuery.of(ctx);
+        final w = mq.size.width;
+        final h = mq.size.height;
+
+        final double titleFont = (w * 0.08).clamp(24.0, 40.0);
+        final double listMaxH = (h * 0.55).clamp(240.0, 480.0);
+        final double thumb = (w * 0.12).clamp(40.0, 56.0);
+        final double itemFont = (w * 0.045).clamp(14.0, 18.0);
+        final double btnH = (h * 0.06).clamp(40.0, 50.0);
+
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
           ),
-        ),
-      ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 6),
+                Text(
+                  'Pick a device',
+                  style: TextStyle(
+                    fontSize: titleFont,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: listMaxH,
+                    minHeight: (listMaxH * 0.45).clamp(180.0, 260.0),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Material(
+                      color: Colors.white,
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: kXtModels.length,
+                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        itemBuilder: (_, i) {
+                          final it = kXtModels[i];
+                          final tpath = _imagePathFor(it);
+                          return ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 6,
+                            ),
+                            leading: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.asset(
+                                tpath,
+                                width: thumb,
+                                height: thumb,
+                                fit: BoxFit.contain,
+                                errorBuilder: (c, e, s) =>
+                                    const Icon(Icons.precision_manufacturing),
+                              ),
+                            ),
+                            title: Text(
+                              it.title,
+                              style: TextStyle(
+                                fontSize: itemFont,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            onTap: () => Navigator.of(ctx).pop(it),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(ctx).pop(null),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: Size(0, btnH),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          side: const BorderSide(color: Color(0x22000000)),
+                        ),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
-  /// Called when the ARView is ready. Initializes AR managers and sets callbacks:
-  /// - `onNodeTap` selects a model
-  /// - `onPlaneOrPointTap` places a model (pending or default)
   Future<void> _onViewCreated(
     ARSessionManager session,
     ARObjectManager objectMgr,
@@ -458,7 +455,6 @@ class _ArLivePageState extends State<ArLivePage> {
     _objectMgr = objectMgr;
     _anchorMgr = anchorMgr;
 
-    // Configure AR session visualization and gesture handling.
     await _session!.onInitialize(
       showFeaturePoints: false,
       showPlanes: true,
@@ -470,7 +466,6 @@ class _ArLivePageState extends State<ArLivePage> {
     );
     await _objectMgr!.onInitialize();
 
-    // When a node is tapped, remember it as "selected" and sync the slider to its X rotation.
     _objectMgr!.onNodeTap = (List<String> nodeNames) {
       if (nodeNames.isEmpty) return;
       final id = nodeNames.first;
@@ -495,18 +490,13 @@ class _ArLivePageState extends State<ArLivePage> {
       );
     };
 
-    // When a plane/point is tapped, create an anchor and add the selected or default GLB node.
     _session!.onPlaneOrPointTap = (hits) async {
-      // Prevent double placements while we process the previous one
       if (_placeBusy) return;
       setState(() => _placeBusy = true);
       try {
-        // Small debounce to absorb micro double taps
         await Future.delayed(const Duration(milliseconds: 120));
-
         if (hits.isEmpty) return;
 
-        // Unless in append mode, clear existing nodes to keep a single model.
         if (!_appendMode) {
           await _removeAll();
         }
@@ -516,13 +506,11 @@ class _ArLivePageState extends State<ArLivePage> {
         final okAnchor = await _anchorMgr!.addAnchor(anchor);
         if (okAnchor != true) return;
 
-        // Rotate 180° around Y so front faces the camera by default.
         final yaw180 = vm.Vector4(0, 1, 0, math.pi);
         final newId = 'mdl_${DateTime.now().microsecondsSinceEpoch}';
 
         ARNode node;
         if (_pendingItem != null) {
-          // Load from catalog (bundled asset staged into app folder)
           final fileName = await _stageGlbIntoAppFolder(_pendingItem!.glbPath);
           node = ARNode(
             name: newId,
@@ -537,7 +525,6 @@ class _ArLivePageState extends State<ArLivePage> {
             rotation: yaw180,
           );
         } else if (widget.assetGlb != null && widget.assetGlb!.isNotEmpty) {
-          // Load a specific asset passed via route
           final fileName = await _stageGlbIntoAppFolder(widget.assetGlb!);
           node = ARNode(
             name: newId,
@@ -548,7 +535,6 @@ class _ArLivePageState extends State<ArLivePage> {
             rotation: yaw180,
           );
         } else if (widget.glbUrl != null && widget.glbUrl!.isNotEmpty) {
-          // Load a GLB from network
           node = ARNode(
             name: newId,
             type: NodeType.webGLB,
@@ -558,7 +544,6 @@ class _ArLivePageState extends State<ArLivePage> {
             rotation: yaw180,
           );
         } else {
-          // Nothing to load -> inform the user.
           if (!mounted) return;
           showArSnack(
             context,
@@ -569,13 +554,12 @@ class _ArLivePageState extends State<ArLivePage> {
           return;
         }
 
-        // Add the node attached to the newly created plane anchor.
         final okNode = await _objectMgr!.addNode(node, planeAnchor: anchor);
         if (okNode == true && mounted) {
           setState(() {
             _placed.add(_Placed(id: newId, anchor: anchor, node: node));
-            _appendMode = false; // Exit append mode after first placement
-            _pendingItem = null; // Clear pending item
+            _appendMode = false;
+            _pendingItem = null;
           });
         } else {
           if (!mounted) return;
@@ -588,113 +572,129 @@ class _ArLivePageState extends State<ArLivePage> {
           );
         }
       } finally {
-        // Always release the lock and hide the overlay
         if (mounted) setState(() => _placeBusy = false);
       }
     };
   }
 
-  /// Ask the user to confirm removal of all nodes/anchors.
   Future<bool?> _confirmClearAll(BuildContext context) async {
     return showDialog<bool>(
       context: context,
       barrierDismissible: true,
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 6),
-              const Text(
-                'Remove all?',
-                style: TextStyle(fontSize: 40, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.of(ctx).pop(false),
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(0, 44),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        side: const BorderSide(color: Color(0x22000000)),
-                      ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.of(ctx).pop(true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.accent,
-                        minimumSize: const Size(0, 44),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        'Remove',
-                        style: TextStyle(fontSize: 18, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+      builder: (ctx) {
+        final mq = MediaQuery.of(ctx);
+        final w = mq.size.width;
+        final h = mq.size.height;
+
+        final double titleFont = (w * 0.08).clamp(26.0, 40.0);
+        final double btnH = (h * 0.06).clamp(40.0, 52.0);
+
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
           ),
-        ),
-      ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 6),
+                Text(
+                  'Remove all?',
+                  style: TextStyle(
+                    fontSize: titleFont,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: Size(0, btnH),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          side: const BorderSide(color: Color(0x22000000)),
+                        ),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(ctx).pop(true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.accent,
+                          minimumSize: Size(0, btnH),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'Remove',
+                          style: TextStyle(fontSize: 18, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
 
-/// Small holder for a placed model and its anchor.
-/// `id` corresponds to the node name used by ar_flutter_plugin.
 class _Placed {
   final String id;
   final ARPlaneAnchor anchor;
   final ARNode node;
-
   _Placed({required this.id, required this.anchor, required this.node});
 }
 
-/// Bottom helper card with brief usage instructions.
 class _BottomHelpCard extends StatelessWidget {
   const _BottomHelpCard();
 
   @override
   Widget build(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final w = mq.size.width;
+
+    final double icon = (w * 0.06).clamp(18.0, 22.0);
+    final double font = (w * 0.035).clamp(11.0, 13.0);
+    final double padH = (w * 0.04).clamp(12.0, 18.0);
+    final double padV = (w * 0.025).clamp(8.0, 12.0);
+
     return SafeArea(
       minimum: const EdgeInsets.only(left: 0, right: 0, bottom: 0),
       child: Card(
         color: Theme.of(context).colorScheme.surface,
         elevation: 6,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        child: const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
           child: Row(
             children: [
-              Icon(Icons.touch_app_outlined),
-              SizedBox(width: 12),
+              Icon(Icons.touch_app_outlined, size: icon),
+              SizedBox(width: (w * 0.03).clamp(8.0, 14.0)),
               Expanded(
                 child: Text(
                   'Tap a plane to place the model.\n'
                   'Press “+” (top-left) to pick a device to add.\n'
                   'Tap the trash (top-right) to remove all models.',
-                  style: TextStyle(fontSize: 12, height: 1.2),
+                  style: TextStyle(fontSize: font, height: 1.25),
                 ),
               ),
             ],
@@ -705,8 +705,6 @@ class _BottomHelpCard extends StatelessWidget {
   }
 }
 
-/// Lightweight fullscreen busy overlay with a small progress indicator.
-/// Blocks interaction (via IgnorePointer) only while visible.
 class _BusyOverlay extends StatelessWidget {
   final bool visible;
   final String message;
@@ -714,16 +712,25 @@ class _BusyOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+    final double boxPadH = (w * 0.035).clamp(12.0, 16.0);
+    final double boxPadV = (w * 0.028).clamp(8.0, 12.0);
+    final double textSize = (w * 0.038).clamp(13.0, 15.0);
+    final double spinner = (w * 0.05).clamp(16.0, 20.0);
+
     return IgnorePointer(
-      ignoring: !visible, // pass through taps when not visible
+      ignoring: !visible,
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 150),
         opacity: visible ? 1 : 0,
         child: Container(
-          color: Colors.black.withOpacity(0.15), // subtle dim background
+          color: Colors.black.withOpacity(0.15),
           child: Center(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: EdgeInsets.symmetric(
+                horizontal: boxPadH,
+                vertical: boxPadV,
+              ),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -739,17 +746,17 @@ class _BusyOverlay extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                  SizedBox(
+                    width: spinner,
+                    height: spinner,
+                    child: const CircularProgressIndicator(strokeWidth: 2),
                   ),
                   const SizedBox(width: 10),
                   Text(
                     message,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w800,
-                      fontSize: 14,
+                      fontSize: textSize,
                       color: Colors.black87,
                     ),
                   ),
@@ -763,7 +770,6 @@ class _BusyOverlay extends StatelessWidget {
   }
 }
 
-/// Compact icon button used inside the custom snackbar.
 class _TinyIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -772,59 +778,77 @@ class _TinyIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: onTap,
-      padding: EdgeInsets.zero,
-      constraints: const BoxConstraints.tightFor(width: 28, height: 28),
-      iconSize: 16,
-      splashRadius: 18,
-      icon: Icon(icon),
+    final w = MediaQuery.of(context).size.width;
+    final double side = (w * 0.08).clamp(26.0, 32.0);
+    final double ic = (w * 0.05).clamp(16.0, 20.0);
+
+    return SizedBox(
+      width: side,
+      height: side,
+      child: Material(
+        color: Colors.white,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: onTap,
+          child: Icon(icon, size: ic),
+        ),
+      ),
     );
   }
 }
 
-/// Lightweight, custom overlay "snack" banner:
-/// - Uses `OverlayEntry` so it doesn't depend on ScaffoldMessenger
-/// - Vibrates lightly (haptic) on show
-/// - Auto-dismisses after 2 seconds
-/// - Supports optional action icon/callback and centered layout
+/// Smaller, raised & top-aligned snack banner (aligned with the corner icons)
 void showArSnack(
   BuildContext context, {
   required String title,
   String? subtitle,
   IconData icon = Icons.info_outline,
-  Color? color, // (Unused in current container but kept for future styling)
+  Color? color, // reserved
   IconData? actionIcon,
   VoidCallback? onAction,
-  bool centered = false, // When true, layout is column-centered
-  bool showIcon = true, // Hide icon for ultra-minimal messages
+  bool centered = false,
+  bool showIcon = true,
 }) {
   HapticFeedback.lightImpact();
 
-  // Get the overlay layer (assumes presence of an Overlay in the tree).
   final overlay = Overlay.of(context);
+  final mq = MediaQuery.of(context);
+  final w = mq.size.width;
 
-  // Position the banner below the AppBar.
-  final topY = MediaQuery.of(context).padding.top + kToolbarHeight + 8;
+  // Compute the same top offset used by the corner icons,
+  // but measured in the global overlay coordinate space:
+  final double cornerTop = (mq.padding.top * 0.1 + 8).clamp(6.0, 12.0);
+  final double appBarTop = mq.padding.top + kToolbarHeight;
+  final double topY = appBarTop + cornerTop; // aligned with side icons
+
+  // Width/padding & compact sizing
+  final double sidePad = (w * 0.18).clamp(24.0, 96.0);
+  final double iconSize = (w * 0.048).clamp(16.0, 20.0);
+  final double titleFont = (w * 0.034).clamp(12.0, 13.0);
+  final double subFont = (w * 0.030).clamp(11.0, 12.0);
+  final double padH = (w * 0.028).clamp(10.0, 14.0);
+  final double padV = (w * 0.020).clamp(6.0, 10.0);
+  const double radius = 14.0;
 
   final entry = OverlayEntry(
     builder: (ctx) {
       return Positioned(
         top: topY,
-        left: 64, // Side padding for a centered-ish banner
-        right: 64,
+        left: sidePad,
+        right: sidePad,
         child: Material(
           color: Colors.transparent,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(radius),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x22000000),
-                  blurRadius: 16,
-                  offset: Offset(0, 8),
+                  color: Color(0x1A000000),
+                  blurRadius: 12,
+                  offset: Offset(0, 6),
                 ),
               ],
               border: Border.all(color: const Color(0x11000000)),
@@ -835,17 +859,17 @@ void showArSnack(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       if (showIcon) ...[
-                        Icon(icon, size: 22, color: Colors.black87),
-                        const SizedBox(height: 6),
+                        Icon(icon, size: iconSize, color: Colors.black87),
+                        const SizedBox(height: 4),
                       ],
                       Text(
                         title,
                         textAlign: TextAlign.center,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w900,
-                          fontSize: 14,
+                          fontSize: titleFont,
                           color: Colors.black87,
                         ),
                       ),
@@ -856,8 +880,8 @@ void showArSnack(
                           textAlign: TextAlign.center,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
+                          style: TextStyle(
+                            fontSize: subFont,
                             color: Colors.black54,
                             height: 1.2,
                           ),
@@ -868,8 +892,8 @@ void showArSnack(
                 : Row(
                     children: [
                       if (showIcon) ...[
-                        Icon(icon, size: 22, color: Colors.black87),
-                        const SizedBox(width: 10),
+                        Icon(icon, size: iconSize, color: Colors.black87),
+                        const SizedBox(width: 8),
                       ],
                       Expanded(
                         child: Column(
@@ -879,9 +903,9 @@ void showArSnack(
                               title,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.w900,
-                                fontSize: 14,
+                                fontSize: titleFont,
                                 color: Colors.black87,
                               ),
                             ),
@@ -891,8 +915,8 @@ void showArSnack(
                                 subtitle,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 12,
+                                style: TextStyle(
+                                  fontSize: subFont,
                                   color: Colors.black54,
                                   height: 1.2,
                                 ),
@@ -913,7 +937,6 @@ void showArSnack(
     },
   );
 
-  // Insert and schedule auto-removal after a short delay.
   overlay.insert(entry);
   Timer(const Duration(seconds: 2), entry.remove);
 }

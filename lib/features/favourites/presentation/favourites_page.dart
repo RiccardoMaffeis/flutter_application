@@ -18,6 +18,32 @@ class FavouritesPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final mq = MediaQuery.of(context);
+    final w = mq.size.width;
+    final h = mq.size.height;
+
+    // ---- Responsive metrics ----
+    final double titleFont = (w * 0.09).clamp(24.0, 40.0);
+    final double headerSpacer = (w * 0.12).clamp(40.0, 56.0);
+    final double barH = (w * 0.01).clamp(3.0, 4.0);
+
+    // Bottom nav size and extra spacing so content doesn't collide
+    final double navHeight = (w * 0.12).clamp(52.0, 64.0);
+    final double bottomSpacer = navHeight + mq.padding.bottom + 24;
+
+    // Grid breakpoints
+    int columns;
+    if (w >= 1000) {
+      columns = 4;
+    } else if (w >= 700) {
+      columns = 3;
+    } else {
+      columns = 2;
+    }
+    final double aspect = columns >= 4
+        ? 0.70
+        : (columns == 3 ? 0.60 : 0.52); // card ratio tuning
+
     // Derived list of favourite products (AsyncValue<List<Product>>)
     final favs = ref.watch(favouritesControllerProvider);
     final favsCtrl = ref.read(favouritesControllerProvider.notifier);
@@ -47,7 +73,9 @@ class FavouritesPage extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
-                      const SizedBox(width: 48), // spacer to balance cart icon
+                      SizedBox(
+                        width: headerSpacer,
+                      ), // spacer to balance cart icon
                       Expanded(
                         child: Center(
                           child: Text(
@@ -55,7 +83,7 @@ class FavouritesPage extends ConsumerWidget {
                             style: Theme.of(context).textTheme.headlineMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.w900,
-                                  fontSize: 40,
+                                  fontSize: titleFont,
                                 ),
                           ),
                         ),
@@ -69,7 +97,7 @@ class FavouritesPage extends ConsumerWidget {
                 ),
                 // Accent underline under the title
                 Container(
-                  height: 4,
+                  height: barH,
                   margin: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
                     color: AppTheme.accent,
@@ -84,7 +112,7 @@ class FavouritesPage extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: (h * 0.02).clamp(8.0, 16.0)),
 
                 // ----- Content: grid of favourite products or placeholders -----
                 Expanded(
@@ -103,12 +131,13 @@ class FavouritesPage extends ConsumerWidget {
                         ),
                         child: GridView.builder(
                           physics: const BouncingScrollPhysics(),
+                          padding: EdgeInsets.only(bottom: bottomSpacer),
                           gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 2,
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: columns,
                                 mainAxisSpacing: 14,
                                 crossAxisSpacing: 14,
-                                childAspectRatio: 0.52,
+                                childAspectRatio: aspect,
                               ),
                           itemCount: items.length,
                           itemBuilder: (_, i) {
@@ -123,9 +152,7 @@ class FavouritesPage extends ConsumerWidget {
                                 await shopCtrl.toggleFavourite(p.id);
                                 await favsCtrl.refresh();
                               },
-                              onTap: () => context.go(
-                                '/product/${p.id}',
-                              ),
+                              onTap: () => context.go('/product/${p.id}'),
                             );
                           },
                         ),
@@ -133,14 +160,15 @@ class FavouritesPage extends ConsumerWidget {
                     },
                   ),
                 ),
-                const SizedBox(height: 76), // space for bottom pill nav overlay
+                // dynamic space so the grid never collides with the bottom nav
+                SizedBox(height: bottomSpacer),
               ],
             ),
 
             // ----- Floating assistant bubble (placeholder action) -----
             Positioned(
               right: 16,
-              bottom: 90,
+              bottom: navHeight + mq.padding.bottom + 26,
               child: Material(
                 color: Colors.white,
                 shape: const CircleBorder(),
@@ -148,10 +176,13 @@ class FavouritesPage extends ConsumerWidget {
                 child: InkWell(
                   customBorder: const CircleBorder(),
                   onTap: () => context.push('/assistant'),
-                  child: const SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: Icon(Icons.psychology_alt_outlined, size: 35),
+                  child: SizedBox(
+                    width: (w * 0.12).clamp(40.0, 52.0),
+                    height: (w * 0.12).clamp(40.0, 52.0),
+                    child: Icon(
+                      Icons.psychology_alt_outlined,
+                      size: (w * 0.095).clamp(28.0, 36.0),
+                    ),
                   ),
                 ),
               ),
@@ -162,14 +193,17 @@ class FavouritesPage extends ConsumerWidget {
               left: 16,
               right: 16,
               bottom: 16,
-              child: _BottomPillNav(
-                index: 1, // this page (Favourites) is selected
-                onChanged: (i) {
-                  if (i == 0) context.go('/home');
-                  if (i == 1) return;
-                  if (i == 3) context.go('/profile');
-                  if (i == 2) context.go('/ar');
-                },
+              child: SafeArea(
+                top: false,
+                child: _BottomPillNav(
+                  index: 1, // this page (Favourites) is selected
+                  onChanged: (i) {
+                    if (i == 0) context.go('/home');
+                    if (i == 1) return;
+                    if (i == 3) context.go('/profile');
+                    if (i == 2) context.go('/ar');
+                  },
+                ),
               ),
             ),
           ],
@@ -180,7 +214,6 @@ class FavouritesPage extends ConsumerWidget {
 }
 
 /// Reusable "pill" bottom navigation with an animated highlight.
-/// Accepts the current [index] and an [onChanged] callback for navigation.
 class _BottomPillNav extends StatelessWidget {
   final int index;
   final ValueChanged<int> onChanged;
@@ -188,89 +221,95 @@ class _BottomPillNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 58,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x22000000),
-            blurRadius: 22,
-            spreadRadius: 2,
-            offset: Offset(0, 10),
-          ),
-          BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-        border: Border.fromBorderSide(
-          const BorderSide(color: Color(0x11000000)),
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: LayoutBuilder(
-        builder: (context, cons) {
-          // Compute slot width for the sliding highlight (4 icons)
-          const pad = 6.0;
-          final slotW = (cons.maxWidth - pad * 2) / 4;
-          return Stack(
-            children: [
-              // Animated highlight under the selected icon
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOut,
-                left: pad + index * slotW,
-                top: pad,
-                bottom: pad,
-                width: slotW,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.accent,
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                ),
+    return LayoutBuilder(
+      builder: (context, cons) {
+        final w = cons.maxWidth;
+        final double h = (w * 0.12).clamp(52.0, 64.0);
+        final double pad = (h * 0.1).clamp(6.0, 8.0);
+
+        return Container(
+          height: h,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(h * 0.48),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x22000000),
+                blurRadius: 22,
+                spreadRadius: 2,
+                offset: Offset(0, 10),
               ),
-              // Row of icons; tapping invokes onChanged with the target index
-              Padding(
-                padding: const EdgeInsets.all(pad),
-                child: Row(
-                  children: [
-                    _NavIcon(
-                      icon: Icons.shopping_bag_outlined,
-                      selected: index == 0,
-                      onTap: () => onChanged(0),
-                    ),
-                    _NavIcon(
-                      icon: Icons.favorite_border,
-                      selected: index == 1,
-                      onTap: () => onChanged(1),
-                    ),
-                    _NavIcon(
-                      icon: Icons.view_in_ar,
-                      selected: index == 2,
-                      onTap: () => onChanged(2),
-                    ),
-                    _NavIcon(
-                      icon: Icons.person_outline,
-                      selected: index == 3,
-                      onTap: () => onChanged(3),
-                    ),
-                  ],
-                ),
+              BoxShadow(
+                color: Color(0x14000000),
+                blurRadius: 8,
+                offset: Offset(0, 2),
               ),
             ],
-          );
-        },
-      ),
+            border: Border.fromBorderSide(
+              const BorderSide(color: Color(0x11000000)),
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: LayoutBuilder(
+            builder: (context, inner) {
+              final slotW = (inner.maxWidth - pad * 2) / 4;
+
+              return Stack(
+                children: [
+                  // Animated highlight under the selected icon
+                  AnimatedPositioned(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOut,
+                    left: pad + index * slotW,
+                    top: pad,
+                    bottom: pad,
+                    width: slotW,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.accent,
+                        borderRadius: BorderRadius.circular(h * 0.38),
+                      ),
+                    ),
+                  ),
+                  // Row of icons
+                  Padding(
+                    padding: EdgeInsets.all(pad),
+                    child: Row(
+                      children: [
+                        _NavIcon(
+                          icon: Icons.shopping_bag_outlined,
+                          selected: index == 0,
+                          onTap: () => onChanged(0),
+                        ),
+                        _NavIcon(
+                          icon: Icons.favorite_border,
+                          selected: index == 1,
+                          onTap: () => onChanged(1),
+                        ),
+                        _NavIcon(
+                          icon: Icons.view_in_ar,
+                          selected: index == 2,
+                          onTap: () => onChanged(2),
+                        ),
+                        _NavIcon(
+                          icon: Icons.person_outline,
+                          selected: index == 3,
+                          onTap: () => onChanged(3),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
 
 /// Single navigation icon within the pill bar.
-/// Adjusts color based on [selected] and triggers [onTap] when pressed.
 class _NavIcon extends StatelessWidget {
   final IconData icon;
   final bool selected;
@@ -283,6 +322,9 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+    final double size = (w * 0.085).clamp(26.0, 34.0);
+
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -290,7 +332,7 @@ class _NavIcon extends StatelessWidget {
         child: Center(
           child: Icon(
             icon,
-            size: 34,
+            size: size,
             color: selected ? Colors.white : Colors.black87,
           ),
         ),

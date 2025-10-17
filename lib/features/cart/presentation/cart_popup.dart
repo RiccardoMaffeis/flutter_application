@@ -25,14 +25,54 @@ class _CartDialog extends ConsumerWidget {
     // Controller to perform mutations (set qty, remove, clear, etc.).
     final ctrl = ref.read(cartControllerProvider.notifier);
 
+    // ---------- Responsive metrics ----------
+    final mq = MediaQuery.of(context);
+    final w = mq.size.width;
+    final h = mq.size.height;
+
+    final double dialogW = (w * 0.94).clamp(300.0, 480.0);
+    final EdgeInsets dialogInset = EdgeInsets.symmetric(
+      horizontal: (w * 0.06).clamp(12.0, 24.0),
+      vertical: (h * 0.04).clamp(12.0, 24.0),
+    );
+
+    final EdgeInsets dialogPad = EdgeInsets.fromLTRB(
+      (w * 0.03).clamp(10.0, 16.0),
+      (h * 0.018).clamp(10.0, 16.0),
+      (w * 0.03).clamp(10.0, 16.0),
+      (h * 0.018).clamp(10.0, 16.0),
+    );
+
+    final double listH = (h * 0.32).clamp(180.0, 320.0);
+
+    final double closeIcon = (w * 0.07).clamp(22.0, 28.0);
+
+    final double avatarR = (w * 0.06).clamp(20.0, 26.0);
+    final double thumbWH = avatarR * 1.8;
+
+    final double nameFont = (w * 0.041).clamp(13.0, 16.0);
+    final double codeFont = (w * 0.033).clamp(11.0, 13.0);
+    final double priceFont = (w * 0.045).clamp(15.0, 18.0);
+
+    final double stepperH = (h * 0.04).clamp(30.0, 36.0);
+    final double stepperIcon = (stepperH * 0.55).clamp(16.0, 20.0);
+
+    final double totalsLabelFont = (w * 0.038).clamp(13.0, 15.0);
+    final double totalsValueFont = (w * 0.042).clamp(14.0, 18.0);
+
+    final double btnW = (dialogW * 0.60).clamp(200.0, 280.0);
+    final double btnH = (h * 0.055).clamp(42.0, 50.0);
+    final double btnFont = (w * 0.045).clamp(16.0, 18.0);
+    final double btnRadius = (btnH * 0.56).clamp(22.0, 26.0);
+
     return Dialog(
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      insetPadding: dialogInset,
       child: SizedBox(
-        width: 420,
+        width: dialogW,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+          padding: dialogPad,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -43,14 +83,14 @@ class _CartDialog extends ConsumerWidget {
                   const Spacer(),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
+                    icon: Icon(Icons.close, size: closeIcon),
                   ),
                 ],
               ),
 
               // Cart items list (fixed height, scrollable)
               SizedBox(
-                height: 260,
+                height: listH,
                 child: cart.items.when(
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
@@ -71,20 +111,20 @@ class _CartDialog extends ConsumerWidget {
                           children: [
                             // Circular thumbnail with asset image fallback
                             CircleAvatar(
-                              radius: 24,
+                              radius: avatarR,
                               backgroundColor: const Color(0xFFF4F4F4),
                               child: ClipOval(
                                 child: Image.asset(
                                   it.imageUrl,
-                                  width: 44,
-                                  height: 44,
+                                  width: thumbWH,
+                                  height: thumbWH,
                                   fit: BoxFit.contain,
                                   errorBuilder: (_, __, ___) =>
                                       const Icon(Icons.broken_image_outlined),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
+                            SizedBox(width: (w * 0.03).clamp(10.0, 14.0)),
                             // Product title, code and unit price
                             Expanded(
                               child: Column(
@@ -94,29 +134,30 @@ class _CartDialog extends ConsumerWidget {
                                     it.displayName,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.w700,
+                                      fontSize: nameFont,
                                     ),
                                   ),
                                   Text(
                                     it.code,
-                                    style: const TextStyle(
-                                      fontSize: 12,
+                                    style: TextStyle(
+                                      fontSize: codeFont,
                                       color: Colors.black54,
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
+                                  SizedBox(height: (h * 0.007).clamp(4.0, 8.0)),
                                   Text(
                                     '${it.unitPrice.toStringAsFixed(2)} €',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.w800,
-                                      fontSize: 16,
+                                      fontSize: priceFont,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 10),
+                            SizedBox(width: (w * 0.02).clamp(8.0, 12.0)),
 
                             // Quantity stepper and delete action
                             _QtyStepper(
@@ -125,6 +166,8 @@ class _CartDialog extends ConsumerWidget {
                                   ctrl.setQty(it.productId, it.qty - 1),
                               onPlus: () =>
                                   ctrl.setQty(it.productId, it.qty + 1),
+                              height: stepperH,
+                              iconSize: stepperIcon,
                             ),
                             IconButton(
                               onPressed: () async {
@@ -143,20 +186,36 @@ class _CartDialog extends ConsumerWidget {
                 ),
               ),
 
-              const SizedBox(height: 12),
+              SizedBox(height: (h * 0.015).clamp(8.0, 14.0)),
 
               // Totals summary (subtotal, tax, and total)
-              _TotalRow(label: 'Order Amount', value: cart.subtotal),
-              _TotalRow(label: 'Tax', value: cart.tax),
+              _TotalRow(
+                label: 'Order Amount',
+                value: cart.subtotal,
+                labelFont: totalsLabelFont,
+                valueFont: totalsValueFont,
+              ),
+              _TotalRow(
+                label: 'Tax',
+                value: cart.tax,
+                labelFont: totalsLabelFont,
+                valueFont: totalsValueFont,
+              ),
               const Divider(height: 18, thickness: 1),
-              _TotalRow(label: 'Total Payment', value: cart.total, bold: true),
+              _TotalRow(
+                label: 'Total Payment',
+                value: cart.total,
+                bold: true,
+                labelFont: totalsLabelFont + 1,
+                valueFont: totalsValueFont + 1,
+              ),
 
-              const SizedBox(height: 12),
+              SizedBox(height: (h * 0.015).clamp(8.0, 14.0)),
 
               // Checkout button (placeholder action -> just closes the dialog)
               SizedBox(
-                width: 240,
-                height: 46,
+                width: btnW,
+                height: btnH,
                 child: ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
@@ -164,13 +223,13 @@ class _CartDialog extends ConsumerWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.accent,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(26),
+                      borderRadius: BorderRadius.circular(btnRadius),
                     ),
                     elevation: 3,
                   ),
-                  child: const Text(
+                  child: Text(
                     'Checkout',
-                    style: TextStyle(color: Colors.white, fontSize: 18),
+                    style: TextStyle(color: Colors.white, fontSize: btnFont),
                   ),
                 ),
               ),
@@ -187,21 +246,31 @@ class _QtyStepper extends StatelessWidget {
   final int qty;
   final VoidCallback onMinus;
   final VoidCallback onPlus;
+
+  // responsive overrides
+  final double? height;
+  final double? iconSize;
+
   const _QtyStepper({
     required this.qty,
     required this.onMinus,
     required this.onPlus,
+    this.height,
+    this.iconSize,
   });
 
   @override
   Widget build(BuildContext context) {
+    final double h = height ?? 32.0;
+    final double ic = (iconSize ?? 18.0);
+
     return Container(
-      height: 32,
-      padding: const EdgeInsets.symmetric(horizontal: 6),
+      height: h,
+      padding: EdgeInsets.symmetric(horizontal: (h * 0.18).clamp(6.0, 8.0)),
       margin: const EdgeInsets.only(right: 6),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(h * 0.55),
         boxShadow: const [
           BoxShadow(
             color: Color(0x22000000),
@@ -213,36 +282,39 @@ class _QtyStepper extends StatelessWidget {
       child: Row(
         children: [
           // Decrease quantity
-          _iconBtn(Icons.remove, onMinus),
+          _iconBtn(Icons.remove, onMinus, ic, h),
           // Current quantity value
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+            padding: EdgeInsets.symmetric(
+              horizontal: (h * 0.22).clamp(6.0, 10.0),
+            ),
             child: Text(
               '$qty',
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
           ),
           // Increase quantity
-          _iconBtn(Icons.add, onPlus),
+          _iconBtn(Icons.add, onPlus, ic, h),
         ],
       ),
     );
   }
 
   /// Small circular icon button used by the stepper.
-  Widget _iconBtn(IconData icon, VoidCallback onTap) => SizedBox(
-    width: 28,
-    height: 28,
-    child: Material(
-      color: Colors.white,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: Icon(icon, size: 18),
-      ),
-    ),
-  );
+  Widget _iconBtn(IconData icon, VoidCallback onTap, double size, double h) =>
+      SizedBox(
+        width: (h * 0.78).clamp(26.0, 32.0),
+        height: (h * 0.78).clamp(26.0, 32.0),
+        child: Material(
+          color: Colors.white,
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onTap,
+            child: Icon(icon, size: size),
+          ),
+        ),
+      );
 }
 
 /// Row widget to display a label + formatted euro amount (with optional emphasis).
@@ -250,17 +322,27 @@ class _TotalRow extends StatelessWidget {
   final String label;
   final double value;
   final bool bold;
+
+  // responsive overrides
+  final double? labelFont;
+  final double? valueFont;
+
   const _TotalRow({
     required this.label,
     required this.value,
     this.bold = false,
+    this.labelFont,
+    this.valueFont,
   });
 
   @override
   Widget build(BuildContext context) {
+    final double lf = labelFont ?? 14.0;
+    final double vf = valueFont ?? (bold ? 16.0 : 14.0);
+
     final s = TextStyle(
       fontWeight: bold ? FontWeight.w900 : FontWeight.w700,
-      fontSize: bold ? 16 : 14,
+      fontSize: bold ? vf : lf,
     );
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 6),

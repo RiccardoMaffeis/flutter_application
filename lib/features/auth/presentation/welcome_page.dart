@@ -45,44 +45,75 @@ class WelcomePage extends StatelessWidget {
       return SizedBox(width: width, height: height, child: btn);
     }
 
-    // The central card with title and main action.
-    final card = Container(
-      width: 380,
-      height: 200,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: const [
-          BoxShadow(
-            blurRadius: 18,
-            offset: Offset(0, 8),
-            color: Color(0x44000000),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 8),
-          const Text(
-            'Welcome!',
-            style: TextStyle(fontSize: 50, fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 27),
-          // Primary action: navigate to login.
-          pillButton(label: 'Next', onPressed: () => context.go('/login')),
-        ],
-      ),
-    );
-
     return Scaffold(
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            // Reserve space for the footer when the keyboard is not visible.
-            const footerHeight = 20.0;
+            // Device/viewport measures
+            final w = constraints.maxWidth;
+            final h = constraints.maxHeight;
+
+            // Keyboard visibility
             final kbOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+            const footerHeight = 20.0;
+
+            // ---- Responsive sizing ----
+            final double cardW = (w - 32)
+                .clamp(280.0, 460.0)
+                .toDouble();
+            final double cardH = (h * 0.26).clamp(180.0, 260.0).toDouble();
+
+            final double titleSize = (w * 0.12).clamp(28.0, 50.0).toDouble();
+
+            final double mainBtnW = (w * 0.60).clamp(180.0, 320.0).toDouble();
+            final double mainBtnH = (h * 0.055).clamp(40.0, 54.0).toDouble();
+            final double mainFont = (w * 0.06).clamp(18.0, 24.0).toDouble();
+
+            final double secBtnW = (w * 0.36).clamp(120.0, 200.0).toDouble();
+            final double secBtnH = (h * 0.05).clamp(36.0, 48.0).toDouble();
+            final double secFont = (w * 0.05).clamp(16.0, 20.0).toDouble();
+
+            // The central card with title and main action (now responsive).
+            final card = Container(
+              width: cardW,
+              height: cardH,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: const [
+                  BoxShadow(
+                    blurRadius: 18,
+                    offset: Offset(0, 8),
+                    color: Color(0x44000000),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(height: cardH * 0.04),
+                  Text(
+                    'Welcome!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: titleSize,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  SizedBox(height: cardH * 0.14),
+                  // Primary action: navigate to login.
+                  pillButton(
+                    label: 'Next',
+                    onPressed: () => context.go('/login'),
+                    width: mainBtnW,
+                    height: mainBtnH,
+                    radius: 24,
+                    fontSize: mainFont,
+                  ),
+                ],
+              ),
+            );
 
             return Stack(
               children: [
@@ -97,7 +128,7 @@ class WelcomePage extends StatelessWidget {
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.center,
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 460),
+                        constraints: BoxConstraints(maxWidth: cardW),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [card, const SizedBox(height: 8)],
@@ -114,28 +145,34 @@ class WelcomePage extends StatelessWidget {
                   bottom: 20,
                   child: Offstage(
                     offstage: kbOpen,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          'Need an account?',
-                          style: TextStyle(
-                            fontSize: 16,
-                            decoration: TextDecoration.underline,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.black87,
+                    child: Center(
+                      // Wrap avoids overflow on very narrow devices.
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 12,
+                        runSpacing: 8,
+                        children: [
+                          Text(
+                            'Need an account?',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: secFont,
+                              decoration: TextDecoration.underline,
+                              fontWeight: FontWeight.w900,
+                              color: Colors.black87,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        pillButton(
-                          label: 'Sign up',
-                          onPressed: () => context.go('/signup'),
-                          width: 140,
-                          height: 40,
-                          fontSize: 20,
-                          radius: 24,
-                        ),
-                      ],
+                          pillButton(
+                            label: 'Sign up',
+                            onPressed: () => context.go('/signup'),
+                            width: secBtnW,
+                            height: secBtnH,
+                            fontSize: secFont,
+                            radius: 24,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

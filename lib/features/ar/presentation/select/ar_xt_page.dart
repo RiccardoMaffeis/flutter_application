@@ -11,7 +11,6 @@ class ARItem {
 }
 
 /// Catalog of selectable XT models for AR.
-/// Each entry points to a local .glb asset and a default scale factor.
 const List<ARItem> kXtModels = [
   ARItem('XT1 3 poli', 'lib/3Dmodels/XT1/XT1_3p.glb', 0.20),
   ARItem('XT1 4 poli', 'lib/3Dmodels/XT1/XT1_4p.glb', 0.20),
@@ -28,11 +27,9 @@ const List<ARItem> kXtModels = [
 ];
 
 /// Page that lets the user pick one of the available AR models.
-/// It shows a header and a scrollable list of buttons with thumbnails.
 class ARXTPage extends StatelessWidget {
   const ARXTPage({super.key});
 
-  /// Returns true if the given asset path exists and can be loaded.
   Future<bool> _assetExists(String path) async {
     try {
       await rootBundle.load(path);
@@ -42,9 +39,6 @@ class ARXTPage extends StatelessWidget {
     }
   }
 
-  /// Handles the back action:
-  /// - If there's a previous route, pop it.
-  /// - Otherwise, go back to '/ar'.
   void _handleBack(BuildContext context) {
     if (Navigator.of(context).canPop()) {
       context.pop();
@@ -53,11 +47,6 @@ class ARXTPage extends StatelessWidget {
     }
   }
 
-  /// Converts a GLB asset path into a PNG image preview path:
-  /// - Replaces the '3Dmodels' root with 'images'
-  /// - Drops the '.glb' extension
-  /// - Normalizes '3P'/'4P' into lowercase
-  /// - Appends '.png'
   String _imagePathFor(ARItem item) {
     var p = item.glbPath.replaceFirst('3Dmodels', 'images');
     p = p.replaceFirst(RegExp(r'\.glb$', caseSensitive: false), '');
@@ -68,16 +57,15 @@ class ARXTPage extends StatelessWidget {
     return '$dir$file.png';
   }
 
-  /// Validates the presence of the GLB asset and, if found, navigates
-  /// to the AR live view passing title, asset path and scale via `extra`.
   Future<void> _openModel(BuildContext context, ARItem item) async {
     final ok = await _assetExists(item.glbPath);
-    if (!ok) {
+    if (!ok && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Modello non trovato: ${item.glbPath}')),
       );
       return;
     }
+    if (!context.mounted) return;
     context.push(
       '/ar-live',
       extra: {
@@ -90,61 +78,83 @@ class ARXTPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final w = mq.size.width;
+    final h = mq.size.height;
+
+    // Header sizing
+    final double iconSize = (w * 0.075).clamp(24.0, 36.0);
+    final double titleSize = (w * 0.075).clamp(22.0, 38.0);
+    final double headerHPad = (w * 0.016).clamp(6.0, 12.0);
+    final double headerVPad = (h * 0.01).clamp(6.0, 10.0);
+    final double accentHMargin = (w * 0.04).clamp(12.0, 20.0);
+    final double accentHeight = (h * 0.005).clamp(3.0, 6.0);
+
+    // List spacing
+    final EdgeInsets listPad = EdgeInsets.fromLTRB(
+      (w * 0.03).clamp(10.0, 16.0),
+      (h * 0.01).clamp(6.0, 12.0),
+      (w * 0.03).clamp(10.0, 16.0),
+      (h * 0.02).clamp(10.0, 20.0),
+    );
+    final double itemSpacing = (h * 0.012).clamp(8.0, 14.0);
+
     return Scaffold(
-      backgroundColor: const Color(
-        0xFFF2F2F7,
-      ), // Subtle iOS-like gray background
+      backgroundColor: const Color(0xFFF2F2F7),
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 6),
-            // Header with back button, centered title, and invisible trailing icon for symmetry
+            SizedBox(height: (h * 0.006).clamp(4.0, 8.0)),
+            // Header
             Padding(
-              padding: const EdgeInsets.fromLTRB(6, 8, 6, 6),
+              padding: EdgeInsets.fromLTRB(
+                headerHPad,
+                headerVPad,
+                headerHPad,
+                headerVPad,
+              ),
               child: Row(
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back),
-                    iconSize: 28,
+                    iconSize: iconSize,
                     onPressed: () => _handleBack(context),
                   ),
                   Expanded(
                     child: Text(
                       'Augmented Reality',
                       textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(fontWeight: FontWeight.w900, fontSize: 31),
+                          ?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            fontSize: titleSize,
+                          ),
                     ),
                   ),
-                  // Placeholder to keep the title centered visually
-                  Opacity(
-                    opacity: 0,
-                    child: IconButton(
-                      icon: const Icon(Icons.arrow_back),
-                      onPressed: null,
-                    ),
-                  ),
+                  // Spacer with same width of leading icon for perfect centering
+                  SizedBox(width: iconSize + headerHPad * 2),
                 ],
               ),
             ),
-            // Thin accent bar under the header
+            // Accent bar
             Container(
-              height: 4,
-              margin: const EdgeInsets.symmetric(horizontal: 16),
+              height: accentHeight,
+              margin: EdgeInsets.symmetric(horizontal: accentHMargin),
               decoration: BoxDecoration(
                 color: const Color(0xFFE53935),
                 borderRadius: BorderRadius.circular(3),
               ),
             ),
-            const SizedBox(height: 8),
+            SizedBox(height: (h * 0.01).clamp(6.0, 12.0)),
 
-            // Scrollable list of model buttons with separators
+            // List
             Expanded(
               child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+                padding: listPad,
                 physics: const BouncingScrollPhysics(),
                 itemCount: kXtModels.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                separatorBuilder: (_, __) => SizedBox(height: itemSpacing),
                 itemBuilder: (context, i) {
                   final item = kXtModels[i];
                   final imgPath = _imagePathFor(item);
@@ -163,10 +173,7 @@ class ARXTPage extends StatelessWidget {
   }
 }
 
-/// Reusable button widget for a single XT model:
-/// - Optional left thumbnail (from local assets)
-/// - Bold label
-/// - Chevron on the right
+/// Reusable button for a single XT model.
 class _XtButton extends StatelessWidget {
   final String label;
   final String? imageAsset;
@@ -175,58 +182,72 @@ class _XtButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      elevation: 2, // Subtle elevation for card-like appearance
-      borderRadius: BorderRadius.circular(26),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(26),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            children: [
-              // Optional preview image; shows a neutral placeholder on error
-              if (imageAsset != null) ...[
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Image.asset(
-                    imageAsset!,
-                    width: 56,
-                    height: 56,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      width: 56,
-                      height: 56,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0F0F3),
-                        borderRadius: BorderRadius.circular(16),
+    return LayoutBuilder(
+      builder: (ctx, cons) {
+        final w = cons.maxWidth;
+
+        final double cardRadius = (w * 0.06).clamp(18.0, 28.0);
+        final double hPad = (w * 0.036).clamp(12.0, 18.0);
+        final double vPad = (w * 0.028).clamp(10.0, 14.0);
+        final double thumb = (w * 0.16).clamp(44.0, 68.0);
+        final double gap = (w * 0.03).clamp(10.0, 14.0);
+        final double labelSize = (w * 0.06).clamp(16.0, 22.0);
+        final double chevron = (w * 0.075).clamp(22.0, 30.0);
+
+        return Material(
+          color: Colors.white,
+          elevation: 2,
+          borderRadius: BorderRadius.circular(cardRadius),
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(cardRadius),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
+              child: Row(
+                children: [
+                  if (imageAsset != null) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(cardRadius * 0.6),
+                      child: Image.asset(
+                        imageAsset!,
+                        width: thumb,
+                        height: thumb,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          width: thumb,
+                          height: thumb,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0F0F3),
+                            borderRadius: BorderRadius.circular(
+                              cardRadius * 0.6,
+                            ),
+                          ),
+                          child: const Icon(Icons.image_not_supported_outlined),
+                        ),
                       ),
-                      child: const Icon(Icons.image_not_supported_outlined),
+                    ),
+                    SizedBox(width: gap),
+                  ],
+                  Expanded(
+                    child: Text(
+                      label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: labelSize,
+                        fontWeight: FontWeight.w700,
+                        height: 1.15,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-              ],
-
-              // Main label
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                  Icon(Icons.chevron_right, size: chevron),
+                ],
               ),
-
-              // Trailing chevron to indicate navigation
-              const Icon(Icons.chevron_right, size: 28),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

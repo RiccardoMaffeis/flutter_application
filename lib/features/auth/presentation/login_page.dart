@@ -28,7 +28,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   void dispose() {
-    // Dispose controllers to avoid memory leaks
     _email.dispose();
     _password.dispose();
     super.dispose();
@@ -69,14 +68,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
       if (!ok) throw 'cannot launch';
     } catch (_) {
+      if (!mounted) return;
+      final w = MediaQuery.of(context).size.width;
+      final double snackFont = (w * 0.04).clamp(12.0, 16.0);
       await Clipboard.setData(
         const ClipboardData(text: 'r.maffeis4@studenti.unibg.it'),
       );
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
             "I couldn't open your email app. Address copied to clipboard.",
+            style: TextStyle(fontSize: snackFont),
           ),
         ),
       );
@@ -93,6 +95,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         final bottom = MediaQuery.of(context).viewInsets.bottom;
+        final w = MediaQuery.of(context).size.width;
+        // Responsive fonts for the sheet
+        final double sheetTitle = (w * 0.055).clamp(18.0, 22.0);
+        final double sheetBody = (w * 0.045).clamp(14.0, 18.0);
+        final double sheetBtn = (w * 0.05).clamp(16.0, 20.0);
+
         return Padding(
           padding: EdgeInsets.only(bottom: bottom),
           child: Container(
@@ -118,14 +126,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Check your email',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                  style: TextStyle(
+                    fontSize: sheetTitle,
+                    fontWeight: FontWeight.w800,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   "If the address is registered, we've sent you a link to reset your password (check spam).",
+                  style: TextStyle(fontSize: sheetBody),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
@@ -139,6 +151,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                       minimumSize: const Size.fromHeight(48),
+                      textStyle: TextStyle(fontSize: sheetBtn),
                     ),
                     onPressed: () => Navigator.of(context).pop(),
                     child: const Text('OK'),
@@ -176,6 +189,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   /// Maps Firebase auth errors to user feedback.
   /// Credential-related errors show the same generic message.
   void _handleAuthException(fb.FirebaseAuthException e) {
+    final w = MediaQuery.of(context).size.width;
+    final double snackFont = (w * 0.04).clamp(12.0, 16.0);
+
     switch (e.code) {
       case 'user-not-found':
       case 'wrong-password':
@@ -185,13 +201,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         break;
       case 'too-many-requests':
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Too many attempts. Try again later.')),
+          SnackBar(
+            content: Text(
+              'Too many attempts. Try again later.',
+              style: TextStyle(fontSize: snackFont),
+            ),
+          ),
         );
         break;
       case 'network-request-failed':
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No connection. Please check your network.'),
+          SnackBar(
+            content: Text(
+              'No connection. Please check your network.',
+              style: TextStyle(fontSize: snackFont),
+            ),
           ),
         );
         break;
@@ -226,6 +250,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             final double footerBtnW = (w * 0.36).clamp(120.0, 200.0);
             final double footerBtnH = (h * 0.05).clamp(36.0, 48.0);
             final double footerBtnFont = (w * 0.05).clamp(16.0, 20.0);
+
+            // NEW: extra responsive fonts for fields / messages / errors
+            final double labelFont = (w * 0.045).clamp(14.0, 18.0);
+            final double fieldFont = (w * 0.05).clamp(15.0, 19.0);
+            final double errorFont = (w * 0.04).clamp(12.0, 16.0);
 
             // Shared link-styled button used for "Need support?" and "Forgot your password?"
             final ButtonStyle linkStyle =
@@ -272,19 +301,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   padding: EdgeInsets.zero,
                   minimumSize: Size(width, height),
+                  textStyle: TextStyle(
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.w400,
+                  ),
                 ),
                 onPressed: () {
                   Feedback.forTap(context);
                   HapticFeedback.selectionClick();
                   onPressed();
                 },
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: fontSize,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
+                child: Text(label),
               );
               return SizedBox(width: width, height: height, child: btn);
             }
@@ -324,8 +351,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       TextFormField(
                         controller: _email,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
+                        style: TextStyle(fontSize: fieldFont),
+                        decoration: InputDecoration(
                           labelText: 'Email',
+                          labelStyle: TextStyle(fontSize: labelFont),
+                          errorStyle: TextStyle(fontSize: errorFont),
                           border: InputBorder.none,
                         ),
                         autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -347,8 +377,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       TextFormField(
                         controller: _password,
                         obscureText: _obscurePassword,
+                        style: TextStyle(fontSize: fieldFont),
                         decoration: InputDecoration(
                           labelText: 'Password',
+                          labelStyle: TextStyle(fontSize: labelFont),
+                          errorStyle: TextStyle(fontSize: errorFont),
                           border: InputBorder.none,
                           suffixIcon: IconButton(
                             tooltip: _obscurePassword
@@ -366,8 +399,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                         validator: (v) {
-                          if (v == null || v.isEmpty)
+                          if (v == null || v.isEmpty) {
                             return 'Enter your password';
+                          }
                           return _passwordError; // shows "Incorrect email and/or password."
                         },
                         autocorrect: false,
@@ -400,8 +434,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             try {
                               await _signInWithRetry(email, pwd);
                             } catch (e) {
+                              final snackFont = (w * 0.04).clamp(12.0, 16.0);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Unexpected error: $e')),
+                                SnackBar(
+                                  content: Text(
+                                    'Unexpected error: $e',
+                                    style: TextStyle(fontSize: snackFont),
+                                  ),
+                                ),
                               );
                             }
                           },
@@ -416,7 +456,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               ),
             );
 
-            // Support links under the form
+            // Support links under the form (font-size driven by linkStyle)
             final supportLinks = Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -600,24 +640,42 @@ class _ResetPasswordDialogState extends ConsumerState<ResetPasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+    final double dialogTitleFont = (w * 0.06).clamp(18.0, 22.0);
+    final double dialogBodyFont = (w * 0.045).clamp(14.0, 18.0);
+    final double dialogActionFont = (w * 0.05).clamp(15.0, 19.0);
+    final double labelFont = (w * 0.045).clamp(14.0, 18.0);
+    final double fieldFont = (w * 0.05).clamp(15.0, 19.0);
+    final double errorFont = (w * 0.04).clamp(12.0, 16.0);
+
     return AlertDialog(
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.transparent,
-      title: const Text('Reset password'),
+      title: Text(
+        'Reset password',
+        style: TextStyle(
+          fontSize: dialogTitleFont,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             "Enter your email: we'll send you a link to reset your password.",
+            style: TextStyle(fontSize: dialogBodyFont),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _emailCtrl,
             autofocus: true,
             keyboardType: TextInputType.emailAddress,
+            style: TextStyle(fontSize: fieldFont),
             decoration: InputDecoration(
               labelText: 'Email',
+              labelStyle: TextStyle(fontSize: labelFont),
               errorText: _errorText,
+              errorStyle: TextStyle(fontSize: errorFont),
             ),
             onSubmitted: (_) => _submit(),
           ),
@@ -626,10 +684,16 @@ class _ResetPasswordDialogState extends ConsumerState<ResetPasswordDialog> {
       actions: [
         TextButton(
           onPressed: _sending ? null : () => Navigator.of(context).pop(false),
+          style: TextButton.styleFrom(
+            textStyle: TextStyle(fontSize: dialogActionFont),
+          ),
           child: const Text('Cancel'),
         ),
         FilledButton(
           onPressed: _sending ? null : _submit,
+          style: FilledButton.styleFrom(
+            textStyle: TextStyle(fontSize: dialogActionFont),
+          ),
           child: _sending
               ? const SizedBox(
                   height: 18,

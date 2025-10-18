@@ -7,9 +7,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/theme/app_theme.dart';
 import '../controllers/profile_controller.dart';
 
+/// Profile screen:
+/// - Shows basic user info (name/email/DOB/city) from `profileControllerProvider`
+/// - Lets the user log out (confirms via dialog, clears relevant providers)
+/// - Uses a custom bottom pill navigation at the bottom
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
 
+  /// Formats a DateTime as DD/MM/YYYY (returns '—' if null).
   String _fmtDob(DateTime? d) {
     if (d == null) return '—';
     final dd = d.day.toString().padLeft(2, '0');
@@ -18,6 +23,10 @@ class ProfilePage extends ConsumerWidget {
     return '$dd/$mm/$yy';
   }
 
+  /// Handles logout:
+  /// - Shows a blocking confirmation dialog
+  /// - On confirm: Firebase signOut, invalidate chat/profile providers
+  /// - Navigates to '/welcome' if still mounted
   Future<void> _onLogoutPressed(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -35,8 +44,24 @@ class ProfilePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Watches the profile async state (loading/data/error).
     final prof = ref.watch(profileControllerProvider);
 
+    // ---- Responsive metrics (solo testi) ----
+    // Compute text-only sizes based on screen width and clamped text scale.
+    final media = MediaQuery.of(context);
+    final w = media.size.width;
+    final ts = media.textScaleFactor.clamp(1.0, 1.3);
+
+    final double headerTitle = (w * 0.09).clamp(28.0, 40.0) * ts;
+    final double headerIcon = (w * 0.085).clamp(
+      26.0,
+      35.0,
+    ); // icona (ok se resta fissa)
+    final double sectionGap = (w * 0.08).clamp(28.0, 40.0);
+    final double errorFont = (w * 0.045).clamp(14.0, 18.0) * ts;
+
+    // Reusable divider for the info card rows.
     const divider = Divider(
       height: 1,
       thickness: 1.2,
@@ -50,6 +75,7 @@ class ProfilePage extends ConsumerWidget {
           children: [
             Column(
               children: [
+                // ----- Header with centered title and logout icon -----
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -57,6 +83,7 @@ class ProfilePage extends ConsumerWidget {
                   ),
                   child: Row(
                     children: [
+                      // Fixed-width spacer to keep title centered.
                       const SizedBox(width: 48),
                       Expanded(
                         child: Center(
@@ -65,18 +92,20 @@ class ProfilePage extends ConsumerWidget {
                             style: Theme.of(context).textTheme.headlineMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.w900,
-                                  fontSize: 40,
+                                  fontSize: headerTitle,
                                 ),
                           ),
                         ),
                       ),
+                      // Logout action opens the confirmation dialog.
                       IconButton(
                         onPressed: () => _onLogoutPressed(context, ref),
-                        icon: const Icon(Icons.logout, size: 35),
+                        icon: Icon(Icons.logout, size: headerIcon),
                       ),
                     ],
                   ),
                 ),
+                // Accent bar under header (brand color).
                 Container(
                   height: 4,
                   margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -93,14 +122,25 @@ class ProfilePage extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 40),
+                SizedBox(height: sectionGap),
 
+                // ----- Profile content: loading/error/data states -----
                 prof.when(
+                  // Full-height loader.
                   loading: () => const Expanded(
                     child: Center(child: CircularProgressIndicator()),
                   ),
-                  error: (e, _) => const Expanded(
-                    child: Center(child: Text('Accedi per vedere il profilo')),
+                  // Error: ask to log in (original Italian copy preserved).
+                  error: (e, _) => Expanded(
+                    child: Center(
+                      child: Text(
+                        'Accedi per vedere il profilo',
+                        style: TextStyle(
+                          fontSize: errorFont,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ),
                   data: (p) => Expanded(
                     child: SingleChildScrollView(
@@ -108,6 +148,7 @@ class ProfilePage extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Column(
                         children: [
+                          // Avatar with camera overlay button (upload TODO).
                           Stack(
                             alignment: Alignment.bottomRight,
                             children: [
@@ -132,6 +173,7 @@ class ProfilePage extends ConsumerWidget {
                                 ),
                               ),
 
+                              // Placeholder action for profile photo change.
                               Material(
                                 color: Colors.white,
                                 shape: const CircleBorder(),
@@ -152,23 +194,18 @@ class ProfilePage extends ConsumerWidget {
                               ),
                             ],
                           ),
-                          const SizedBox(height: 40),
+                          SizedBox(height: sectionGap),
 
+                          // Card with profile details (name/email/dob/city).
                           Container(
-                            width: 400,
-                            height: 275,
+                            constraints: const BoxConstraints(maxWidth: 400),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(18),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x55000000),
-                                  blurRadius: 16,
-                                  offset: Offset(0, 8),
-                                ),
-                              ],
+                              boxShadow: const [/* ... */],
                             ),
                             child: Column(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
                                 _ProfileRow(
                                   label: 'Name',
@@ -197,12 +234,13 @@ class ProfilePage extends ConsumerWidget {
               ],
             ),
 
+            // ----- Bottom pill navigation (fixed) -----
             Positioned(
               left: 16,
               right: 16,
               bottom: 16,
               child: _BottomPillNav(
-                index: 3,
+                index: 3, // Profile tab selected.
                 onChanged: (i) {
                   if (i == 0) context.go('/home');
                   if (i == 1) context.go('/favourites');
@@ -218,11 +256,22 @@ class ProfilePage extends ConsumerWidget {
   }
 }
 
+/// Confirmation dialog for logout.
+/// - Large title
+/// - "Yes" button returns true
+/// - Close icon (top-right) returns false
 class _LogoutDialog extends StatelessWidget {
   const _LogoutDialog();
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final w = media.size.width;
+    final ts = media.textScaleFactor.clamp(1.0, 1.3);
+
+    final double dlgTitle = (w * 0.09).clamp(24.0, 40.0) * ts;
+    final double btnFont = (w * 0.05).clamp(16.0, 20.0) * ts;
+
     return Dialog(
       backgroundColor: Colors.white,
       insetPadding: const EdgeInsets.symmetric(horizontal: 28),
@@ -235,9 +284,12 @@ class _LogoutDialog extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(height: 6),
-                const Text(
+                Text(
                   'Logout?',
-                  style: TextStyle(fontSize: 40, fontWeight: FontWeight.w800),
+                  style: TextStyle(
+                    fontSize: dlgTitle,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 18),
                 SizedBox(
@@ -253,15 +305,20 @@ class _LogoutDialog extends StatelessWidget {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
+                    child: Text(
                       'Yes',
-                      style: TextStyle(fontSize: 20, color: Colors.white),
+                      style: TextStyle(
+                        fontSize: btnFont,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
               ],
             ),
           ),
+          // Close icon (dismiss = false)
           Positioned(
             right: 6,
             top: 6,
@@ -277,6 +334,8 @@ class _LogoutDialog extends StatelessWidget {
   }
 }
 
+/// Single labeled value row for the profile info card.
+/// - Left-aligned label, right-aligned value (ellipsized)
 class _ProfileRow extends StatelessWidget {
   final String label;
   final String value;
@@ -284,14 +343,21 @@ class _ProfileRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final w = media.size.width;
+    final ts = media.textScaleFactor.clamp(1.0, 1.3);
+
+    final double labelFont = (w * 0.038).clamp(12.0, 16.0) * ts;
+    final double valueFont = (w * 0.042).clamp(13.0, 17.0) * ts;
+
     final labelStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
-      fontSize: 18,
+      fontSize: labelFont,
       fontWeight: FontWeight.w400,
       color: Colors.black,
     );
 
     final valueStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
-      fontSize: 17,
+      fontSize: valueFont,
       fontWeight: FontWeight.w600,
       color: Colors.black,
     );
@@ -306,6 +372,9 @@ class _ProfileRow extends StatelessWidget {
   }
 }
 
+/// Reusable bottom navigation with a sliding "pill" highlight.
+/// - Accepts a `index` to indicate the selected tab
+/// - Calls `onChanged` with the tapped index
 class _BottomPillNav extends StatelessWidget {
   final int index;
   final ValueChanged<int> onChanged;
@@ -342,6 +411,7 @@ class _BottomPillNav extends StatelessWidget {
           final slotW = (cons.maxWidth - pad * 2) / 4;
           return Stack(
             children: [
+              // Animated pill indicating the selected tab.
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOut,
@@ -356,6 +426,7 @@ class _BottomPillNav extends StatelessWidget {
                   ),
                 ),
               ),
+              // Four icons (Home/Favourites/AR/Profile).
               Padding(
                 padding: const EdgeInsets.all(pad),
                 child: Row(
@@ -391,6 +462,8 @@ class _BottomPillNav extends StatelessWidget {
   }
 }
 
+/// Single icon button used by the pill navigation.
+/// - Changes color to white when selected (due to colored pill background)
 class _NavIcon extends StatelessWidget {
   final IconData icon;
   final bool selected;

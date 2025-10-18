@@ -30,17 +30,14 @@ class WelcomePage extends StatelessWidget {
           ),
           padding: EdgeInsets.zero,
           minimumSize: Size(width, height),
+          textStyle: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w400),
         ),
         onPressed: () {
-          // Provide tactile feedback on press.
           Feedback.forTap(context);
           HapticFeedback.selectionClick();
           onPressed();
         },
-        child: Text(
-          label,
-          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w400),
-        ),
+        child: Text(label),
       );
       return SizedBox(width: width, height: height, child: btn);
     }
@@ -58,9 +55,7 @@ class WelcomePage extends StatelessWidget {
             const footerHeight = 20.0;
 
             // ---- Responsive sizing ----
-            final double cardW = (w - 32)
-                .clamp(280.0, 460.0)
-                .toDouble();
+            final double cardW = (w - 32).clamp(280.0, 460.0).toDouble();
             final double cardH = (h * 0.26).clamp(180.0, 260.0).toDouble();
 
             final double titleSize = (w * 0.12).clamp(28.0, 50.0).toDouble();
@@ -146,7 +141,6 @@ class WelcomePage extends StatelessWidget {
                   child: Offstage(
                     offstage: kbOpen,
                     child: Center(
-                      // Wrap avoids overflow on very narrow devices.
                       child: Wrap(
                         alignment: WrapAlignment.center,
                         crossAxisAlignment: WrapCrossAlignment.center,

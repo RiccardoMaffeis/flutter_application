@@ -89,11 +89,22 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
       error: (_, __) => 0,
     );
 
+    // --- Error view font responsive ---
+    final double globalErrorFont = (MediaQuery.of(context).size.width * 0.045)
+        .clamp(14.0, 18.0);
+
     return details.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (e, _) =>
-          Scaffold(body: Center(child: Text('Failed to load: $e'))),
+      error: (e, _) => Scaffold(
+        body: Center(
+          child: Text(
+            'Failed to load: $e',
+            style: TextStyle(fontSize: globalErrorFont),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ),
       data: (ProductDetails d) {
         final p = d.product;
         final isFav = shop.favourites.contains(p.id);
@@ -132,6 +143,10 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
             final double priceFont = (w * 0.07).clamp(22.0, 28.0);
             final double specTitleFont = (w * 0.045).clamp(14.0, 16.0);
             final double specValueFont = (w * 0.04).clamp(13.0, 14.0);
+
+            // Badge/snack fonts
+            final double badgeFont = (w * 0.03).clamp(10.0, 12.0);
+            final double snackFont = (w * 0.04).clamp(12.0, 16.0);
 
             // Floating PDF button size
             final double pdfBtn = (w * 0.11).clamp(38.0, 46.0);
@@ -188,9 +203,9 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                             alignment: Alignment.center,
                             child: Text(
                               cartCount > 99 ? '99+' : '$cartCount',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 11,
+                                fontSize: badgeFont,
                                 fontWeight: FontWeight.w800,
                               ),
                             ),
@@ -286,6 +301,9 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                             SnackBar(
                                               content: Text(
                                                 '3D model not found for ${p.code}',
+                                                style: TextStyle(
+                                                  fontSize: snackFont,
+                                                ),
                                               ),
                                             ),
                                           );
@@ -460,7 +478,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                             : () async {
                                 setState(() => _pdfBusy = true);
                                 try {
-                                  // Optional: tiny delay to soften double taps
                                   await Future.delayed(
                                     const Duration(milliseconds: 120),
                                   );
@@ -477,8 +494,11 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                   if (famUpper == null) {
                                     if (!mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Family not recognized'),
+                                      SnackBar(
+                                        content: Text(
+                                          'Family not recognized',
+                                          style: TextStyle(fontSize: snackFont),
+                                        ),
                                       ),
                                     );
                                     return;
@@ -496,6 +516,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                       SnackBar(
                                         content: Text(
                                           'PDF not found: $famUpper/${prod.id}.pdf',
+                                          style: TextStyle(fontSize: snackFont),
                                         ),
                                       ),
                                     );
@@ -701,6 +722,10 @@ void showAddToCartSnack(
 }) {
   HapticFeedback.lightImpact();
 
+  final w = MediaQuery.of(context).size.width;
+  final double titleFont = (w * 0.04).clamp(13.0, 16.0);
+  final double subtitleFont = (w * 0.035).clamp(12.0, 14.0);
+  final double actionFont = (w * 0.04).clamp(13.0, 16.0);
   final textSecondary = Colors.black54;
 
   ScaffoldMessenger.of(context).showSnackBar(
@@ -752,9 +777,9 @@ void showAddToCartSnack(
                     '${product.code} added to cart',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w900,
-                      fontSize: 14,
+                      fontSize: titleFont,
                       color: Colors.black87,
                     ),
                   ),
@@ -764,7 +789,7 @@ void showAddToCartSnack(
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: subtitleFont,
                       color: textSecondary,
                       height: 1.2,
                     ),
@@ -782,6 +807,7 @@ void showAddToCartSnack(
                 ),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                textStyle: TextStyle(fontSize: actionFont),
               ),
               child: Text(
                 'See',

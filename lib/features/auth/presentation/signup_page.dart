@@ -111,16 +111,14 @@ class _SignupPageState extends ConsumerState<SignupPage> {
         ),
         padding: EdgeInsets.zero,
         minimumSize: Size(width, height),
+        textStyle: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w400),
       ),
       onPressed: () {
         Feedback.forTap(context);
         HapticFeedback.selectionClick();
         onPressed();
       },
-      child: Text(
-        label,
-        style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w400),
-      ),
+      child: Text(label),
     );
     return SizedBox(width: width, height: height, child: btn);
   }
@@ -160,6 +158,12 @@ class _SignupPageState extends ConsumerState<SignupPage> {
             final double betweenTitlePad = (h * 0.02).clamp(12.0, 20.0);
             final double afterFormPad = (h * 0.02).clamp(12.0, 24.0);
 
+            // NEW: responsive fonts for fields/messages/errors
+            final double labelFont = (w * 0.045).clamp(14.0, 18.0);
+            final double fieldFont = (w * 0.05).clamp(15.0, 19.0);
+            final double errorFont = (w * 0.04).clamp(12.0, 16.0);
+            final double snackFont = (w * 0.04).clamp(12.0, 16.0);
+
             // ---- Main card (responsive) ----
             final card = Card(
               color: Colors.white,
@@ -190,8 +194,11 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       // Name
                       TextFormField(
                         controller: _name,
-                        decoration: const InputDecoration(
+                        style: TextStyle(fontSize: fieldFont),
+                        decoration: InputDecoration(
                           labelText: 'Name',
+                          labelStyle: TextStyle(fontSize: labelFont),
+                          errorStyle: TextStyle(fontSize: errorFont),
                           border: InputBorder.none,
                         ),
                         validator: (v) => (v == null || v.trim().isEmpty)
@@ -204,8 +211,11 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       TextFormField(
                         controller: _dobText,
                         readOnly: true,
+                        style: TextStyle(fontSize: fieldFont),
                         decoration: InputDecoration(
                           labelText: 'Date of Birth',
+                          labelStyle: TextStyle(fontSize: labelFont),
+                          errorStyle: TextStyle(fontSize: errorFont),
                           border: InputBorder.none,
                           suffixIcon: IconButton(
                             onPressed: _pickDobMaterial,
@@ -229,8 +239,11 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       // City
                       TextFormField(
                         controller: _city,
-                        decoration: const InputDecoration(
+                        style: TextStyle(fontSize: fieldFont),
+                        decoration: InputDecoration(
                           labelText: 'City of Birth',
+                          labelStyle: TextStyle(fontSize: labelFont),
+                          errorStyle: TextStyle(fontSize: errorFont),
                           border: InputBorder.none,
                         ),
                         validator: (v) => (v == null || v.trim().isEmpty)
@@ -243,8 +256,11 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       TextFormField(
                         controller: _email,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
+                        style: TextStyle(fontSize: fieldFont),
+                        decoration: InputDecoration(
                           labelText: 'Email',
+                          labelStyle: TextStyle(fontSize: labelFont),
+                          errorStyle: TextStyle(fontSize: errorFont),
                           border: InputBorder.none,
                         ),
                         validator: (v) => (v == null || !v.contains('@'))
@@ -257,8 +273,11 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       TextFormField(
                         controller: _password,
                         obscureText: _obscurePwd,
+                        style: TextStyle(fontSize: fieldFont),
                         decoration: InputDecoration(
                           labelText: 'Password',
+                          labelStyle: TextStyle(fontSize: labelFont),
+                          errorStyle: TextStyle(fontSize: errorFont),
                           border: InputBorder.none,
                           suffixIcon: IconButton(
                             tooltip: _obscurePwd
@@ -297,8 +316,11 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       TextFormField(
                         controller: _confirm,
                         obscureText: _obscureConfirm,
+                        style: TextStyle(fontSize: fieldFont),
                         decoration: InputDecoration(
                           labelText: 'Confirm Password',
+                          labelStyle: TextStyle(fontSize: labelFont),
+                          errorStyle: TextStyle(fontSize: errorFont),
                           border: InputBorder.none,
                           suffixIcon: IconButton(
                             tooltip: _obscureConfirm
@@ -352,9 +374,14 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                                 'invalid-email' => 'Invalid email.',
                                 _ => 'Sign up failed: ${e.code}',
                               };
-                              ScaffoldMessenger.of(
-                                context,
-                              ).showSnackBar(SnackBar(content: Text(msg)));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    msg,
+                                    style: TextStyle(fontSize: snackFont),
+                                  ),
+                                ),
+                              );
                             }
                           },
                           width: mainBtnW,
@@ -451,7 +478,10 @@ class _PasswordChecklist extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const rowTextStyle = TextStyle(fontSize: 14);
+    // Responsive sizes
+    final w = MediaQuery.of(context).size.width;
+    final double rowFont = (w * 0.04).clamp(12.0, 16.0);
+    final double iconSize = (w * 0.045).clamp(16.0, 20.0);
 
     return ValueListenableBuilder<TextEditingValue>(
       valueListenable: controller,
@@ -477,13 +507,14 @@ class _PasswordChecklist extends StatelessWidget {
             children: [
               Icon(
                 ok ? Icons.check_circle : Icons.cancel,
-                size: 18,
+                size: iconSize,
                 color: ok ? Colors.green : Colors.red,
               ),
               const SizedBox(width: 8),
               Text(
                 label,
-                style: rowTextStyle.copyWith(
+                style: TextStyle(
+                  fontSize: rowFont,
                   color: ok ? Colors.black87 : Colors.black54,
                   fontWeight: ok ? FontWeight.w600 : FontWeight.w400,
                 ),

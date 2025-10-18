@@ -182,9 +182,13 @@ class _ShopPageState extends ConsumerState<ShopPage> {
             // ---- Responsive metrics ----
             final double searchIconSize = (w * 0.085).clamp(26.0, 35.0);
             final double titleFont = (w * 0.09).clamp(24.0, 40.0);
+            final double errorFont = (w * 0.045).clamp(14.0, 18.0);
             final double barH = (w * 0.01).clamp(3.0, 4.0);
             final double chipRowH = (h * 0.075).clamp(48.0, 64.0);
             final double chipFont = (w * 0.04).clamp(12.0, 16.0);
+
+            final double familyTitleFont = (w * 0.07).clamp(22.0, 30.0);
+            final double variantTitleFont = (w * 0.055).clamp(18.0, 22.0);
 
             final double carouselCardW = (w * 0.5).clamp(180.0, 240.0);
             final double carouselH = (h * 0.36).clamp(280.0, 340.0);
@@ -325,7 +329,9 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                             shape: const StadiumBorder(side: BorderSide.none),
                             elevation: 3,
                             showCheckmark: false,
+                            // Ensure the chip doesn't override our Text font size
                             labelStyle: TextStyle(
+                              fontSize: chipFont,
                               fontWeight: selected
                                   ? FontWeight.w700
                                   : FontWeight.w500,
@@ -344,8 +350,13 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                       child: state.products.when(
                         loading: () =>
                             const Center(child: CircularProgressIndicator()),
-                        error: (e, _) =>
-                            Center(child: Text('Failed to load: $e')),
+                        error: (e, _) => Center(
+                          child: Text(
+                            'Failed to load: $e',
+                            style: TextStyle(fontSize: errorFont),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
                         data: (items) {
                           final titleUp = sectionTitle.toUpperCase();
                           final isAll = titleUp == 'ALL';
@@ -371,10 +382,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                       child: Text(
                                         entry.key,
                                         style: TextStyle(
-                                          fontSize: (w * 0.07).clamp(
-                                            22.0,
-                                            30.0,
-                                          ),
+                                          fontSize: familyTitleFont,
                                           fontWeight: FontWeight.w800,
                                         ),
                                         textAlign: TextAlign.center,
@@ -444,10 +452,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                       child: Text(
                                         entry.key,
                                         style: TextStyle(
-                                          fontSize: (w * 0.055).clamp(
-                                            18.0,
-                                            22.0,
-                                          ),
+                                          fontSize: variantTitleFont,
                                           fontWeight: FontWeight.w800,
                                         ),
                                       ),
@@ -576,116 +581,102 @@ class _ShopPageState extends ConsumerState<ShopPage> {
   }
 }
 
+/// Reusable bottom navigation with a sliding "pill" highlight.
+/// - Accepts a `index` to indicate the selected tab
+/// - Calls `onChanged` with the tapped index
 class _BottomPillNav extends StatelessWidget {
   final int index;
   final ValueChanged<int> onChanged;
-
   const _BottomPillNav({required this.index, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, cons) {
-        final w = cons.maxWidth;
-        final double h = (w * 0.12).clamp(52.0, 64.0);
-        final double pad = (h * 0.1).clamp(6.0, 8.0);
-        return Container(
-          height: h,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(h * 0.48),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x22000000),
-                blurRadius: 22,
-                spreadRadius: 2,
-                offset: Offset(0, 10),
+    return Container(
+      height: 58,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x22000000),
+            blurRadius: 22,
+            spreadRadius: 2,
+            offset: Offset(0, 10),
+          ),
+          BoxShadow(
+            color: Color(0x14000000),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+        border: Border.fromBorderSide(
+          const BorderSide(color: Color(0x11000000)),
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: LayoutBuilder(
+        builder: (context, cons) {
+          const pad = 6.0;
+          final slotW = (cons.maxWidth - pad * 2) / 4;
+          return Stack(
+            children: [
+              // Animated pill indicating the selected tab.
+              AnimatedPositioned(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOut,
+                left: pad + index * slotW,
+                top: pad,
+                bottom: pad,
+                width: slotW,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.accent,
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                ),
               ),
-              BoxShadow(
-                color: Color(0x14000000),
-                blurRadius: 8,
-                offset: Offset(0, 2),
+              // Four icons (Home/Favourites/AR/Profile).
+              Padding(
+                padding: const EdgeInsets.all(pad),
+                child: Row(
+                  children: [
+                    _NavIcon(
+                      icon: Icons.shopping_bag_outlined,
+                      selected: index == 0,
+                      onTap: () => onChanged(0),
+                    ),
+                    _NavIcon(
+                      icon: Icons.favorite_border,
+                      selected: index == 1,
+                      onTap: () => onChanged(1),
+                    ),
+                    _NavIcon(
+                      icon: Icons.view_in_ar,
+                      selected: index == 2,
+                      onTap: () => onChanged(2),
+                    ),
+                    _NavIcon(
+                      icon: Icons.person_outline,
+                      selected: index == 3,
+                      onTap: () => onChanged(3),
+                    ),
+                  ],
+                ),
               ),
             ],
-            border: Border.fromBorderSide(
-              const BorderSide(color: Color(0x11000000)),
-            ),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: LayoutBuilder(
-            builder: (context, inner) {
-              final slotW = (inner.maxWidth - pad * 2) / 4;
-
-              return Stack(
-                children: [
-                  AnimatedPositioned(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOut,
-                    left: pad + index * slotW,
-                    top: pad,
-                    bottom: pad,
-                    width: slotW,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppTheme.accent,
-                        borderRadius: BorderRadius.circular(h * 0.38),
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(pad),
-                    child: Row(
-                      children: const [
-                        _NavIcon(
-                          icon: Icons.shopping_bag_outlined,
-                          selected: true, // handled via parent highlight
-                          onTap: null, // replaced by Gesture in _NavIcon
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(pad),
-                    child: Row(
-                      children: [
-                        _NavIcon(
-                          icon: Icons.shopping_bag_outlined,
-                          selected: index == 0,
-                          onTap: () => onChanged(0),
-                        ),
-                        _NavIcon(
-                          icon: Icons.favorite_border,
-                          selected: index == 1,
-                          onTap: () => onChanged(1),
-                        ),
-                        _NavIcon(
-                          icon: Icons.view_in_ar,
-                          selected: index == 2,
-                          onTap: () => onChanged(2),
-                        ),
-                        _NavIcon(
-                          icon: Icons.person_outline,
-                          selected: index == 3,
-                          onTap: () => onChanged(3),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
 
+/// Single icon button used by the pill navigation.
+/// - Changes color to white when selected (due to colored pill background)
 class _NavIcon extends StatelessWidget {
   final IconData icon;
   final bool selected;
-  final VoidCallback? onTap;
-
+  final VoidCallback onTap;
   const _NavIcon({
     required this.icon,
     required this.selected,
@@ -694,8 +685,6 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final w = MediaQuery.of(context).size.width;
-    final double iconSize = (w * 0.085).clamp(26.0, 34.0);
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -703,7 +692,7 @@ class _NavIcon extends StatelessWidget {
         child: Center(
           child: Icon(
             icon,
-            size: iconSize,
+            size: 34,
             color: selected ? Colors.white : Colors.black87,
           ),
         ),

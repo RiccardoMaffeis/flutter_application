@@ -97,7 +97,6 @@ class PdfViewerPage extends StatelessWidget {
       }
 
       await Share.shareXFiles([xfile], text: title);
-      // (Niente snack di successo qui: la condivisione apre il foglio di sistema)
     } catch (e) {
       if (context.mounted) {
         showPdfErrorSnack(context, message: 'Share error: $e');
@@ -108,9 +107,13 @@ class PdfViewerPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // ---------- Responsive metrics ----------
-    final w = MediaQuery.of(context).size.width;
-    final double titleFont = (w * 0.055).clamp(18.0, 22.0);
+    final media = MediaQuery.of(context);
+    final w = media.size.width;
+    final textScale = media.textScaleFactor.clamp(1.0, 1.3);
+
+    final double titleFont = (w * 0.055).clamp(18.0, 22.0) * textScale;
     final double iconSize = (w * 0.075).clamp(22.0, 28.0);
+    final double emptyFont = (w * 0.045).clamp(14.0, 18.0) * textScale;
 
     final Widget viewer = (pdfFile != null && File(pdfFile!).existsSync())
         ? SfPdfViewer.file(
@@ -119,7 +122,15 @@ class PdfViewerPage extends StatelessWidget {
           )
         : (pdfUrl != null && pdfUrl!.isNotEmpty)
         ? SfPdfViewer.network(pdfUrl!, initialPageNumber: (initialPage ?? 1))
-        : const Center(child: Text('No PDF to display'));
+        : Center(
+            child: Text(
+              'No PDF to display',
+              style: TextStyle(
+                fontSize: emptyFont,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          );
 
     return Scaffold(
       appBar: AppBar(
@@ -158,12 +169,15 @@ void showPdfSavedSnack(
   required String fileName,
   String? openPath,
 }) {
-  final w = MediaQuery.of(context).size.width;
+  final media = MediaQuery.of(context);
+  final w = media.size.width;
+  final textScale = media.textScaleFactor.clamp(1.0, 1.3);
 
   final double badge = (w * 0.085).clamp(26.0, 34.0);
   final double check = (badge * 0.6).clamp(16.0, 20.0);
-  final double titleFont = (w * 0.04).clamp(13.0, 15.0);
-  final double subFont = (w * 0.035).clamp(11.0, 13.0);
+  final double titleFont = (w * 0.04).clamp(13.0, 15.0) * textScale;
+  final double subFont = (w * 0.035).clamp(11.0, 13.0) * textScale;
+  final double actionFont = (w * 0.04).clamp(13.0, 16.0) * textScale;
 
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
@@ -246,6 +260,7 @@ void showPdfSavedSnack(
                   ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  textStyle: TextStyle(fontSize: actionFont),
                 ),
                 child: Text(
                   'OPEN',
@@ -264,12 +279,14 @@ void showPdfSavedSnack(
 
 /// Error snack with same visual language
 void showPdfErrorSnack(BuildContext context, {required String message}) {
-  final w = MediaQuery.of(context).size.width;
+  final media = MediaQuery.of(context);
+  final w = media.size.width;
+  final textScale = media.textScaleFactor.clamp(1.0, 1.3);
 
   final double badge = (w * 0.085).clamp(26.0, 34.0);
   final double icon = (badge * 0.6).clamp(16.0, 20.0);
-  final double titleFont = (w * 0.04).clamp(13.0, 15.0);
-  final double subFont = (w * 0.035).clamp(11.0, 13.0);
+  final double titleFont = (w * 0.04).clamp(13.0, 15.0) * textScale;
+  final double subFont = (w * 0.035).clamp(11.0, 13.0) * textScale;
 
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(

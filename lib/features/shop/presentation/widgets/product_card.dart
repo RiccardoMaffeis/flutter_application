@@ -107,9 +107,14 @@ class _ProductCardState extends State<ProductCard> {
       final modelPath = await _findModelPath(widget.product);
       if (modelPath == null) {
         if (!context.mounted) return;
+        final w = MediaQuery.of(context).size.width;
+        final double snackFont = (w * 0.04).clamp(12.0, 16.0);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('3D model not found for ${widget.product.code}'),
+            content: Text(
+              '3D model not found for ${widget.product.code}',
+              style: TextStyle(fontSize: snackFont),
+            ),
           ),
         );
         return;

@@ -12,10 +12,14 @@ class CartIconButton extends ConsumerWidget {
     final count = ref.watch(cartCountProvider);
 
     // ---- Responsive metrics ----
-    final w = MediaQuery.of(context).size.width;
+    final media = MediaQuery.of(context);
+    final w = media.size.width;
+    final textScale = media.textScaleFactor.clamp(1.0, 1.3);
+
     final double iconSize = (w * 0.085).clamp(26.0, 35.0);
     final double badgeMin = (iconSize * 0.52).clamp(16.0, 20.0);
-    final double badgeFont = (iconSize * 0.31).clamp(9.0, 12.0);
+    final double baseBadgeFont = (iconSize * 0.31).clamp(9.0, 12.0);
+    final double badgeFont = (baseBadgeFont * textScale).toDouble();
     final double padH = (iconSize * 0.17).clamp(4.0, 6.0);
     final double padV = (iconSize * 0.09).clamp(2.0, 3.0);
     final double badgeRight = (iconSize * 0.08).clamp(1.0, 4.0);

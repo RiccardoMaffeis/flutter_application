@@ -9,11 +9,11 @@ class ProductSearchDelegate extends SearchDelegate<Product?> {
   final WidgetRef ref;
   ProductSearchDelegate(this.ref);
 
-  // Label statico; lo stile viene ridimensionato in appBarTheme()
+  // Label statico; lo stile/size viene gestito in appBarTheme() -> hintStyle
   @override
   String get searchFieldLabel => 'Search for code or name...';
 
-  // Stile di fallback (verrà sovrascritto da appBarTheme in base allo schermo)
+  // Stile di fallback (verrà sovrascritto in appBarTheme)
   @override
   TextStyle? get searchFieldStyle => const TextStyle(fontSize: 16);
 
@@ -21,9 +21,11 @@ class ProductSearchDelegate extends SearchDelegate<Product?> {
   @override
   ThemeData appBarTheme(BuildContext context) {
     final theme = Theme.of(context);
-    final w = MediaQuery.of(context).size.width;
+    final media = MediaQuery.of(context);
+    final w = media.size.width;
+    final textScale = media.textScaleFactor.clamp(1.0, 1.3);
 
-    final double fieldFont = (w * 0.045).clamp(14.0, 18.0);
+    final double fieldFont = (w * 0.045).clamp(14.0, 18.0) * textScale;
     final double actionIconSize = (w * 0.08).clamp(22.0, 28.0);
 
     return theme.copyWith(
@@ -131,11 +133,15 @@ class _ResultsList extends ConsumerWidget {
         return items.where(matches).toList();
       }(),
       builder: (context, snap) {
-        // Metriche responsvie per lista/tile/immagini/font
-        final w = MediaQuery.of(context).size.width;
+        // Metriche responsive per lista/tile/immagini/font
+        final media = MediaQuery.of(context);
+        final w = media.size.width;
+        final textScale = media.textScaleFactor.clamp(1.0, 1.3);
+
         final double imgW = (w * 0.14).clamp(48.0, 64.0);
-        final double titleFont = (w * 0.045).clamp(14.0, 18.0);
-        final double subtitleFont = (w * 0.038).clamp(12.0, 14.0);
+        final double titleFont = (w * 0.045).clamp(14.0, 18.0) * textScale;
+        final double subtitleFont = (w * 0.038).clamp(12.0, 14.0) * textScale;
+        final double emptyFont = (w * 0.045).clamp(14.0, 18.0) * textScale;
         final double favIcon = (w * 0.075).clamp(22.0, 28.0);
         final double tileHPad = (w * 0.04).clamp(10.0, 16.0);
         final double tileVPad = (w * 0.02).clamp(6.0, 10.0);
@@ -147,7 +153,15 @@ class _ResultsList extends ConsumerWidget {
 
         final results = snap.data!;
         if (results.isEmpty) {
-          return const Center(child: Text('No results'));
+          return Center(
+            child: Text(
+              'No results',
+              style: TextStyle(
+                fontSize: emptyFont,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          );
         }
 
         final favs = ref.watch(shopControllerProvider).favourites;

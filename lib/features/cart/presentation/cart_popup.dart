@@ -4,38 +4,45 @@ import '../../../core/theme/app_theme.dart';
 import '../../cart/controllers/cart_controller.dart';
 
 /// Shows the cart dialog on top of the current route.
-/// Uses Riverpod [WidgetRef] to access the cart controller/state inside the dialog.
+/// - Uses Riverpod to read cart state and perform mutations
+/// - Dismissible by tapping outside or the close button
 Future<void> showCartPopup(BuildContext context, WidgetRef ref) async {
   await showDialog(
     context: context,
-    barrierDismissible: true, // allow tap outside to close
+    barrierDismissible: true,
     builder: (_) => const _CartDialog(),
   );
 }
 
-/// Modal dialog that displays cart contents, totals, and a checkout button.
-/// Listens to [cartControllerProvider] for reactive updates.
+/// Modal dialog that renders the cart contents with:
+/// - List of line items (thumbnail, name, code, unit price)
+/// - Quantity stepper and delete action per item
+/// - Subtotal / tax / total rows
+/// - Checkout button (closes the dialog; hook your flow where needed)
 class _CartDialog extends ConsumerWidget {
   const _CartDialog();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Read current cart state (AsyncValue<List<CartItem>> + totals).
+    // Cart read-only state and controller (mutations).
     final cart = ref.watch(cartControllerProvider);
-    // Controller to perform mutations (set qty, remove, clear, etc.).
     final ctrl = ref.read(cartControllerProvider.notifier);
 
     // ---------- Responsive metrics ----------
+    // Scale dialog and typography using MediaQuery and a clamped text scale factor.
     final mq = MediaQuery.of(context);
     final w = mq.size.width;
     final h = mq.size.height;
+    final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
+    // Dialog width and insets (screen edge spacing).
     final double dialogW = (w * 0.94).clamp(300.0, 480.0);
     final EdgeInsets dialogInset = EdgeInsets.symmetric(
       horizontal: (w * 0.06).clamp(12.0, 24.0),
       vertical: (h * 0.04).clamp(12.0, 24.0),
     );
 
+    // Inner padding of the dialog card.
     final EdgeInsets dialogPad = EdgeInsets.fromLTRB(
       (w * 0.03).clamp(10.0, 16.0),
       (h * 0.018).clamp(10.0, 16.0),
@@ -43,27 +50,35 @@ class _CartDialog extends ConsumerWidget {
       (h * 0.018).clamp(10.0, 16.0),
     );
 
+    // Max list height to keep dialog compact.
     final double listH = (h * 0.32).clamp(180.0, 320.0);
-
     final double closeIcon = (w * 0.07).clamp(22.0, 28.0);
 
+    // Thumbnail/avatars sizing.
     final double avatarR = (w * 0.06).clamp(20.0, 26.0);
     final double thumbWH = avatarR * 1.8;
 
-    final double nameFont = (w * 0.041).clamp(13.0, 16.0);
-    final double codeFont = (w * 0.033).clamp(11.0, 13.0);
-    final double priceFont = (w * 0.045).clamp(15.0, 18.0);
+    // Typography for item lines.
+    final double nameFont = (w * 0.041).clamp(13.0, 16.0) * ts;
+    final double codeFont = (w * 0.033).clamp(11.0, 13.0) * ts;
+    final double priceFont = (w * 0.045).clamp(15.0, 18.0) * ts;
 
+    // Quantity stepper sizes.
     final double stepperH = (h * 0.04).clamp(30.0, 36.0);
     final double stepperIcon = (stepperH * 0.55).clamp(16.0, 20.0);
 
-    final double totalsLabelFont = (w * 0.038).clamp(13.0, 15.0);
-    final double totalsValueFont = (w * 0.042).clamp(14.0, 18.0);
+    // Totals row typography.
+    final double totalsLabelFont = (w * 0.038).clamp(13.0, 15.0) * ts;
+    final double totalsValueFont = (w * 0.042).clamp(14.0, 18.0) * ts;
 
+    // CTA button (Checkout) sizes.
     final double btnW = (dialogW * 0.60).clamp(200.0, 280.0);
     final double btnH = (h * 0.055).clamp(42.0, 50.0);
-    final double btnFont = (w * 0.045).clamp(16.0, 18.0);
+    final double btnFont = (w * 0.045).clamp(16.0, 18.0) * ts;
     final double btnRadius = (btnH * 0.56).clamp(22.0, 26.0);
+
+    // Generic state/empty/error font size.
+    final double stateFont = (w * 0.045).clamp(14.0, 18.0) * ts;
 
     return Dialog(
       backgroundColor: Colors.white,
@@ -76,7 +91,7 @@ class _CartDialog extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header row with only a close button aligned to the right
+              // Header: right-aligned close button (keeps header compact).
               Row(
                 children: [
                   const SizedBox(width: 8),
@@ -88,19 +103,38 @@ class _CartDialog extends ConsumerWidget {
                 ],
               ),
 
-              // Cart items list (fixed height, scrollable)
+              // -------- Line items list --------
               SizedBox(
                 height: listH,
                 child: cart.items.when(
+                  // Loading spinner while items resolve.
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Center(child: Text('Error: $e')),
+                  // Error message (shows the thrown error string).
+                  error: (e, _) => Center(
+                    child: Text(
+                      'Error: $e',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: stateFont,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  // Data case: either empty state or the actual list.
                   data: (items) {
                     if (items.isEmpty) {
-                      // Empty state message
-                      return const Center(child: Text('The cart is empty'));
+                      return Center(
+                        child: Text(
+                          'The cart is empty',
+                          style: TextStyle(
+                            fontSize: stateFont,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      );
                     }
-                    // Render each item with thumbnail, info, price, qty stepper, and delete
+                    // One row per item: thumb, info (name/code/price), qty stepper, delete.
                     return ListView.separated(
                       itemCount: items.length,
                       separatorBuilder: (_, __) => const Divider(height: 16),
@@ -109,7 +143,7 @@ class _CartDialog extends ConsumerWidget {
                         return Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            // Circular thumbnail with asset image fallback
+                            // Product thumbnail (from local asset path).
                             CircleAvatar(
                               radius: avatarR,
                               backgroundColor: const Color(0xFFF4F4F4),
@@ -125,7 +159,7 @@ class _CartDialog extends ConsumerWidget {
                               ),
                             ),
                             SizedBox(width: (w * 0.03).clamp(10.0, 14.0)),
-                            // Product title, code and unit price
+                            // Textual details (name/code/price).
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,7 +193,7 @@ class _CartDialog extends ConsumerWidget {
                             ),
                             SizedBox(width: (w * 0.02).clamp(8.0, 12.0)),
 
-                            // Quantity stepper and delete action
+                            // Quantity stepper and delete action.
                             _QtyStepper(
                               qty: it.qty,
                               onMinus: () =>
@@ -171,6 +205,7 @@ class _CartDialog extends ConsumerWidget {
                             ),
                             IconButton(
                               onPressed: () async {
+                                // Small delay for a nicer UI feedback before removal.
                                 await Future.delayed(
                                   const Duration(milliseconds: 350),
                                 );
@@ -188,7 +223,7 @@ class _CartDialog extends ConsumerWidget {
 
               SizedBox(height: (h * 0.015).clamp(8.0, 14.0)),
 
-              // Totals summary (subtotal, tax, and total)
+              // -------- Totals section --------
               _TotalRow(
                 label: 'Order Amount',
                 value: cart.subtotal,
@@ -206,20 +241,20 @@ class _CartDialog extends ConsumerWidget {
                 label: 'Total Payment',
                 value: cart.total,
                 bold: true,
+                // Slightly larger font for the final total.
                 labelFont: totalsLabelFont + 1,
                 valueFont: totalsValueFont + 1,
               ),
 
               SizedBox(height: (h * 0.015).clamp(8.0, 14.0)),
 
-              // Checkout button (placeholder action -> just closes the dialog)
+              // -------- Checkout CTA --------
+              // Currently just closes the dialog; integrate navigation/payment here.
               SizedBox(
                 width: btnW,
                 height: btnH,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
+                  onPressed: () => Navigator.of(context).pop(),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.accent,
                     shape: RoundedRectangleBorder(
@@ -241,7 +276,9 @@ class _CartDialog extends ConsumerWidget {
   }
 }
 
-/// Compact quantity selector with minus/plus buttons.
+/// Compact quantity stepper used per line item:
+/// - Minus / current qty / Plus
+/// - Elevation and rounded pill shape for a tactile feel
 class _QtyStepper extends StatelessWidget {
   final int qty;
   final VoidCallback onMinus;
@@ -261,8 +298,13 @@ class _QtyStepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final w = media.size.width;
+    final ts = media.textScaleFactor.clamp(1.0, 1.3);
+
     final double h = height ?? 32.0;
     final double ic = (iconSize ?? 18.0);
+    final double qtyFont = (w * 0.04).clamp(13.0, 15.0) * ts;
 
     return Container(
       height: h,
@@ -281,26 +323,23 @@ class _QtyStepper extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Decrease quantity
           _iconBtn(Icons.remove, onMinus, ic, h),
-          // Current quantity value
           Padding(
             padding: EdgeInsets.symmetric(
               horizontal: (h * 0.22).clamp(6.0, 10.0),
             ),
             child: Text(
               '$qty',
-              style: const TextStyle(fontWeight: FontWeight.w800),
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: qtyFont),
             ),
           ),
-          // Increase quantity
           _iconBtn(Icons.add, onPlus, ic, h),
         ],
       ),
     );
   }
 
-  /// Small circular icon button used by the stepper.
+  // Small circular icon button used inside the stepper.
   Widget _iconBtn(IconData icon, VoidCallback onTap, double size, double h) =>
       SizedBox(
         width: (h * 0.78).clamp(26.0, 32.0),
@@ -317,7 +356,8 @@ class _QtyStepper extends StatelessWidget {
       );
 }
 
-/// Row widget to display a label + formatted euro amount (with optional emphasis).
+/// Single row showing a label/value pair of a monetary total.
+/// - `bold` increases font weight and value size (for the grand total).
 class _TotalRow extends StatelessWidget {
   final String label;
   final double value;

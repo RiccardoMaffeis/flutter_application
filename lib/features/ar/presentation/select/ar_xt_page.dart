@@ -60,8 +60,17 @@ class ARXTPage extends StatelessWidget {
   Future<void> _openModel(BuildContext context, ARItem item) async {
     final ok = await _assetExists(item.glbPath);
     if (!ok && context.mounted) {
+      final w = MediaQuery.of(context).size.width;
+      final ts = MediaQuery.of(context).textScaleFactor.clamp(1.0, 1.3);
+      final double snackFont = (w * 0.04).clamp(13.0, 16.0) * ts;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Modello non trovato: ${item.glbPath}')),
+        SnackBar(
+          content: Text(
+            'Model not found: ${item.glbPath}',
+            style: TextStyle(fontSize: snackFont, fontWeight: FontWeight.w600),
+          ),
+        ),
       );
       return;
     }
@@ -81,10 +90,11 @@ class ARXTPage extends StatelessWidget {
     final mq = MediaQuery.of(context);
     final w = mq.size.width;
     final h = mq.size.height;
+    final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
     // Header sizing
     final double iconSize = (w * 0.075).clamp(24.0, 36.0);
-    final double titleSize = (w * 0.075).clamp(22.0, 38.0);
+    final double titleSize = (w * 0.075).clamp(22.0, 38.0) * ts;
     final double headerHPad = (w * 0.016).clamp(6.0, 12.0);
     final double headerVPad = (h * 0.01).clamp(6.0, 10.0);
     final double accentHMargin = (w * 0.04).clamp(12.0, 20.0);
@@ -185,13 +195,14 @@ class _XtButton extends StatelessWidget {
     return LayoutBuilder(
       builder: (ctx, cons) {
         final w = cons.maxWidth;
+        final ts = MediaQuery.of(ctx).textScaleFactor.clamp(1.0, 1.3);
 
         final double cardRadius = (w * 0.06).clamp(18.0, 28.0);
         final double hPad = (w * 0.036).clamp(12.0, 18.0);
         final double vPad = (w * 0.028).clamp(10.0, 14.0);
         final double thumb = (w * 0.16).clamp(44.0, 68.0);
         final double gap = (w * 0.03).clamp(10.0, 14.0);
-        final double labelSize = (w * 0.06).clamp(16.0, 22.0);
+        final double labelSize = (w * 0.06).clamp(16.0, 22.0) * ts;
         final double chevron = (w * 0.075).clamp(22.0, 30.0);
 
         return Material(

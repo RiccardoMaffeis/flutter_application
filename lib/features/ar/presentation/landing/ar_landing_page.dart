@@ -20,10 +20,11 @@ class ARLandingPage extends ConsumerWidget {
     final mq = MediaQuery.of(context);
     final w = mq.size.width;
     final h = mq.size.height;
+    final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
     final double headerHPad = (w * 0.04).clamp(12.0, 22.0);
     final double headerVPad = (h * 0.012).clamp(6.0, 14.0);
-    final double headerTitleSize = (w * 0.085).clamp(28.0, 44.0);
+    final double headerTitleSize = (w * 0.085).clamp(28.0, 44.0) * ts;
 
     final double accentBarHeight = (h * 0.005).clamp(3.0, 6.0);
     final double accentBarHMargin = (w * 0.04).clamp(12.0, 24.0);
@@ -48,8 +49,6 @@ class ARLandingPage extends ConsumerWidget {
           children: [
             Column(
               children: [
-                // Header grande + underline rossa
-                // Top title centered with heavy weight
                 Padding(
                   padding: EdgeInsets.fromLTRB(
                     headerHPad,
@@ -101,9 +100,7 @@ class ARLandingPage extends ConsumerWidget {
                       for (final c in choices) ...[
                         _ChoiceTile(
                           choice: c,
-                          onTap: () => context.push(
-                            '/ar/${c.route}',
-                          ), // Navigate to selection page
+                          onTap: () => context.push('/ar/${c.route}'),
                         ),
                         SizedBox(height: listVGap),
                       ],
@@ -111,10 +108,10 @@ class ARLandingPage extends ConsumerWidget {
                   ),
                 ),
 
-                const Spacer(), // Pushes bottom content to the bottom
+                const Spacer(),
                 SizedBox(
                   height: bottomReserved,
-                ), // Reserve space above bottom pill nav
+                ), // Reserve space for bottom nav
               ],
             ),
 
@@ -141,17 +138,13 @@ class ARLandingPage extends ConsumerWidget {
               ),
             ),
 
-            // Bottom nav stile “pillola”
-            // Custom "pill" bottom navigation with 4 slots and a sliding highlight
             Positioned(
               left: navSideMargin,
               right: navSideMargin,
               bottom: (h * 0.02).clamp(10.0, 18.0),
               child: _BottomPillNav(
-                index: 2, // AR tab selected
-                height: navHeight,
+                index: 2,
                 onChanged: (i) {
-                  // Map indices to routes; ignore if already selected
                   if (i == 2) return;
                   if (i == 1) context.go('/favourites');
                   if (i == 3) context.go('/profile');
@@ -187,10 +180,12 @@ class _ChoiceTile extends StatelessWidget {
     return LayoutBuilder(
       builder: (ctx, cons) {
         final w = cons.maxWidth;
+        final ts = MediaQuery.of(ctx).textScaleFactor.clamp(1.0, 1.3);
+
         final double cardRadius = (w * 0.055).clamp(18.0, 26.0);
         final double hPad = (w * 0.04).clamp(12.0, 20.0);
         final double tileHeight = (w * 0.18).clamp(64.0, 92.0);
-        final double titleSize = (w * 0.06).clamp(16.0, 22.0);
+        final double titleSize = (w * 0.06).clamp(16.0, 22.0) * ts;
         final double imgW = (w * 0.16).clamp(48.0, 72.0);
         final double imgH = (tileHeight * 0.58).clamp(36.0, 56.0);
         final double chevron = (w * 0.075).clamp(22.0, 30.0);
@@ -198,7 +193,7 @@ class _ChoiceTile extends StatelessWidget {
 
         return Material(
           color: Colors.white,
-          elevation: 6, // Card-like elevation
+          elevation: 6,
           shadowColor: Colors.black12,
           borderRadius: BorderRadius.circular(cardRadius),
           child: InkWell(
@@ -209,7 +204,7 @@ class _ChoiceTile extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: hPad),
               child: Row(
                 children: [
-                  // Choice title (bold, prominent)
+                  // Choice title
                   Expanded(
                     child: Text(
                       choice.title,
@@ -223,7 +218,7 @@ class _ChoiceTile extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: gap),
-                  // Right-side small preview image with graceful fallback icon
+                  // Right preview image
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.asset(
@@ -240,7 +235,7 @@ class _ChoiceTile extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: gap),
-                  Icon(Icons.chevron_right, size: chevron), // Disclosure arrow
+                  Icon(Icons.chevron_right, size: chevron),
                 ],
               ),
             ),
@@ -251,28 +246,22 @@ class _ChoiceTile extends StatelessWidget {
   }
 }
 
-/// Custom bottom navigation styled as a rounded "pill".
-/// Shows 4 icons and animates a colored highlight under the selected one.
+/// Reusable bottom navigation with a sliding "pill" highlight.
+/// - Accepts a `index` to indicate the selected tab
+/// - Calls `onChanged` with the tapped index
 class _BottomPillNav extends StatelessWidget {
-  final int index; // Currently selected tab index (0..3)
-  final ValueChanged<int> onChanged; // Callback when a tab is tapped
-  final double height;
-
-  const _BottomPillNav({
-    required this.index,
-    required this.onChanged,
-    this.height = 58,
-  });
+  final int index;
+  final ValueChanged<int> onChanged;
+  const _BottomPillNav({required this.index, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: height,
+      height: 58,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(height * 0.48),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: const [
-          // Soft, elevated shadow stack for a floating effect
           BoxShadow(
             color: Color(0x22000000),
             blurRadius: 22,
@@ -292,15 +281,11 @@ class _BottomPillNav extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: LayoutBuilder(
         builder: (context, cons) {
-          // Compute slot width for the sliding highlight
-          final double pad = (height * 0.1).clamp(4.0, 8.0);
+          const pad = 6.0;
           final slotW = (cons.maxWidth - pad * 2) / 4;
-          final double capsuleRadius = (height * 0.38).clamp(18.0, 26.0);
-          final double iconSize = (height * 0.58).clamp(24.0, 36.0);
-
           return Stack(
             children: [
-              // Animated colored capsule that moves to the selected slot
+              // Animated pill indicating the selected tab.
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOut,
@@ -311,39 +296,34 @@ class _BottomPillNav extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: AppTheme.accent,
-                    borderRadius: BorderRadius.circular(capsuleRadius),
+                    borderRadius: BorderRadius.circular(22),
                   ),
                 ),
               ),
-
-              // Row of tappable icons; color switches based on selection
+              // Four icons (Home/Favourites/AR/Profile).
               Padding(
-                padding: EdgeInsets.all(pad),
+                padding: const EdgeInsets.all(pad),
                 child: Row(
                   children: [
                     _NavIcon(
                       icon: Icons.shopping_bag_outlined,
                       selected: index == 0,
                       onTap: () => onChanged(0),
-                      size: iconSize,
                     ),
                     _NavIcon(
                       icon: Icons.favorite_border,
                       selected: index == 1,
                       onTap: () => onChanged(1),
-                      size: iconSize,
                     ),
                     _NavIcon(
                       icon: Icons.view_in_ar,
                       selected: index == 2,
                       onTap: () => onChanged(2),
-                      size: iconSize,
                     ),
                     _NavIcon(
                       icon: Icons.person_outline,
                       selected: index == 3,
                       onTap: () => onChanged(3),
-                      size: iconSize,
                     ),
                   ],
                 ),
@@ -356,18 +336,16 @@ class _BottomPillNav extends StatelessWidget {
   }
 }
 
-/// Single nav icon that expands to fill its slot and toggles color when selected.
+/// Single icon button used by the pill navigation.
+/// - Changes color to white when selected (due to colored pill background)
 class _NavIcon extends StatelessWidget {
   final IconData icon;
   final bool selected;
   final VoidCallback onTap;
-  final double size;
-
   const _NavIcon({
     required this.icon,
     required this.selected,
     required this.onTap,
-    required this.size,
   });
 
   @override
@@ -379,10 +357,8 @@ class _NavIcon extends StatelessWidget {
         child: Center(
           child: Icon(
             icon,
-            size: size,
-            color: selected
-                ? Colors.white
-                : Colors.black87,
+            size: 34,
+            color: selected ? Colors.white : Colors.black87,
           ),
         ),
       ),

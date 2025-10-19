@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_application/features/cart/presentation/cart_popup.dart';
 import 'package:flutter_application/features/shop/domain/product.dart';
@@ -17,10 +18,9 @@ class ShopPage extends ConsumerStatefulWidget {
 }
 
 class _ShopPageState extends ConsumerState<ShopPage> {
-  // --- Anti double-tap / throttle ---
-  bool _navBusy = false; // blocca navigazioni ripetute
-  DateTime? _cooldownUntil; // breve cooldown UI generico
-  final Set<String> _favBusy = <String>{}; // toggle preferiti in corso
+  bool _navBusy = false;
+  DateTime? _cooldownUntil;
+  final Set<String> _favBusy = <String>{};
 
   bool get _cooldownActive =>
       _cooldownUntil != null && DateTime.now().isBefore(_cooldownUntil!);
@@ -30,7 +30,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
   }
 
   Future<void> _onFavToggle(String productId) async {
-    if (_favBusy.contains(productId)) return; // già in corso
+    if (_favBusy.contains(productId)) return;
     _favBusy.add(productId);
     setState(() {});
     try {
@@ -179,47 +179,78 @@ class _ShopPageState extends ConsumerState<ShopPage> {
             final w = cons.maxWidth;
             final h = cons.maxHeight;
 
-            // ---- Responsive metrics ----
-            final double searchIconSize = (w * 0.085).clamp(26.0, 35.0);
-            final double titleFont = (w * 0.09).clamp(24.0, 40.0);
-            final double errorFont = (w * 0.045).clamp(14.0, 18.0);
-            final double barH = (w * 0.01).clamp(3.0, 4.0);
-            final double chipRowH = (h * 0.075).clamp(48.0, 64.0);
-            final double chipFont = (w * 0.04).clamp(12.0, 16.0);
+            final shortest = math.min(w, h);
+            final s = (shortest / 375.0).clamp(0.85, 1.30);
+            double sp(double v) => (v * s).toDouble();
 
-            final double familyTitleFont = (w * 0.07).clamp(22.0, 30.0);
-            final double variantTitleFont = (w * 0.055).clamp(18.0, 22.0);
+            final double searchIconSize = (w * 0.085)
+                .clamp(sp(26.0), sp(35.0))
+                .toDouble();
+            final double titleFont = (w * 0.09)
+                .clamp(sp(24.0), sp(40.0))
+                .toDouble();
+            final double errorFont = (w * 0.045)
+                .clamp(sp(14.0), sp(18.0))
+                .toDouble();
+            final double barH = (w * 0.01).clamp(sp(3.0), sp(4.0)).toDouble();
+            final double chipRowH = (h * 0.075)
+                .clamp(sp(48.0), sp(64.0))
+                .toDouble();
+            final double chipFont = (w * 0.04)
+                .clamp(sp(12.0), sp(16.0))
+                .toDouble();
 
-            final double carouselCardW = (w * 0.5).clamp(180.0, 240.0);
-            final double carouselH = (h * 0.36).clamp(280.0, 340.0);
+            final double familyTitleFont = (w * 0.07)
+                .clamp(sp(22.0), sp(30.0))
+                .toDouble();
+            final double variantTitleFont = (w * 0.055)
+                .clamp(sp(18.0), sp(22.0))
+                .toDouble();
 
-            final double listHPad = (w * 0.03).clamp(10.0, 16.0);
-            final double listSep = (w * 0.03).clamp(10.0, 16.0);
+            final double carouselCardW = (w * 0.5)
+                .clamp(sp(180.0), sp(240.0))
+                .toDouble();
+            final double carouselH = (h * 0.36)
+                .clamp(sp(280.0), sp(340.0))
+                .toDouble();
 
-            // Grid columns by width breakpoints
-            int gridCols;
-            if (w >= 920) {
-              gridCols = 4;
-            } else if (w >= 700) {
-              gridCols = 3;
-            } else {
-              gridCols = 2;
-            }
-            final double gridMainSpace = (w * 0.035).clamp(10.0, 16.0);
-            final double gridCrossSpace = (w * 0.035).clamp(10.0, 16.0);
-            final double gridAspect = 0.52; // keep card aspect
+            final double listHPad = (w * 0.03)
+                .clamp(sp(10.0), sp(16.0))
+                .toDouble();
+            final double listSep = (w * 0.03)
+                .clamp(sp(10.0), sp(16.0))
+                .toDouble();
 
-            final double fabSize = (w * 0.12).clamp(40.0, 52.0);
-            final double bottomPad = (h * 0.11).clamp(68.0, 92.0);
+            final double gridMainSpace = (w * 0.035)
+                .clamp(sp(10.0), sp(16.0))
+                .toDouble();
+            final double gridCrossSpace = (w * 0.035)
+                .clamp(sp(10.0), sp(16.0))
+                .toDouble();
+            final double gridAspect = 0.52;
+
+            final double targetCardMinW = (w * 0.42)
+                .clamp(sp(160.0), sp(220.0))
+                .toDouble();
+            int gridCols = (w / (targetCardMinW + gridCrossSpace))
+                .floor()
+                .clamp(2, 6);
+
+            final double fabSize = (w * 0.12)
+                .clamp(sp(40.0), sp(52.0))
+                .toDouble();
+            final double bottomPad = (h * 0.11)
+                .clamp(sp(68.0), sp(92.0))
+                .toDouble();
 
             return Stack(
               children: [
                 Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: sp(12),
+                        vertical: sp(6),
                       ),
                       child: Row(
                         children: [
@@ -260,36 +291,36 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                     ),
                     Container(
                       height: barH,
-                      margin: const EdgeInsets.symmetric(horizontal: 12),
+                      margin: EdgeInsets.symmetric(horizontal: sp(12)),
                       decoration: BoxDecoration(
                         color: AppTheme.accent,
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.circular(sp(3)),
                         boxShadow: [
                           BoxShadow(
                             color: AppTheme.accent.withOpacity(0.45),
-                            blurRadius: 3,
-                            spreadRadius: 0.4,
-                            offset: const Offset(0, 3),
+                            blurRadius: sp(3),
+                            spreadRadius: sp(0.4),
+                            offset: Offset(0, sp(3)),
                           ),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 12),
+                    SizedBox(height: sp(12)),
 
                     SizedBox(
                       height: chipRowH,
                       child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: sp(12),
+                          vertical: sp(12),
                         ),
                         scrollDirection: Axis.horizontal,
                         itemCount: state.categories.length.clamp(
                           0,
                           categoryLabels.length,
                         ),
-                        separatorBuilder: (_, __) => const SizedBox(width: 6),
+                        separatorBuilder: (_, __) => SizedBox(width: sp(6)),
                         itemBuilder: (_, i) {
                           final c = state.categories[i];
                           final selected = c.id == state.selectedCategoryId;
@@ -302,8 +333,8 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                             ),
                             avatar: selected
                                 ? Container(
-                                    width: 20,
-                                    height: 20,
+                                    width: sp(18),
+                                    height: sp(18),
                                     decoration: const BoxDecoration(
                                       color: Colors.white,
                                       shape: BoxShape.circle,
@@ -311,7 +342,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                     alignment: Alignment.center,
                                     child: Icon(
                                       Icons.check,
-                                      size: 14,
+                                      size: sp(14),
                                       color: AppTheme.accent,
                                     ),
                                   )
@@ -327,9 +358,8 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                               ctrl.loadProducts(categoryId: c.id);
                             },
                             shape: const StadiumBorder(side: BorderSide.none),
-                            elevation: 3,
+                            elevation: sp(3),
                             showCheckmark: false,
-                            // Ensure the chip doesn't override our Text font size
                             labelStyle: TextStyle(
                               fontSize: chipFont,
                               fontWeight: selected
@@ -344,7 +374,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                       ),
                     ),
 
-                    const SizedBox(height: 4),
+                    SizedBox(height: sp(4)),
 
                     Expanded(
                       child: state.products.when(
@@ -373,11 +403,11 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                 for (final entry in families.entries) ...[
                                   SliverToBoxAdapter(
                                     child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        12,
-                                        12,
-                                        12,
-                                        6,
+                                      padding: EdgeInsets.fromLTRB(
+                                        sp(12),
+                                        sp(12),
+                                        sp(12),
+                                        sp(6),
                                       ),
                                       child: Text(
                                         entry.key,
@@ -424,8 +454,8 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                     ),
                                   ),
                                 ],
-                                const SliverToBoxAdapter(
-                                  child: SizedBox(height: 76),
+                                SliverToBoxAdapter(
+                                  child: SizedBox(height: bottomPad),
                                 ),
                               ],
                             );
@@ -443,11 +473,11 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                 for (final entry in groups.entries) ...[
                                   SliverToBoxAdapter(
                                     child: Padding(
-                                      padding: const EdgeInsets.fromLTRB(
-                                        12,
-                                        12,
-                                        12,
-                                        6,
+                                      padding: EdgeInsets.fromLTRB(
+                                        sp(12),
+                                        sp(12),
+                                        sp(12),
+                                        sp(6),
                                       ),
                                       child: Text(
                                         entry.key,
@@ -492,17 +522,17 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                     ),
                                   ),
                                 ],
-                                const SliverToBoxAdapter(
-                                  child: SizedBox(height: 76),
+                                SliverToBoxAdapter(
+                                  child: SizedBox(height: bottomPad),
                                 ),
                               ],
                             );
                           }
 
                           return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: sp(12),
+                              vertical: sp(8),
                             ),
                             child: GridView.builder(
                               physics: const BouncingScrollPhysics(),
@@ -535,12 +565,12 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                 ),
 
                 Positioned(
-                  right: 16,
-                  bottom: bottomPad + 16,
+                  right: sp(16),
+                  bottom: bottomPad + sp(16),
                   child: Material(
                     color: Colors.white,
                     shape: const CircleBorder(),
-                    elevation: 4,
+                    elevation: sp(4),
                     child: InkWell(
                       customBorder: const CircleBorder(),
                       onTap: () => _safePush(context, '/assistant'),
@@ -549,7 +579,9 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                         height: fabSize,
                         child: Icon(
                           Icons.psychology_alt_outlined,
-                          size: (fabSize * 0.8).clamp(28.0, 35.0),
+                          size: (fabSize * 0.8)
+                              .clamp(sp(28.0), sp(35.0))
+                              .toDouble(),
                         ),
                       ),
                     ),
@@ -557,9 +589,9 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                 ),
 
                 Positioned(
-                  left: 16,
-                  right: 16,
-                  bottom: 16,
+                  left: sp(16),
+                  right: sp(16),
+                  bottom: sp(16),
                   child: _BottomPillNav(
                     index: 0,
                     onChanged: (i) {
@@ -591,22 +623,28 @@ class _BottomPillNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Scala locale per rendere il nav completamente responsive
+    final size = MediaQuery.of(context).size;
+    final shortest = math.min(size.width, size.height);
+    final s = (shortest / 375.0).clamp(0.85, 1.30);
+    double sp(double v) => (v * s).toDouble();
+
     return Container(
-      height: 58,
+      height: sp(58),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: const [
+        borderRadius: BorderRadius.circular(sp(28)),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x22000000),
-            blurRadius: 22,
-            spreadRadius: 2,
-            offset: Offset(0, 10),
+            color: const Color(0x22000000),
+            blurRadius: sp(22),
+            spreadRadius: sp(2),
+            offset: Offset(0, sp(10)),
           ),
           BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+            color: const Color(0x14000000),
+            blurRadius: sp(8),
+            offset: Offset(0, sp(2)),
           ),
         ],
         border: Border.fromBorderSide(
@@ -616,7 +654,7 @@ class _BottomPillNav extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: LayoutBuilder(
         builder: (context, cons) {
-          const pad = 6.0;
+          final pad = sp(6);
           final slotW = (cons.maxWidth - pad * 2) / 4;
           return Stack(
             children: [
@@ -631,13 +669,13 @@ class _BottomPillNav extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: AppTheme.accent,
-                    borderRadius: BorderRadius.circular(22),
+                    borderRadius: BorderRadius.circular(sp(22)),
                   ),
                 ),
               ),
               // Four icons (Home/Favourites/AR/Profile).
               Padding(
-                padding: const EdgeInsets.all(pad),
+                padding: EdgeInsets.all(pad),
                 child: Row(
                   children: [
                     _NavIcon(
@@ -685,14 +723,19 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final shortest = math.min(size.width, size.height);
+    final s = (shortest / 375.0).clamp(0.85, 1.30);
+    double sp(double v) => (v * s).toDouble();
+
     return Expanded(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(sp(22)),
         child: Center(
           child: Icon(
             icon,
-            size: 34,
+            size: sp(34),
             color: selected ? Colors.white : Colors.black87,
           ),
         ),

@@ -726,10 +726,11 @@ class _BottomHelpCard extends StatelessWidget {
     final size = mq.size;
     final shortest = math.min(size.width, size.height);
     double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
-    final ts = mq.textScaleFactor.clamp(1.0, 1.3);
+    // 🔧 usare TextScaler per il font (niente clamp)
+    final scaler = MediaQuery.textScalerOf(context);
 
     final double icon = sp(20);
-    final double font = sp(13) * ts;
+    final double font = scaler.scale(sp(13));
     final double padH = sp(14);
     final double padV = sp(10);
     final double gap = sp(10);
@@ -891,7 +892,8 @@ void showArSnack(
   final size = mq.size;
   final shortest = math.min(size.width, size.height);
   double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
-  final ts = mq.textScaleFactor.clamp(1.0, 1.3);
+  // 🔧 usare TextScaler per i font del popup overlay (niente clamp)
+  final scaler = MediaQuery.textScalerOf(context);
 
   final double cornerTop = (mq.padding.top * 0.12 + sp(6)).clamp(sp(6), sp(14));
   final double appBarTop = mq.padding.top + kToolbarHeight;
@@ -899,8 +901,8 @@ void showArSnack(
 
   final double sidePad = (size.width * 0.18).clamp(sp(24), sp(100));
   final double iconSize = sp(18);
-  final double titleFont = sp(13) * ts;
-  final double subFont = sp(12) * ts;
+  final double titleFont = scaler.scale(sp(13));
+  final double subFont = scaler.scale(sp(12));
   final double padH = sp(12);
   final double padV = sp(8);
   final double radius = sp(14);

@@ -282,7 +282,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                     children: [
                       Column(
                         children: [
-                          // Favourite + AR actions
                           Padding(
                             padding: EdgeInsets.fromLTRB(
                               sidePad * 0.4,

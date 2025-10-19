@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -127,12 +128,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
 
-    const divider = Divider(
-      height: 1,
-      thickness: 1.2,
-      color: Color(0x44000000),
-    );
-
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: SafeArea(
@@ -142,45 +137,92 @@ class _SignupPageState extends ConsumerState<SignupPage> {
             final h = constraints.maxHeight;
             final kbOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
+            // ---- Responsive scale & helpers ----
+            final shortest = math.min(w, h);
+            final s = (shortest / 375.0).clamp(0.85, 1.30);
+            double sp(double v) => v * s;
+
             // ---- Responsive metrics ----
-            final double maxContentW = (w - 32).clamp(300.0, 460.0);
-            final double titleSize = (w * 0.11).clamp(28.0, 50.0);
+            final double maxContentW = (w - sp(32))
+                .clamp(sp(300.0), sp(540.0))
+                .toDouble();
+            final double titleSize = (w * 0.11)
+                .clamp(sp(28.0), sp(50.0))
+                .toDouble();
 
-            final double mainBtnW = (w * 0.60).clamp(180.0, 320.0);
-            final double mainBtnH = (h * 0.055).clamp(40.0, 54.0);
-            final double mainBtnFont = (w * 0.06).clamp(18.0, 24.0);
+            final double mainBtnW = (w * 0.60)
+                .clamp(sp(180.0), sp(360.0))
+                .toDouble();
+            final double mainBtnH = (h * 0.055)
+                .clamp(sp(40.0), sp(58.0))
+                .toDouble();
+            final double mainBtnFont = (w * 0.06)
+                .clamp(sp(18.0), sp(24.0))
+                .toDouble();
 
-            final double footerFont = (w * 0.045).clamp(13.0, 16.0);
-            final double footerBtnW = (w * 0.36).clamp(120.0, 200.0);
-            final double footerBtnH = (h * 0.05).clamp(36.0, 48.0);
-            final double footerBtnFont = (w * 0.05).clamp(16.0, 20.0);
-            final double topPad = (h * 0.02).clamp(12.0, 24.0);
-            final double betweenTitlePad = (h * 0.02).clamp(12.0, 20.0);
-            final double afterFormPad = (h * 0.02).clamp(12.0, 24.0);
+            final double footerFont = (w * 0.045)
+                .clamp(sp(13.0), sp(16.0))
+                .toDouble();
+            final double footerBtnW = (w * 0.36)
+                .clamp(sp(120.0), sp(220.0))
+                .toDouble();
+            final double footerBtnH = (h * 0.05)
+                .clamp(sp(36.0), sp(54.0))
+                .toDouble();
+            final double footerBtnFont = (w * 0.05)
+                .clamp(sp(16.0), sp(20.0))
+                .toDouble();
 
-            // NEW: responsive fonts for fields/messages/errors
-            final double labelFont = (w * 0.045).clamp(14.0, 18.0);
-            final double fieldFont = (w * 0.05).clamp(15.0, 19.0);
-            final double errorFont = (w * 0.04).clamp(12.0, 16.0);
-            final double snackFont = (w * 0.04).clamp(12.0, 16.0);
+            final double topPad = (h * 0.02)
+                .clamp(sp(12.0), sp(24.0))
+                .toDouble();
+            final double betweenTitlePad = (h * 0.02)
+                .clamp(sp(12.0), sp(20.0))
+                .toDouble();
+            final double afterFormPad = (h * 0.02)
+                .clamp(sp(12.0), sp(24.0))
+                .toDouble();
+
+            // Responsive fonts for fields/messages/errors
+            final double labelFont = (w * 0.045)
+                .clamp(sp(14.0), sp(18.0))
+                .toDouble();
+            final double fieldFont = (w * 0.05)
+                .clamp(sp(15.0), sp(19.0))
+                .toDouble();
+            final double errorFont = (w * 0.04)
+                .clamp(sp(12.0), sp(16.0))
+                .toDouble();
+            final double snackFont = (w * 0.04)
+                .clamp(sp(12.0), sp(16.0))
+                .toDouble();
+
+            // Scaled divider (instead of const)
+            Divider divider = Divider(
+              height: sp(1),
+              thickness: sp(1.2),
+              color: const Color(0x44000000),
+            );
 
             // ---- Main card (responsive) ----
             final card = Card(
               color: Colors.white,
               surfaceTintColor: Colors.transparent,
-              elevation: 6,
+              elevation: sp(6),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(sp(24)),
               ),
-              margin: const EdgeInsets.all(16),
+              margin: EdgeInsets.all(sp(16)),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                padding: EdgeInsets.fromLTRB(sp(20), sp(24), sp(20), sp(20)),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      SizedBox(height: (h * 0.007).clamp(4.0, 10.0)),
+                      SizedBox(
+                        height: (h * 0.007).clamp(sp(4.0), sp(10.0)).toDouble(),
+                      ),
                       Text(
                         'Signup',
                         textAlign: TextAlign.center,
@@ -228,12 +270,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                             ? 'Please select your date of birth'
                             : null,
                       ),
-                      const Divider(
-                        height: 1,
-                        thickness: 1.2,
-                        color: Color(0x44000000),
-                      ),
-
+                      // (rimosso il doppio divider fisso)
                       divider,
 
                       // City
@@ -310,7 +347,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       divider,
                       _PasswordChecklist(controller: _password),
 
-                      const SizedBox(height: 2),
+                      SizedBox(height: sp(2)),
 
                       // Confirm Password
                       TextFormField(
@@ -387,7 +424,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                           width: mainBtnW,
                           height: mainBtnH,
                           fontSize: mainBtnFont,
-                          radius: 24,
+                          radius: sp(24),
                         ),
                     ],
                   ),
@@ -402,10 +439,10 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                   alignment: Alignment.center,
                   child: SingleChildScrollView(
                     padding: EdgeInsets.fromLTRB(
-                      5,
+                      sp(5),
                       topPad,
-                      5,
-                      (kbOpen ? topPad : 84.0),
+                      sp(5),
+                      (kbOpen ? topPad : sp(84.0)),
                     ),
                     physics: const BouncingScrollPhysics(
                       parent: AlwaysScrollableScrollPhysics(),
@@ -423,17 +460,17 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                 AnimatedPositioned(
                   duration: const Duration(milliseconds: 180),
                   curve: Curves.easeOut,
-                  left: 16,
-                  right: 16,
-                  bottom: kbOpen ? -200 : 20,
+                  left: sp(16),
+                  right: sp(16),
+                  bottom: kbOpen ? -sp(200) : sp(20),
                   child: Offstage(
                     offstage: kbOpen,
                     child: Center(
                       child: Wrap(
                         alignment: WrapAlignment.center,
                         crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 10,
-                        runSpacing: 8,
+                        spacing: sp(8),
+                        runSpacing: sp(8),
                         children: [
                           Text(
                             'Already have an account?',
@@ -453,7 +490,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                               width: footerBtnW,
                               height: footerBtnH,
                               fontSize: footerBtnFont,
-                              radius: 24,
+                              radius: sp(24),
                             ),
                           ),
                         ],
@@ -479,9 +516,15 @@ class _PasswordChecklist extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Responsive sizes
-    final w = MediaQuery.of(context).size.width;
-    final double rowFont = (w * 0.04).clamp(12.0, 16.0);
-    final double iconSize = (w * 0.045).clamp(16.0, 20.0);
+    final size = MediaQuery.of(context).size;
+    final w = size.width;
+    final h = size.height;
+    final shortest = math.min(w, h);
+    final s = (shortest / 375.0).clamp(0.85, 1.30);
+    double sp(double v) => v * s;
+
+    final double rowFont = (w * 0.04).clamp(sp(12.0), sp(16.0)).toDouble();
+    final double iconSize = (w * 0.045).clamp(sp(16.0), sp(20.0)).toDouble();
 
     return ValueListenableBuilder<TextEditingValue>(
       valueListenable: controller,
@@ -510,7 +553,7 @@ class _PasswordChecklist extends StatelessWidget {
                 size: iconSize,
                 color: ok ? Colors.green : Colors.red,
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: sp(8)),
               Text(
                 label,
                 style: TextStyle(
@@ -525,11 +568,11 @@ class _PasswordChecklist extends StatelessWidget {
 
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          margin: const EdgeInsets.only(top: 6, bottom: 6),
+          padding: EdgeInsets.symmetric(horizontal: sp(12), vertical: sp(10)),
+          margin: EdgeInsets.only(top: sp(6), bottom: sp(6)),
           decoration: BoxDecoration(
             color: const Color(0xFFF6F6F6),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(sp(12)),
             border: Border.all(color: const Color(0x22000000)),
           ),
           child: Column(

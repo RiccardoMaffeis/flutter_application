@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,15 +15,11 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  // Form key and text controllers for email/password fields
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
 
-  // Toggles password visibility
   bool _obscurePassword = true;
-
-  // Inline error holders for form fields (driven by validators)
   String? _emailError;
   String? _passwordError;
 
@@ -33,8 +30,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.dispose();
   }
 
-  /// Displays a single generic credential error under the password field.
-  /// This keeps error messaging consistent without revealing which field is wrong.
   void _showGenericCredsError() {
     setState(() {
       _emailError = null;
@@ -43,22 +38,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     _formKey.currentState?.validate();
   }
 
-  /// Opens the default mail app with a pre-filled email (subject/body).
-  /// Falls back to copying the address to the clipboard if launching fails.
   Future<void> _openSupportEmail() async {
-    String _encodeQueryParams(Map<String, String> params) {
-      return params.entries
-          .map(
-            (e) =>
-                '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}',
-          )
-          .join('&');
-    }
+    String _enc(Map<String, String> p) => p.entries
+        .map(
+          (e) =>
+              '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}',
+        )
+        .join('&');
 
     final uri = Uri(
       scheme: 'mailto',
       path: 'r.maffeis4@studenti.unibg.it',
-      query: _encodeQueryParams({
+      query: _enc({
         'subject': 'App support',
         'body': 'Hi, I need help with ...\nThanks!',
       }),
@@ -69,8 +60,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       if (!ok) throw 'cannot launch';
     } catch (_) {
       if (!mounted) return;
-      final w = MediaQuery.of(context).size.width;
-      final double snackFont = (w * 0.04).clamp(12.0, 16.0);
+      final size = MediaQuery.of(context).size;
+      final s =
+          (math.min(size.width, size.height) / 375.0).clamp(0.85, 1.30);
+      double sp(double v) => v * s;
+      final snackFont = (size.width * 0.04).clamp(sp(12), sp(16)).toDouble();
       await Clipboard.setData(
         const ClipboardData(text: 'r.maffeis4@studenti.unibg.it'),
       );
@@ -85,8 +79,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
-  /// Shows a bottom sheet confirming a reset email was (potentially) sent.
-  /// Uses neutral wording to avoid leaking whether an email exists.
   Future<void> showResetSentSheet(BuildContext context) async {
     HapticFeedback.lightImpact();
     await showModalBottomSheet(
@@ -95,26 +87,29 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         final bottom = MediaQuery.of(context).viewInsets.bottom;
-        final w = MediaQuery.of(context).size.width;
-        // Responsive fonts for the sheet
-        final double sheetTitle = (w * 0.055).clamp(18.0, 22.0);
-        final double sheetBody = (w * 0.045).clamp(14.0, 18.0);
-        final double sheetBtn = (w * 0.05).clamp(16.0, 20.0);
+        final size = MediaQuery.of(context).size;
+        final w = size.width, h = size.height;
+        final s = (math.min(w, h) / 375.0).clamp(0.85, 1.30);
+        double sp(double v) => v * s;
+
+        final sheetTitle = (w * 0.055).clamp(sp(18), sp(22)).toDouble();
+        final sheetBody = (w * 0.045).clamp(sp(14), sp(18)).toDouble();
+        final sheetBtn = (w * 0.05).clamp(sp(16), sp(20)).toDouble();
 
         return Padding(
           padding: EdgeInsets.only(bottom: bottom),
           child: Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(sp(24))),
             ),
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+            padding: EdgeInsets.fromLTRB(sp(20), sp(24), sp(20), sp(24)),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 64,
-                  height: 64,
+                  width: sp(64),
+                  height: sp(64),
                   decoration: BoxDecoration(
                     color: AppTheme.accent.withOpacity(0.12),
                     shape: BoxShape.circle,
@@ -122,10 +117,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   child: Icon(
                     Icons.mark_email_read_rounded,
                     color: AppTheme.accent,
-                    size: 36,
+                    size: sp(36),
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: sp(16)),
                 Text(
                   'Check your email',
                   style: TextStyle(
@@ -134,13 +129,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 8),
+                SizedBox(height: sp(8)),
                 Text(
                   "If the address is registered, we've sent you a link to reset your password (check spam).",
                   style: TextStyle(fontSize: sheetBody),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: sp(16)),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -148,9 +143,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       backgroundColor: AppTheme.accent,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(sp(14)),
                       ),
-                      minimumSize: const Size.fromHeight(48),
+                      minimumSize: Size.fromHeight(sp(48)),
                       textStyle: TextStyle(fontSize: sheetBtn),
                     ),
                     onPressed: () => Navigator.of(context).pop(),
@@ -165,8 +160,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  /// Attempts to sign in and performs a lightweight retry if Firebase returns
-  /// `invalid-credential`, which can happen due to anti-abuse checks.
   Future<void> _signInWithRetry(String email, String pwd) async {
     try {
       await ref.read(authControllerProvider.notifier).signIn(email, pwd);
@@ -186,11 +179,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
-  /// Maps Firebase auth errors to user feedback.
-  /// Credential-related errors show the same generic message.
   void _handleAuthException(fb.FirebaseAuthException e) {
-    final w = MediaQuery.of(context).size.width;
-    final double snackFont = (w * 0.04).clamp(12.0, 16.0);
+    final size = MediaQuery.of(context).size;
+    final s =
+        (math.min(size.width, size.height) / 375.0).clamp(0.85, 1.30);
+    double sp(double v) => v * s;
+    final snackFont = (size.width * 0.04).clamp(sp(12), sp(16)).toDouble();
 
     switch (e.code) {
       case 'user-not-found':
@@ -226,37 +220,36 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch auth state for loading indicator during sign-in
     final auth = ref.watch(authControllerProvider);
+    final mq = MediaQuery.of(context);
+    final kbOpen = mq.viewInsets.bottom > 0;
 
     return Scaffold(
+      // comportamento allineato al Signup: il body NON viene ridimensionato dalla tastiera
+      resizeToAvoidBottomInset: false,
+
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            // Viewport sizes
-            final w = constraints.maxWidth;
-            final h = constraints.maxHeight;
-            final kbOpen = MediaQuery.of(context).viewInsets.bottom > 0;
+            final w = constraints.maxWidth, h = constraints.maxHeight;
+            final s = (math.min(w, h) / 375.0).clamp(0.85, 1.30);
+            double sp(double v) => v * s;
 
-            // ---- Responsive metrics ----
-            final double maxContentW = (w - 32).clamp(300.0, 460.0);
-            final double titleSize = (w * 0.11).clamp(28.0, 50.0);
-            final double mainBtnW = (w * 0.60).clamp(180.0, 320.0);
-            final double mainBtnH = (h * 0.055).clamp(40.0, 54.0);
-            final double mainBtnFont = (w * 0.06).clamp(18.0, 24.0);
+            // ---- Metrics ----
+            final maxContentW = (w - sp(32)).clamp(sp(300), sp(540)).toDouble();
+            final titleSize = (w * 0.11).clamp(sp(28), sp(50)).toDouble();
+            final mainBtnW = (w * 0.60).clamp(sp(180), sp(360)).toDouble();
+            final mainBtnH = (h * 0.055).clamp(sp(40), sp(58)).toDouble();
+            final mainBtnFont = (w * 0.06).clamp(sp(18), sp(24)).toDouble();
+            final linkFont = (w * 0.045).clamp(sp(14), sp(18)).toDouble();
+            final footerFont = (w * 0.045).clamp(sp(13), sp(16)).toDouble();
+            final footerBtnW = (w * 0.36).clamp(sp(120), sp(220)).toDouble();
+            final footerBtnH = (h * 0.05).clamp(sp(36), sp(54)).toDouble();
+            final footerBtnFont = (w * 0.05).clamp(sp(16), sp(20)).toDouble();
+            final labelFont = (w * 0.045).clamp(sp(14), sp(18)).toDouble();
+            final fieldFont = (w * 0.05).clamp(sp(15), sp(19)).toDouble();
+            final errorFont = (w * 0.04).clamp(sp(12), sp(16)).toDouble();
 
-            final double linkFont = (w * 0.045).clamp(14.0, 18.0);
-            final double footerFont = (w * 0.045).clamp(13.0, 16.0);
-            final double footerBtnW = (w * 0.36).clamp(120.0, 200.0);
-            final double footerBtnH = (h * 0.05).clamp(36.0, 48.0);
-            final double footerBtnFont = (w * 0.05).clamp(16.0, 20.0);
-
-            // NEW: extra responsive fonts for fields / messages / errors
-            final double labelFont = (w * 0.045).clamp(14.0, 18.0);
-            final double fieldFont = (w * 0.05).clamp(15.0, 19.0);
-            final double errorFont = (w * 0.04).clamp(12.0, 16.0);
-
-            // Shared link-styled button used for "Need support?" and "Forgot your password?"
             final ButtonStyle linkStyle =
                 TextButton.styleFrom(
                   foregroundColor: Colors.black87,
@@ -270,9 +263,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                 ).copyWith(
                   overlayColor: MaterialStateProperty.resolveWith((states) {
-                    if (states.contains(MaterialState.pressed)) {
+                    if (states.contains(MaterialState.pressed))
                       return Colors.black.withOpacity(0.06);
-                    }
                     if (states.contains(MaterialState.hovered) ||
                         states.contains(MaterialState.focused)) {
                       return Colors.black.withOpacity(0.04);
@@ -282,7 +274,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   splashFactory: InkRipple.splashFactory,
                 );
 
-            // Reusable rounded (pill) button for primary actions.
             Widget pillButton({
               required String label,
               required VoidCallback onPressed,
@@ -295,7 +286,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.accent,
                   foregroundColor: Colors.white,
-                  elevation: 3,
+                  elevation: sp(3),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(radius),
                   ),
@@ -316,27 +307,32 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               return SizedBox(width: width, height: height, child: btn);
             }
 
-            InputBorder underline() => const UnderlineInputBorder(
-              borderSide: BorderSide(width: 1, color: Color(0x44000000)),
+            InputBorder underline() => UnderlineInputBorder(
+              borderSide: BorderSide(
+                width: sp(1),
+                color: const Color(0x44000000),
+              ),
             );
 
-            // Main login card with form fields and submit action
+            // ---- Card ----
             final card = Card(
               color: Colors.white,
               surfaceTintColor: Colors.transparent,
-              elevation: 6,
+              elevation: sp(6),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(sp(24)),
               ),
-              margin: const EdgeInsets.all(16),
+              margin: EdgeInsets.all(sp(16)),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                padding: EdgeInsets.fromLTRB(sp(20), sp(24), sp(20), sp(20)),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      SizedBox(height: (h * 0.007).clamp(4.0, 10.0)),
+                      SizedBox(
+                        height: (h * 0.007).clamp(sp(4), sp(10)).toDouble(),
+                      ),
                       Text(
                         'Login',
                         textAlign: TextAlign.center,
@@ -345,9 +341,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      SizedBox(height: (h * 0.02).clamp(12.0, 20.0)),
+                      SizedBox(
+                        height: (h * 0.02).clamp(sp(12), sp(22)).toDouble(),
+                      ),
 
-                      // Email
                       TextFormField(
                         controller: _email,
                         keyboardType: TextInputType.emailAddress,
@@ -360,20 +357,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
+                          if (v == null || v.trim().isEmpty)
                             return 'Enter your email';
-                          }
                           if (!v.contains('@')) return 'Enter a valid email';
                           return _emailError;
                         },
                       ),
                       Divider(
-                        height: 1,
-                        thickness: 1,
+                        height: sp(1),
+                        thickness: sp(1),
                         color: underline().borderSide.color,
                       ),
 
-                      // Password
                       TextFormField(
                         controller: _password,
                         obscureText: _obscurePassword,
@@ -398,24 +393,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           ),
                         ),
                         autovalidateMode: AutovalidateMode.onUserInteraction,
-                        validator: (v) {
-                          if (v == null || v.isEmpty) {
-                            return 'Enter your password';
-                          }
-                          return _passwordError; // shows "Incorrect email and/or password."
-                        },
+                        validator: (v) => (v == null || v.isEmpty)
+                            ? 'Enter your password'
+                            : _passwordError,
                         autocorrect: false,
                         enableSuggestions: false,
                       ),
                       Divider(
-                        height: 1,
-                        thickness: 1.2,
+                        height: sp(1),
+                        thickness: sp(1.2),
                         color: underline().borderSide.color,
                       ),
 
-                      SizedBox(height: (h * 0.025).clamp(14.0, 24.0)),
+                      SizedBox(
+                        height: (h * 0.025).clamp(sp(14), sp(24)).toDouble(),
+                      ),
 
-                      // Show loading indicator during auth operations, else show submit button
                       if (auth.isLoading)
                         const CircularProgressIndicator()
                       else
@@ -428,13 +421,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             });
                             if (!_formKey.currentState!.validate()) return;
 
-                            final email = _email.text.trim();
-                            final pwd = _password.text;
-
                             try {
-                              await _signInWithRetry(email, pwd);
+                              await _signInWithRetry(
+                                _email.text.trim(),
+                                _password.text,
+                              );
                             } catch (e) {
-                              final snackFont = (w * 0.04).clamp(12.0, 16.0);
+                              final sLoc =
+                                  (math.min(w, h) / 375.0).clamp(0.85, 1.30);
+                              double spLocal(double v) => v * sLoc;
+                              final snackFont = (w * 0.04)
+                                  .clamp(spLocal(12), spLocal(16))
+                                  .toDouble();
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(
@@ -448,7 +446,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           width: mainBtnW,
                           height: mainBtnH,
                           fontSize: mainBtnFont,
-                          radius: 24,
+                          radius: sp(24),
                         ),
                     ],
                   ),
@@ -456,7 +454,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               ),
             );
 
-            // Support links under the form (font-size driven by linkStyle)
+            // ---- Support links ----
             final supportLinks = Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -469,19 +467,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   style: linkStyle,
                   child: const Text('Need support?'),
                 ),
-                SizedBox(height: (h * 0.004).clamp(2.0, 6.0)),
+                SizedBox(height: (h * 0.004).clamp(sp(2), sp(6)).toDouble()),
                 TextButton(
                   onPressed: () async {
                     Feedback.forTap(context);
                     HapticFeedback.selectionClick();
-
                     final result = await showDialog<bool>(
                       context: context,
                       barrierDismissible: true,
                       builder: (_) =>
                           ResetPasswordDialog(initialEmail: _email.text.trim()),
                     );
-
                     if (result == true && mounted) {
                       await showResetSentSheet(context);
                     }
@@ -492,15 +488,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               ],
             );
 
+            // ---- Page layout ----
             return Stack(
               children: [
-                // Centered, scrollable content to avoid overflow on small screens / with keyboard
                 Align(
                   alignment: Alignment.center,
                   child: SingleChildScrollView(
                     padding: EdgeInsets.only(
-                      top: (h * 0.02).clamp(12.0, 24.0),
-                      bottom: (kbOpen ? (h * 0.02).clamp(12.0, 24.0) : 84.0),
+                      top: (h * 0.02).clamp(sp(12), sp(24)).toDouble(),
+                      bottom: kbOpen
+                          ? (h * 0.02).clamp(sp(12), sp(24)).toDouble()
+                          : sp(84),
+                    ),
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
                     ),
                     child: Center(
                       child: ConstrainedBox(
@@ -509,7 +510,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             card,
-                            SizedBox(height: (h * 0.006).clamp(4.0, 10.0)),
+                            SizedBox(
+                              height: (h * 0.006)
+                                  .clamp(sp(4), sp(10))
+                                  .toDouble(),
+                            ),
                             supportLinks,
                           ],
                         ),
@@ -518,21 +523,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                 ),
 
-                // Bottom CTA to navigate to signup (hidden when keyboard is open)
-                AnimatedPositioned(
-                  duration: const Duration(milliseconds: 180),
-                  curve: Curves.easeOut,
-                  left: 16,
-                  right: 16,
-                  bottom: kbOpen ? -200 : 20,
-                  child: Offstage(
-                    offstage: kbOpen,
+                // Footer: presente solo a tastiera chiusa
+                if (!kbOpen)
+                  Positioned(
+                    left: sp(16),
+                    right: sp(16),
+                    bottom: sp(20),
                     child: Center(
                       child: Wrap(
                         alignment: WrapAlignment.center,
                         crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 10,
-                        runSpacing: 8,
+                        spacing: sp(8),
+                        runSpacing: sp(8),
                         children: [
                           Text(
                             'Need an account?',
@@ -552,14 +554,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               width: footerBtnW,
                               height: footerBtnH,
                               fontSize: footerBtnFont,
-                              radius: 24,
+                              radius: sp(24),
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                ),
               ],
             );
           },
@@ -569,8 +570,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 }
 
-/// Dialog for requesting a password reset email.
-/// Shows validation errors inline and disables actions while sending.
 class ResetPasswordDialog extends ConsumerStatefulWidget {
   final String initialEmail;
   const ResetPasswordDialog({super.key, required this.initialEmail});
@@ -581,10 +580,7 @@ class ResetPasswordDialog extends ConsumerStatefulWidget {
 }
 
 class _ResetPasswordDialogState extends ConsumerState<ResetPasswordDialog> {
-  // Local controller for the email field inside the dialog
   late final TextEditingController _emailCtrl;
-
-  // Inline error text and sending state
   String? _errorText;
   bool _sending = false;
 
@@ -600,8 +596,6 @@ class _ResetPasswordDialogState extends ConsumerState<ResetPasswordDialog> {
     super.dispose();
   }
 
-  /// Validates and submits a password reset request via the auth controller.
-  /// On success, closes the dialog returning `true`.
   Future<void> _submit() async {
     final email = _emailCtrl.text.trim();
     if (email.isEmpty || !email.contains('@')) {
@@ -640,13 +634,23 @@ class _ResetPasswordDialogState extends ConsumerState<ResetPasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final w = MediaQuery.of(context).size.width;
-    final double dialogTitleFont = (w * 0.06).clamp(18.0, 22.0);
-    final double dialogBodyFont = (w * 0.045).clamp(14.0, 18.0);
-    final double dialogActionFont = (w * 0.05).clamp(15.0, 19.0);
-    final double labelFont = (w * 0.045).clamp(14.0, 18.0);
-    final double fieldFont = (w * 0.05).clamp(15.0, 19.0);
-    final double errorFont = (w * 0.04).clamp(12.0, 16.0);
+    final size = MediaQuery.of(context).size;
+    final s =
+        (math.min(size.width, size.height) / 375.0).clamp(0.85, 1.30);
+    double sp(double v) => v * s;
+
+    final dialogTitleFont = (size.width * 0.06)
+        .clamp(sp(18), sp(22))
+        .toDouble();
+    final dialogBodyFont = (size.width * 0.045)
+        .clamp(sp(14), sp(18))
+        .toDouble();
+    final dialogActionFont = (size.width * 0.05)
+        .clamp(sp(15), sp(19))
+        .toDouble();
+    final labelFont = (size.width * 0.045).clamp(sp(14), sp(18)).toDouble();
+    final fieldFont = (size.width * 0.05).clamp(sp(15), sp(19)).toDouble();
+    final errorFont = (size.width * 0.04).clamp(sp(12), sp(16)).toDouble();
 
     return AlertDialog(
       backgroundColor: Colors.white,
@@ -665,7 +669,7 @@ class _ResetPasswordDialogState extends ConsumerState<ResetPasswordDialog> {
             "Enter your email: we'll send you a link to reset your password.",
             style: TextStyle(fontSize: dialogBodyFont),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: sp(12)),
           TextField(
             controller: _emailCtrl,
             autofocus: true,

@@ -1,17 +1,18 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_application/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 
-/// Simple welcome screen shown on first launch or when user is logged out.
-/// Presents a centered card with a CTA to move to the login page and a footer
-/// with a secondary action to go to the signup page.
+/// Welcome screen shown on first launch or when user is logged out.
+/// - Fully responsive: sizes, paddings, radii, shadows scale with screen.
+/// - Limits (clamp) are widened so the layout breathes on large displays.
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    /// Reusable rounded (pill) button builder used across the screen.
+    /// Reusable rounded (pill) button used across the screen.
     Widget pillButton({
       required String label,
       required VoidCallback onPressed,
@@ -46,41 +47,70 @@ class WelcomePage extends StatelessWidget {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
-            // Device/viewport measures
+            // Viewport measures
             final w = constraints.maxWidth;
             final h = constraints.maxHeight;
 
             // Keyboard visibility
             final kbOpen = MediaQuery.of(context).viewInsets.bottom > 0;
-            const footerHeight = 20.0;
+
+            // ---- Responsive scale factor (relative to a 375pt baseline) ----
+            final shortest = math.min(w, h);
+            final s = (shortest / 375.0).clamp(0.85, 1.30);
+            double sp(double v) => v * s;
+
+            // Footer height (scaled)
+            final double footerHeight = sp(20);
 
             // ---- Responsive sizing ----
-            final double cardW = (w - 32).clamp(280.0, 460.0).toDouble();
-            final double cardH = (h * 0.26).clamp(180.0, 260.0).toDouble();
+            final double cardW = ((w - sp(32)))
+                .clamp(sp(280), sp(540))
+                .toDouble();
+            final double cardH = (h * 0.26).clamp(sp(160), sp(360)).toDouble();
 
-            final double titleSize = (w * 0.12).clamp(28.0, 50.0).toDouble();
+            final double titleSize = (w * 0.12)
+                .clamp(sp(22), sp(64))
+                .toDouble();
 
-            final double mainBtnW = (w * 0.60).clamp(180.0, 320.0).toDouble();
-            final double mainBtnH = (h * 0.055).clamp(40.0, 54.0).toDouble();
-            final double mainFont = (w * 0.06).clamp(18.0, 24.0).toDouble();
+            final double mainBtnW = (w * 0.60)
+                .clamp(sp(160), sp(420))
+                .toDouble();
+            final double mainBtnH = (h * 0.055)
+                .clamp(sp(36), sp(64))
+                .toDouble();
+            final double mainFont = (w * 0.06).clamp(sp(16), sp(28)).toDouble();
 
-            final double secBtnW = (w * 0.36).clamp(120.0, 200.0).toDouble();
-            final double secBtnH = (h * 0.05).clamp(36.0, 48.0).toDouble();
-            final double secFont = (w * 0.05).clamp(16.0, 20.0).toDouble();
+            final double secBtnW = (w * 0.36)
+                .clamp(sp(120), sp(260))
+                .toDouble();
+            final double secBtnH = (h * 0.05).clamp(sp(34), sp(56)).toDouble();
+            final double secFont = (w * 0.05).clamp(sp(14), sp(22)).toDouble();
 
-            // The central card with title and main action (now responsive).
+            // Scaled cosmetics
+            final double pad = sp(24);
+            final double radius = sp(24);
+            final double shadowBlur = sp(18);
+            final double shadowYOffset = sp(8);
+            final double sidePad = sp(16);
+            final double topPad = sp(24);
+            final double bottomExtra = sp(24);
+            final double gapSmall = sp(8);
+            final double wrapSpacing = sp(12);
+            final double wrapRunSpacing = sp(8);
+
+            // Central card with title and main action.
             final card = Container(
               width: cardW,
               height: cardH,
-              padding: const EdgeInsets.all(24),
+              padding: EdgeInsets.all(pad),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: const [
+                borderRadius: BorderRadius.circular(radius),
+                boxShadow: [
                   BoxShadow(
-                    blurRadius: 18,
-                    offset: Offset(0, 8),
-                    color: Color(0x44000000),
+                    blurRadius: shadowBlur,
+                    offset: Offset(0, shadowYOffset),
+                    color: const Color(0x44000000),
                   ),
                 ],
               ),
@@ -103,7 +133,7 @@ class WelcomePage extends StatelessWidget {
                     onPressed: () => context.go('/login'),
                     width: mainBtnW,
                     height: mainBtnH,
-                    radius: 24,
+                    radius: radius,
                     fontSize: mainFont,
                   ),
                 ],
@@ -112,12 +142,12 @@ class WelcomePage extends StatelessWidget {
 
             return Stack(
               children: [
-                // Main content area: card centered and responsively scaled down.
+                // Main content: card centered and responsively scaled down.
                 Positioned.fill(
-                  left: 16,
-                  right: 16,
-                  top: 24,
-                  bottom: kbOpen ? 0 : footerHeight + 24,
+                  left: sidePad,
+                  right: sidePad,
+                  top: topPad,
+                  bottom: kbOpen ? 0 : footerHeight + bottomExtra,
                   child: Center(
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
@@ -126,7 +156,10 @@ class WelcomePage extends StatelessWidget {
                         constraints: BoxConstraints(maxWidth: cardW),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
-                          children: [card, const SizedBox(height: 8)],
+                          children: [
+                            card,
+                            SizedBox(height: gapSmall),
+                          ],
                         ),
                       ),
                     ),
@@ -135,17 +168,17 @@ class WelcomePage extends StatelessWidget {
 
                 // Footer with secondary action (Sign up). Hidden when keyboard is open.
                 Positioned(
-                  left: 16,
-                  right: 16,
-                  bottom: 20,
+                  left: sidePad,
+                  right: sidePad,
+                  bottom: footerHeight,
                   child: Offstage(
                     offstage: kbOpen,
                     child: Center(
                       child: Wrap(
                         alignment: WrapAlignment.center,
                         crossAxisAlignment: WrapCrossAlignment.center,
-                        spacing: 12,
-                        runSpacing: 8,
+                        spacing: wrapSpacing,
+                        runSpacing: wrapRunSpacing,
                         children: [
                           Text(
                             'Need an account?',
@@ -163,7 +196,7 @@ class WelcomePage extends StatelessWidget {
                             width: secBtnW,
                             height: secBtnH,
                             fontSize: secFont,
-                            radius: 24,
+                            radius: radius,
                           ),
                         ],
                       ),

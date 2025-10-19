@@ -26,55 +26,63 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
         ref.watch(aiChatControllerProvider).value ?? const <AiMessage>[];
 
     // --- Responsive metrics ---
-    // Sizes derived from MediaQuery to adapt spacing/typography on phones/tablets.
     final mq = MediaQuery.of(context);
     final w = mq.size.width;
     final h = mq.size.height;
+    final shortest = w < h ? w : h;
+    final s = (shortest / 375.0).clamp(0.85, 1.30);
+    double sp(double v) => v * s;
     final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
-    final double pageHPad = (w * 0.04).clamp(16.0, 28.0);
-    final double pageVPad = (h * 0.02).clamp(14.0, 24.0);
+    final double pageHPad = (w * 0.04).clamp(sp(16.0), sp(28.0));
+    final double pageVPad = (h * 0.02).clamp(sp(14.0), sp(24.0));
 
-    final double cardRadius = (w * 0.04).clamp(14.0, 22.0);
-    final double cardHPad = (w * 0.05).clamp(16.0, 24.0);
-    final double cardVPad = (h * 0.02).clamp(14.0, 22.0);
-    final double panelMaxW = (w * 0.92).clamp(360.0, 820.0);
+    final double cardRadius = (w * 0.04).clamp(sp(14.0), sp(22.0));
+    final double cardHPad = (w * 0.05).clamp(sp(16.0), sp(24.0));
+    final double cardVPad = (h * 0.02).clamp(sp(14.0), sp(22.0));
+    final double panelMaxW = (w * 0.92).clamp(sp(360.0), sp(820.0));
 
-    final double titleSize = (w * 0.095).clamp(28.0, 44.0) * ts;
-    final double dividerHeight = (h * 0.005).clamp(3.0, 6.0);
-    final double dividerHMargin = (w * 0.03).clamp(10.0, 20.0);
+    final double titleSize = (w * 0.095).clamp(sp(28.0), sp(44.0)) * ts;
+    final double dividerHeight = (h * 0.005).clamp(sp(3.0), sp(6.0));
+    final double dividerHMargin = (w * 0.03).clamp(sp(10.0), sp(20.0));
 
-    final double listMaxH = (h * 0.52).clamp(220.0, 540.0);
-    final double listMinH = (h * 0.26).clamp(160.0, 260.0);
+    final double listMaxH = (h * 0.52).clamp(sp(220.0), sp(540.0));
+    final double listMinH = (h * 0.26).clamp(sp(160.0), sp(260.0));
 
-    final double avatarR = (w * 0.06).clamp(18.0, 26.0);
-    final double avatarIcon = (avatarR * 0.95).clamp(18.0, 26.0);
+    final double avatarR = (w * 0.06).clamp(sp(18.0), sp(26.0));
+    final double avatarIcon = (avatarR * 0.95).clamp(sp(18.0), sp(26.0));
 
-    final double msgFont = (w * 0.04).clamp(14.0, 18.0) * ts;
+    final double msgFont = (w * 0.04).clamp(sp(14.0), sp(18.0)) * ts;
     final double msgLineH = 1.25;
 
-    final double tfHPad = (w * 0.035).clamp(12.0, 18.0);
-    final double tfVPad = (h * 0.015).clamp(10.0, 14.0);
-    final double tfRadius = (w * 0.045).clamp(14.0, 20.0);
-    final double hintFont = (w * 0.038).clamp(13.0, 16.0) * ts;
+    final double tfHPad = (w * 0.035).clamp(sp(12.0), sp(18.0));
+    final double tfVPad = (h * 0.015).clamp(sp(10.0), sp(14.0));
+    final double tfRadius = (w * 0.045).clamp(sp(14.0), sp(20.0));
+    final double hintFont = (w * 0.038).clamp(sp(13.0), sp(16.0)) * ts;
 
-    final double sendBtnH = (h * 0.06).clamp(42.0, 50.0);
-    final double sendBtnW = (sendBtnH * 1.15).clamp(48.0, 60.0);
-    final double sendIcon = (sendBtnH * 0.5).clamp(18.0, 24.0);
-    final double sendRadius = (w * 0.035).clamp(12.0, 16.0);
+    final double sendBtnH = (h * 0.06).clamp(sp(42.0), sp(50.0));
+    final double sendBtnW = (sendBtnH * 1.15).clamp(sp(48.0), sp(60.0));
+    final double sendIcon = (sendBtnH * 0.5).clamp(sp(18.0), sp(24.0));
+    final double sendRadius = (w * 0.035).clamp(sp(12.0), sp(16.0));
 
-    final double cancelMinH = (h * 0.055).clamp(40.0, 48.0);
-    final double cancelFont = (w * 0.04).clamp(14.0, 16.0) * ts;
+    final double cancelMinH = (h * 0.055).clamp(sp(40.0), sp(48.0));
+    final double cancelFont = (w * 0.04).clamp(sp(14.0), sp(16.0)) * ts;
 
     // Global background for the page.
     const bg = Color(0xFFF5F5F7);
+
+    // List separator (no const: fully responsive)
+    final listSeparator = Divider(
+      height: sp(1.0),
+      thickness: sp(1.0),
+      color: const Color(0x22000000),
+    );
 
     return Scaffold(
       backgroundColor: bg,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            // Outer padding for the page content.
             padding: EdgeInsets.fromLTRB(
               pageHPad,
               pageVPad,
@@ -86,7 +94,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                 constraints: BoxConstraints(maxWidth: panelMaxW),
                 child: Material(
                   color: Colors.white,
-                  elevation: 3,
+                  elevation: sp(3.0),
                   borderRadius: BorderRadius.circular(cardRadius),
                   child: Padding(
                     // Inner card padding.
@@ -99,7 +107,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        SizedBox(height: (h * 0.006).clamp(4.0, 8.0)),
+                        SizedBox(height: (h * 0.006).clamp(sp(4.0), sp(8.0))),
                         // Title
                         Text(
                           'Assistant',
@@ -109,7 +117,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                             fontWeight: FontWeight.w800,
                           ),
                         ),
-                        SizedBox(height: (h * 0.008).clamp(6.0, 10.0)),
+                        SizedBox(height: (h * 0.008).clamp(sp(6.0), sp(10.0))),
                         // Accent divider (brand color)
                         Container(
                           height: dividerHeight,
@@ -118,21 +126,20 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                           ),
                           decoration: BoxDecoration(
                             color: AppTheme.accent,
-                            borderRadius: BorderRadius.circular(3),
+                            borderRadius: BorderRadius.circular(sp(3.0)),
                             boxShadow: [
                               BoxShadow(
                                 color: AppTheme.accent.withOpacity(0.45),
-                                blurRadius: 3,
-                                spreadRadius: 0.4,
-                                offset: const Offset(0, 3),
+                                blurRadius: sp(3.0),
+                                spreadRadius: sp(0.4),
+                                offset: Offset(0, sp(3.0)),
                               ),
                             ],
                           ),
                         ),
-                        SizedBox(height: (h * 0.015).clamp(10.0, 16.0)),
+                        SizedBox(height: (h * 0.015).clamp(sp(10.0), sp(16.0))),
 
                         // -------- Messages panel --------
-                        // Shows a placeholder if empty, otherwise a separated ListView of messages.
                         ConstrainedBox(
                           constraints: BoxConstraints(
                             maxHeight: listMaxH,
@@ -140,7 +147,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(
-                              (w * 0.03).clamp(10.0, 16.0),
+                              (w * 0.03).clamp(sp(10.0), sp(16.0)),
                             ),
                             child: Material(
                               color: Colors.white,
@@ -148,14 +155,17 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                                   ? Center(
                                       child: Padding(
                                         padding: EdgeInsets.all(
-                                          (w * 0.04).clamp(12.0, 20.0),
+                                          (w * 0.04).clamp(sp(12.0), sp(20.0)),
                                         ),
                                         child: Text(
                                           'Type a message below…',
                                           style: TextStyle(
                                             color: Colors.black54,
                                             fontSize:
-                                                (w * 0.038).clamp(13.0, 16.0) *
+                                                (w * 0.038).clamp(
+                                                  sp(13.0),
+                                                  sp(16.0),
+                                                ) *
                                                 ts,
                                           ),
                                         ),
@@ -164,11 +174,14 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                                   : ListView.separated(
                                       shrinkWrap: true,
                                       padding: EdgeInsets.symmetric(
-                                        vertical: (h * 0.008).clamp(4.0, 10.0),
+                                        vertical: (h * 0.008).clamp(
+                                          sp(4.0),
+                                          sp(10.0),
+                                        ),
                                       ),
                                       itemCount: msgs.length,
                                       separatorBuilder: (_, __) =>
-                                          const Divider(height: 1),
+                                          listSeparator,
                                       itemBuilder: (_, i) {
                                         final m = msgs[i];
                                         final isUser = m.role == 'user';
@@ -176,12 +189,12 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                                           // Per-item padding for better density.
                                           contentPadding: EdgeInsets.symmetric(
                                             horizontal: (w * 0.02).clamp(
-                                              8.0,
-                                              16.0,
+                                              sp(8.0),
+                                              sp(16.0),
                                             ),
                                             vertical: (h * 0.008).clamp(
-                                              6.0,
-                                              10.0,
+                                              sp(6.0),
+                                              sp(10.0),
                                             ),
                                           ),
                                           // Avatar reflects user vs assistant.
@@ -214,7 +227,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                           ),
                         ),
 
-                        SizedBox(height: (h * 0.016).clamp(10.0, 16.0)),
+                        SizedBox(height: (h * 0.016).clamp(sp(10.0), sp(16.0))),
 
                         // -------- Input row (TextField + Send button) --------
                         Row(
@@ -240,7 +253,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                                 onSubmitted: _onSend,
                               ),
                             ),
-                            SizedBox(width: (w * 0.02).clamp(6.0, 12.0)),
+                            SizedBox(
+                              width: (w * 0.02).clamp(sp(6.0), sp(12.0)),
+                            ),
                             SizedBox(
                               height: sendBtnH,
                               width: sendBtnW,
@@ -254,7 +269,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                                     ),
                                   ),
                                   padding: EdgeInsets.zero,
-                                  elevation: 2,
+                                  elevation: sp(2.0),
                                 ),
                                 child: Icon(
                                   Icons.send,
@@ -266,7 +281,7 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                           ],
                         ),
 
-                        SizedBox(height: (h * 0.016).clamp(10.0, 16.0)),
+                        SizedBox(height: (h * 0.016).clamp(sp(10.0), sp(16.0))),
 
                         // -------- Bottom actions (Cancel) --------
                         Row(
@@ -278,15 +293,19 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                                 style: OutlinedButton.styleFrom(
                                   minimumSize: Size(0, cancelMinH),
                                   padding: EdgeInsets.symmetric(
-                                    vertical: (h * 0.012).clamp(8.0, 12.0),
+                                    vertical: (h * 0.012).clamp(
+                                      sp(8.0),
+                                      sp(12.0),
+                                    ),
                                   ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(
-                                      (w * 0.045).clamp(14.0, 20.0),
+                                      (w * 0.045).clamp(sp(14.0), sp(20.0)),
                                     ),
                                   ),
-                                  side: const BorderSide(
-                                    color: Color(0x22000000),
+                                  side: BorderSide(
+                                    color: const Color(0x22000000),
+                                    width: sp(1.0),
                                   ),
                                 ),
                                 child: Text(
@@ -330,13 +349,17 @@ class _MessageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Se non viene passato uno style, calcolane uno responsivo qui
-    // If no style is provided, compute a responsive fallback here.
+    // Responsive fallback if no style provided.
     final mq = MediaQuery.of(context);
     final w = mq.size.width;
+    final h = mq.size.height;
+    final shortest = w < h ? w : h;
+    final s = (shortest / 375.0).clamp(0.85, 1.30);
+    double sp(double v) => v * s;
     final ts = mq.textScaleFactor.clamp(1.0, 1.3);
+
     final fallback = TextStyle(
-      fontSize: (w * 0.04).clamp(14.0, 18.0) * ts,
+      fontSize: (w * 0.04).clamp(sp(14.0), sp(18.0)) * ts,
       fontWeight: FontWeight.w600,
       height: 1.25,
     );
@@ -374,7 +397,7 @@ class _MessageContent extends StatelessWidget {
           i++;
         }
 
-        // Add a list block with slightly lighter weight than the message base style.
+        // List block with slightly lighter weight than the base style.
         children.add(
           _ListBlock(
             items: items,
@@ -399,12 +422,12 @@ class _MessageContent extends StatelessWidget {
       }
     }
 
-    // Render collected blocks with a small vertical gap between them.
+    // Render collected blocks with a small responsive vertical gap.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (int j = 0; j < children.length; j++) ...[
-          if (j > 0) const SizedBox(height: 6),
+          if (j > 0) SizedBox(height: sp(6.0)),
           children[j],
         ],
       ],
@@ -448,18 +471,27 @@ class _ListBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Local responsive spacing for bullets.
+    final mq = MediaQuery.of(context);
+    final w = mq.size.width;
+    final h = mq.size.height;
+    final shortest = w < h ? w : h;
+    final s = (shortest / 375.0).clamp(0.85, 1.30);
+    double sp(double v) => v * s;
+
     final bulletStyle = textStyle.copyWith(fontWeight: FontWeight.w600);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: items.map((it) {
         return Padding(
-          padding: const EdgeInsets.only(bottom: 2),
+          padding: EdgeInsets.only(bottom: sp(2.0)),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Bullet or number prefix.
               Text(ordered ? '${it.number ?? 1}.' : '•', style: bulletStyle),
-              const SizedBox(width: 8),
+              SizedBox(width: sp(8.0)),
               // Item text expands to available width, supports selection.
               Expanded(child: SelectableText(it.text, style: textStyle)),
             ],

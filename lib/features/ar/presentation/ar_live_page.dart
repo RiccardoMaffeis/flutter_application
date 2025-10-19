@@ -1,7 +1,5 @@
 // Fullscreen AR placement page using ar_flutter_plugin.
-// Adds an overlay HUD (help card, top corner actions) and a tiny toast/snack system.
-// You can place ABB XT GLB models on detected horizontal planes, rotate the selected node on X,
-// and clear everything. A picker lets you choose the model before tapping on a plane.
+// All paddings/radii/icon sizes/text sizes are now responsive (no fixed pixels).
 
 import 'dart:async';
 import 'dart:io';
@@ -32,8 +30,7 @@ class ARItem {
   const ARItem(this.title, this.glbPath, this.scale);
 }
 
-/// Demo catalog of ABB XT models exposed to the picker dialog.
-/// NOTE: These paths must exist in your assets and be properly declared in pubspec.yaml.
+/// Demo catalog (paths must exist and be declared in pubspec.yaml).
 const List<ARItem> kXtModels = [
   ARItem('XT1 3 poli', 'lib/3Dmodels/XT1/XT1_3p.glb', 0.20),
   ARItem('XT1 4 poli', 'lib/3Dmodels/XT1/XT1_4p.glb', 0.20),
@@ -49,16 +46,11 @@ const List<ARItem> kXtModels = [
   ARItem('XT7 4 poli', 'lib/3Dmodels/XT7/XT7_4p.glb', 0.20),
 ];
 
-/// Fullscreen AR scene page
 class ArLivePage extends StatefulWidget {
-  // Page title.
   final String title;
-  // If provided, loads a GLB from the network (NodeType.webGLB).
-  final String? glbUrl; // Optional: load GLB from the web
-  // If provided, loads a bundled asset GLB (staged into app folder at runtime).
-  final String? assetGlb; // Optional: load GLB from bundled assets
-  // Default scale when placing the model if not supplied by ARItem.
-  final double scale; // Default scale used when placing the model
+  final String? glbUrl;
+  final String? assetGlb;
+  final double scale;
 
   const ArLivePage({
     super.key,
@@ -73,35 +65,26 @@ class ArLivePage extends StatefulWidget {
 }
 
 class _ArLivePageState extends State<ArLivePage> {
-  // AR managers provided by ar_flutter_plugin after view initialization.
   ARSessionManager? _session;
   ARObjectManager? _objectMgr;
   ARAnchorManager? _anchorMgr;
 
-  // True while we are placing a node to prevent re-entrancy on rapid taps.
   bool _placeBusy = false;
 
-  // Bookkeeping for placed nodes and their anchors.
   final List<_Placed> _placed = [];
-  // Currently selected node id (from onNodeTap callback).
   String? _selectedId;
 
-  // Slider value for X-axis rotation (degrees) of the selected node.
   double _sliderXDeg = 0;
-  // If true, do not clear previously placed models when placing a new one.
   bool _appendMode = false;
-  // Pending catalog item to place on next plane tap.
   ARItem? _pendingItem;
 
   @override
   void dispose() {
-    // Important: remove nodes/anchors before session dispose to avoid residuals.
     _removeAll();
     _session?.dispose();
     super.dispose();
   }
 
-  // Remove all nodes and anchors from the scene and reset selection/UI state.
   Future<void> _removeAll() async {
     for (final e in List<_Placed>.from(_placed)) {
       await _objectMgr?.removeNode(e.node);
@@ -112,11 +95,9 @@ class _ArLivePageState extends State<ArLivePage> {
     _placed.clear();
     _selectedId = null;
     _sliderXDeg = 0;
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
-  // Update the X-axis rotation of the selected node (in degrees),
-  // falling back to update only the slider UI if nothing is selected.
   void _setSelectedXDeg(double degrees) {
     if (_selectedId == null || _objectMgr == null) {
       setState(() => _sliderXDeg = degrees);
@@ -133,19 +114,15 @@ class _ArLivePageState extends State<ArLivePage> {
     setState(() => _sliderXDeg = degrees);
   }
 
-  // Copy an asset .glb to the app's documents directory so we can load it
-  // using NodeType.fileSystemAppFolderGLB (required by ar_flutter_plugin).
   Future<String> _stageGlbIntoAppFolder(String assetPath) async {
     final data = await rootBundle.load(assetPath);
     final bytes = data.buffer.asUint8List(
       data.offsetInBytes,
       data.lengthInBytes,
     );
-
     final docs = await getApplicationDocumentsDirectory();
     final fileName = p.basename(assetPath);
     final outFile = File(p.join(docs.path, fileName));
-
     if (!await outFile.exists()) {
       await outFile.create(recursive: true);
       await outFile.writeAsBytes(bytes, flush: true);
@@ -153,8 +130,6 @@ class _ArLivePageState extends State<ArLivePage> {
     return fileName;
   }
 
-  // Derive a thumbnail image path from the GLB path (used by the model picker).
-  // Assumes 3Dmodels/.../*.glb mirrors images/.../*.png in your assets.
   String _imagePathFor(ARItem item) {
     var path = item.glbPath.replaceFirst('3Dmodels', 'images');
     path = path.replaceFirst(RegExp(r'\.glb$', caseSensitive: false), '');
@@ -167,23 +142,35 @@ class _ArLivePageState extends State<ArLivePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Basic responsive metrics for consistent sizing on phones/tablets.
     final mq = MediaQuery.of(context);
-    final w = mq.size.width;
-    final h = mq.size.height;
+    final size = mq.size;
+    final shortest = math.min(size.width, size.height);
+    // Base scaler: tuned for a 375px baseline
+    double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
     final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
-    final double toolbarH = (h * 0.08).clamp(48.0, 64.0);
-    final double titleFont = (w * 0.06).clamp(18.0, 24.0) * ts;
+    final double toolbarH = sp(58);
+    final double titleFont = sp(19) * ts;
 
-    final double cornerIcon = (w * 0.10).clamp(28.0, 40.0);
-    final double cornerPad = (w * 0.032).clamp(8.0, 14.0);
-    final double cornerTop = (mq.padding.top * 0.1 + 8).clamp(6.0, 12.0);
+    final double cornerIcon = sp(32);
+    final double cornerPad = sp(10);
+    final double cornerTop = (mq.padding.top * 0.12 + sp(6)).clamp(
+      sp(6),
+      sp(14),
+    );
 
-    final double sliderBottom = (h * 0.14).clamp(84.0, 120.0);
-    final double sliderMinW = (w * 0.45).clamp(180.0, 240.0);
-    final double sliderMaxW = (w * 0.70).clamp(220.0, 320.0);
-    final double sliderValueFont = (w * 0.035).clamp(12.0, 16.0) * ts;
+    final double sliderBottom = (size.height * 0.14).clamp(sp(80), sp(130));
+    final double sliderMinW = (size.width * 0.45).clamp(sp(170), sp(260));
+    final double sliderMaxW = (size.width * 0.72).clamp(sp(220), sp(360));
+    final double sliderValueFont = sp(13) * ts;
+    final double sliderIcon = sp(18);
+
+    // Slider theme sizes
+    final double trackH = sp(4);
+    final double thumbR = sp(9);
+    final double overlayR = sp(15);
+    final double labelW = sp(48);
+    final double rowGap = sp(6);
 
     return Scaffold(
       appBar: AppBar(
@@ -197,21 +184,20 @@ class _ArLivePageState extends State<ArLivePage> {
       ),
       body: Stack(
         children: [
-          // The actual AR view with horizontal plane detection.
           ARView(
             planeDetectionConfig: PlaneDetectionConfig.horizontal,
             onARViewCreated: _onViewCreated,
           ),
 
-          // Bottom, persistent help card explaining controls.
-          const Positioned(
-            left: 16,
-            right: 16,
-            bottom: 20,
-            child: _BottomHelpCard(),
+          // Bottom help card (responsive paddings/radius inside)
+          Positioned(
+            left: sp(12),
+            right: sp(12),
+            bottom: sp(18),
+            child: const _BottomHelpCard(),
           ),
 
-          // Top-left: add model button.
+          // Add model (top-left)
           Positioned(
             left: cornerPad,
             top: cornerTop,
@@ -221,12 +207,12 @@ class _ArLivePageState extends State<ArLivePage> {
                 icon: Icon(Icons.add, size: cornerIcon, color: Colors.white),
                 tooltip: 'Add a model',
                 onPressed: _onPressAdd,
-                splashRadius: (cornerIcon * 0.6).clamp(20.0, 28.0),
+                splashRadius: (cornerIcon * 0.6).clamp(sp(18), sp(28)),
               ),
             ),
           ),
 
-          // Top-right: remove all button (disabled when nothing placed).
+          // Remove all (top-right)
           Positioned(
             right: cornerPad,
             top: cornerTop,
@@ -256,23 +242,23 @@ class _ArLivePageState extends State<ArLivePage> {
                           }
                         }
                       },
-                splashRadius: (cornerIcon * 0.6).clamp(20.0, 28.0),
+                splashRadius: (cornerIcon * 0.6).clamp(sp(18), sp(28)),
               ),
             ),
           ),
 
-          // Bottom-centered rotation slider. It is enabled only when a node is selected.
+          // Rotation slider (bottom-centered)
           Positioned(
             left: 0,
             right: 0,
             bottom: sliderBottom,
             child: Center(
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(sp(18)),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 6,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: sp(10),
+                    vertical: sp(6),
                   ),
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
@@ -286,27 +272,27 @@ class _ArLivePageState extends State<ArLivePage> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.screen_rotation_alt_outlined,
-                              size: 18,
+                              size: sliderIcon,
                               color: Colors.white,
                             ),
-                            const SizedBox(width: 6),
+                            SizedBox(width: rowGap),
                             Expanded(
                               child: SliderTheme(
                                 data: SliderTheme.of(context).copyWith(
-                                  trackHeight: 4,
+                                  trackHeight: trackH,
                                   activeTrackColor: AppTheme.accent,
                                   inactiveTrackColor: Colors.white,
                                   thumbColor: AppTheme.accent,
                                   overlayColor: AppTheme.accent.withOpacity(
                                     0.12,
                                   ),
-                                  thumbShape: const RoundSliderThumbShape(
-                                    enabledThumbRadius: 8,
+                                  thumbShape: RoundSliderThumbShape(
+                                    enabledThumbRadius: thumbR,
                                   ),
-                                  overlayShape: const RoundSliderOverlayShape(
-                                    overlayRadius: 14,
+                                  overlayShape: RoundSliderOverlayShape(
+                                    overlayRadius: overlayR,
                                   ),
                                   showValueIndicator: ShowValueIndicator.never,
                                 ),
@@ -315,13 +301,17 @@ class _ArLivePageState extends State<ArLivePage> {
                                   onChanged: (v) => _setSelectedXDeg(v),
                                   min: -180,
                                   max: 180,
-                                  divisions: 180,
+                                  // divisions responsive-ish (at least 60 steps)
+                                  divisions: math.max(
+                                    60,
+                                    (180 * (shortest / 375)).round(),
+                                  ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 6),
+                            SizedBox(width: rowGap),
                             SizedBox(
-                              width: 44,
+                              width: labelW,
                               child: Text(
                                 '${_sliderXDeg.toStringAsFixed(0)}°',
                                 textAlign: TextAlign.right,
@@ -342,11 +332,11 @@ class _ArLivePageState extends State<ArLivePage> {
             ),
           ),
 
-          // Invisible overlay slot (kept for layout symmetry / future use).
+          // Invisible overlay (reserved)
           Positioned.fill(
             child: const _BusyOverlay(visible: false, message: ''),
           ),
-          // Busy overlay while placing a model.
+          // Busy overlay
           Positioned.fill(
             child: _BusyOverlay(visible: _placeBusy, message: 'Placing…'),
           ),
@@ -355,7 +345,6 @@ class _ArLivePageState extends State<ArLivePage> {
     );
   }
 
-  // Open the picker, then enable append mode and show a snack prompting to tap a plane.
   Future<void> _onPressAdd() async {
     final picked = await _showModelPickerDialog(context);
     if (picked != null) {
@@ -373,35 +362,47 @@ class _ArLivePageState extends State<ArLivePage> {
     }
   }
 
-  // Simple modal dialog to choose among kXtModels.
   Future<ARItem?> _showModelPickerDialog(BuildContext context) async {
     return showDialog<ARItem>(
       context: context,
       barrierDismissible: true,
       builder: (ctx) {
         final mq = MediaQuery.of(ctx);
-        final w = mq.size.width;
-        final h = mq.size.height;
+        final size = mq.size;
+        final shortest = math.min(size.width, size.height);
+        double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
         final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
-        final double titleFont = (w * 0.08).clamp(24.0, 40.0) * ts;
-        final double listMaxH = (h * 0.55).clamp(240.0, 480.0);
-        final double thumb = (w * 0.12).clamp(40.0, 56.0);
-        final double itemFont = (w * 0.045).clamp(14.0, 18.0) * ts;
-        final double btnH = (h * 0.06).clamp(40.0, 50.0);
-        final double btnFont = (w * 0.045).clamp(14.0, 18.0) * ts;
+        final double titleFont = sp(28) * ts;
+        final double listMaxH = (size.height * 0.55).clamp(sp(240), sp(520));
+        final double thumb = sp(52);
+        final double itemFont = sp(16) * ts;
+        final double btnH = sp(46);
+        final double btnFont = sp(16) * ts;
+        final double dlgRadius = sp(18);
+        final double listRadius = sp(12);
+        final EdgeInsets pad = EdgeInsets.fromLTRB(
+          sp(20),
+          sp(18),
+          sp(20),
+          sp(18),
+        );
+        final EdgeInsets tilePad = EdgeInsets.symmetric(
+          horizontal: sp(8),
+          vertical: sp(6),
+        );
 
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(dlgRadius),
           ),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+            padding: pad,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 6),
+                SizedBox(height: sp(6)),
                 Text(
                   'Pick a device',
                   style: TextStyle(
@@ -409,30 +410,27 @@ class _ArLivePageState extends State<ArLivePage> {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: sp(12)),
                 ConstrainedBox(
                   constraints: BoxConstraints(
                     maxHeight: listMaxH,
-                    minHeight: (listMaxH * 0.45).clamp(180.0, 260.0),
+                    minHeight: (listMaxH * 0.45).clamp(sp(180), sp(260)),
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(listRadius),
                     child: Material(
                       color: Colors.white,
                       child: ListView.separated(
                         shrinkWrap: true,
                         itemCount: kXtModels.length,
-                        separatorBuilder: (_, __) => const Divider(height: 1),
+                        separatorBuilder: (_, __) => Divider(height: sp(1)),
                         itemBuilder: (_, i) {
                           final it = kXtModels[i];
                           final tpath = _imagePathFor(it);
                           return ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 6,
-                            ),
+                            contentPadding: tilePad,
                             leading: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(sp(8)),
                               child: Image.asset(
                                 tpath,
                                 width: thumb,
@@ -456,7 +454,7 @@ class _ArLivePageState extends State<ArLivePage> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: sp(12)),
                 Row(
                   children: [
                     Expanded(
@@ -464,9 +462,9 @@ class _ArLivePageState extends State<ArLivePage> {
                         onPressed: () => Navigator.of(ctx).pop(null),
                         style: OutlinedButton.styleFrom(
                           minimumSize: Size(0, btnH),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          padding: EdgeInsets.symmetric(vertical: sp(10)),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(sp(18)),
                           ),
                           side: const BorderSide(color: Color(0x22000000)),
                         ),
@@ -486,7 +484,6 @@ class _ArLivePageState extends State<ArLivePage> {
     );
   }
 
-  // Called once the ARView is created; initialize plugin managers and set handlers.
   Future<void> _onViewCreated(
     ARSessionManager session,
     ARObjectManager objectMgr,
@@ -497,7 +494,6 @@ class _ArLivePageState extends State<ArLivePage> {
     _objectMgr = objectMgr;
     _anchorMgr = anchorMgr;
 
-    // Session & object manager initialization.
     await _session!.onInitialize(
       showFeaturePoints: false,
       showPlanes: true,
@@ -509,7 +505,6 @@ class _ArLivePageState extends State<ArLivePage> {
     );
     await _objectMgr!.onInitialize();
 
-    // Select node on tap; sync slider to current X rotation.
     _objectMgr!.onNodeTap = (List<String> nodeNames) {
       if (nodeNames.isEmpty) return;
       final id = nodeNames.first;
@@ -534,12 +529,10 @@ class _ArLivePageState extends State<ArLivePage> {
       );
     };
 
-    // Place a node when a plane is tapped; supports append or replace mode.
     _session!.onPlaneOrPointTap = (hits) async {
       if (_placeBusy) return;
       setState(() => _placeBusy = true);
       try {
-        // Small delay improves perceived responsiveness and avoids multiple hits.
         await Future.delayed(const Duration(milliseconds: 120));
         if (hits.isEmpty) return;
 
@@ -552,13 +545,11 @@ class _ArLivePageState extends State<ArLivePage> {
         final okAnchor = await _anchorMgr!.addAnchor(anchor);
         if (okAnchor != true) return;
 
-        // Rotate model 180° around Y so it faces the user by default.
         final yaw180 = vm.Vector4(0, 1, 0, math.pi);
         final newId = 'mdl_${DateTime.now().microsecondsSinceEpoch}';
 
         ARNode node;
         if (_pendingItem != null) {
-          // Use the chosen catalog item (asset GLB staged into app folder).
           final fileName = await _stageGlbIntoAppFolder(_pendingItem!.glbPath);
           node = ARNode(
             name: newId,
@@ -573,7 +564,6 @@ class _ArLivePageState extends State<ArLivePage> {
             rotation: yaw180,
           );
         } else if (widget.assetGlb != null && widget.assetGlb!.isNotEmpty) {
-          // If the page was configured with an asset GLB, use that.
           final fileName = await _stageGlbIntoAppFolder(widget.assetGlb!);
           node = ARNode(
             name: newId,
@@ -584,7 +574,6 @@ class _ArLivePageState extends State<ArLivePage> {
             rotation: yaw180,
           );
         } else if (widget.glbUrl != null && widget.glbUrl!.isNotEmpty) {
-          // Otherwise, load from web (requires network permissions).
           node = ARNode(
             name: newId,
             type: NodeType.webGLB,
@@ -594,7 +583,6 @@ class _ArLivePageState extends State<ArLivePage> {
             rotation: yaw180,
           );
         } else {
-          // No model source provided.
           if (!mounted) return;
           showArSnack(
             context,
@@ -605,7 +593,6 @@ class _ArLivePageState extends State<ArLivePage> {
           return;
         }
 
-        // Add node to the newly created plane anchor.
         final okNode = await _objectMgr!.addNode(node, planeAnchor: anchor);
         if (okNode == true && mounted) {
           setState(() {
@@ -629,32 +616,39 @@ class _ArLivePageState extends State<ArLivePage> {
     };
   }
 
-  // Confirmation dialog before removing all placed nodes.
   Future<bool?> _confirmClearAll(BuildContext context) async {
     return showDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (ctx) {
         final mq = MediaQuery.of(ctx);
-        final w = mq.size.width;
-        final h = mq.size.height;
+        final size = mq.size;
+        final shortest = math.min(size.width, size.height);
+        double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
         final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
-        final double titleFont = (w * 0.08).clamp(26.0, 40.0) * ts;
-        final double btnH = (h * 0.06).clamp(40.0, 52.0);
-        final double btnFont = (w * 0.048).clamp(15.0, 19.0) * ts;
+        final double titleFont = sp(28) * ts;
+        final double btnH = sp(48);
+        final double btnFont = sp(17) * ts;
+        final double dlgRadius = sp(18);
+        final EdgeInsets pad = EdgeInsets.fromLTRB(
+          sp(20),
+          sp(18),
+          sp(20),
+          sp(18),
+        );
 
         return Dialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(dlgRadius),
           ),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+            padding: pad,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 6),
+                SizedBox(height: sp(6)),
                 Text(
                   'Remove all?',
                   style: TextStyle(
@@ -662,7 +656,7 @@ class _ArLivePageState extends State<ArLivePage> {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: sp(16)),
                 Row(
                   children: [
                     Expanded(
@@ -670,9 +664,9 @@ class _ArLivePageState extends State<ArLivePage> {
                         onPressed: () => Navigator.of(ctx).pop(false),
                         style: OutlinedButton.styleFrom(
                           minimumSize: Size(0, btnH),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          padding: EdgeInsets.symmetric(vertical: sp(10)),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(sp(18)),
                           ),
                           side: const BorderSide(color: Color(0x22000000)),
                         ),
@@ -682,16 +676,16 @@ class _ArLivePageState extends State<ArLivePage> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    SizedBox(width: sp(8)),
                     Expanded(
                       child: ElevatedButton(
                         onPressed: () => Navigator.of(ctx).pop(true),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.accent,
                           minimumSize: Size(0, btnH),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          padding: EdgeInsets.symmetric(vertical: sp(10)),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
+                            borderRadius: BorderRadius.circular(sp(18)),
                           ),
                           elevation: 0,
                         ),
@@ -716,7 +710,6 @@ class _ArLivePageState extends State<ArLivePage> {
   }
 }
 
-// Simple tuple for a placed node with its plane anchor and generated id.
 class _Placed {
   final String id;
   final ARPlaneAnchor anchor;
@@ -724,33 +717,38 @@ class _Placed {
   _Placed({required this.id, required this.anchor, required this.node});
 }
 
-// Compact card that explains how to interact with the page (bottom of the screen).
 class _BottomHelpCard extends StatelessWidget {
   const _BottomHelpCard();
 
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
-    final w = mq.size.width;
+    final size = mq.size;
+    final shortest = math.min(size.width, size.height);
+    double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
     final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
-    final double icon = (w * 0.06).clamp(18.0, 22.0);
-    final double font = (w * 0.035).clamp(11.0, 13.0) * ts;
-    final double padH = (w * 0.04).clamp(12.0, 18.0);
-    final double padV = (w * 0.025).clamp(8.0, 12.0);
+    final double icon = sp(20);
+    final double font = sp(13) * ts;
+    final double padH = sp(14);
+    final double padV = sp(10);
+    final double gap = sp(10);
+    final double radius = sp(14);
 
     return SafeArea(
-      minimum: const EdgeInsets.only(left: 0, right: 0, bottom: 0),
+      minimum: EdgeInsets.zero,
       child: Card(
         color: Theme.of(context).colorScheme.surface,
-        elevation: 6,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        elevation: sp(6),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radius),
+        ),
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
           child: Row(
             children: [
               Icon(Icons.touch_app_outlined, size: icon),
-              SizedBox(width: (w * 0.03).clamp(8.0, 14.0)),
+              SizedBox(width: gap),
               Expanded(
                 child: Text(
                   'Tap a plane to place the model.\n'
@@ -767,7 +765,6 @@ class _BottomHelpCard extends StatelessWidget {
   }
 }
 
-// Semi-transparent busy overlay with a spinner and message (used while placing).
 class _BusyOverlay extends StatelessWidget {
   final bool visible;
   final String message;
@@ -776,13 +773,20 @@ class _BusyOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
-    final w = mq.size.width;
+    final size = mq.size;
+    final shortest = math.min(size.width, size.height);
+    double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
     final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
-    final double boxPadH = (w * 0.035).clamp(12.0, 16.0);
-    final double boxPadV = (w * 0.028).clamp(8.0, 12.0);
-    final double textSize = (w * 0.038).clamp(13.0, 15.0) * ts;
-    final double spinner = (w * 0.05).clamp(16.0, 20.0);
+    final double boxPadH = sp(14);
+    final double boxPadV = sp(10);
+    final double textSize = sp(14) * ts;
+    final double spinner = sp(18);
+    final double radius = sp(12);
+    final double blur = sp(16);
+    final double offsetY = sp(8);
+    final double gap = sp(10);
+    final double stroke = (spinner / 10).clamp(1.5, 2.5);
 
     return IgnorePointer(
       ignoring: !visible,
@@ -799,12 +803,12 @@ class _BusyOverlay extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: const [
+                borderRadius: BorderRadius.circular(radius),
+                boxShadow: [
                   BoxShadow(
-                    color: Color(0x22000000),
-                    blurRadius: 16,
-                    offset: Offset(0, 8),
+                    color: const Color(0x22000000),
+                    blurRadius: blur,
+                    offset: Offset(0, offsetY),
                   ),
                 ],
                 border: Border.all(color: const Color(0x11000000)),
@@ -815,9 +819,9 @@ class _BusyOverlay extends StatelessWidget {
                   SizedBox(
                     width: spinner,
                     height: spinner,
-                    child: const CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(strokeWidth: stroke),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: gap),
                   Text(
                     message,
                     style: TextStyle(
@@ -836,7 +840,6 @@ class _BusyOverlay extends StatelessWidget {
   }
 }
 
-// Small circular icon button used by the snack action (if provided).
 class _TinyIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -846,8 +849,11 @@ class _TinyIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final w = MediaQuery.of(context).size.width;
-    final double side = (w * 0.08).clamp(26.0, 32.0);
-    final double ic = (w * 0.05).clamp(16.0, 20.0);
+    final shortest = math.min(w, MediaQuery.of(context).size.height);
+    double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
+
+    final double side = sp(30);
+    final double ic = sp(18);
 
     return SizedBox(
       width: side,
@@ -865,9 +871,8 @@ class _TinyIconButton extends StatelessWidget {
   }
 }
 
-/// Smaller, raised & top-aligned snack banner (aligned with the corner icons)
-/// This uses an OverlayEntry instead of ScaffoldMessenger to align with the AR HUD.
-/// Automatically hides after 2 seconds.
+/// Top-aligned snack banner shown via OverlayEntry.
+/// Paddings, radius, icon/text sizes are responsive.
 void showArSnack(
   BuildContext context, {
   required String title,
@@ -883,23 +888,27 @@ void showArSnack(
 
   final overlay = Overlay.of(context);
   final mq = MediaQuery.of(context);
-  final w = mq.size.width;
+  final size = mq.size;
+  final shortest = math.min(size.width, size.height);
+  double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
   final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
-  // Compute the same top offset used by the corner icons,
-  // but measured in the global overlay coordinate space:
-  final double cornerTop = (mq.padding.top * 0.1 + 8).clamp(6.0, 12.0);
+  final double cornerTop = (mq.padding.top * 0.12 + sp(6)).clamp(sp(6), sp(14));
   final double appBarTop = mq.padding.top + kToolbarHeight;
-  final double topY = appBarTop + cornerTop; // aligned with side icons
+  final double topY = appBarTop + cornerTop;
 
-  // Width/padding & compact sizing
-  final double sidePad = (w * 0.18).clamp(24.0, 96.0);
-  final double iconSize = (w * 0.048).clamp(16.0, 20.0);
-  final double titleFont = (w * 0.034).clamp(12.0, 13.0) * ts;
-  final double subFont = (w * 0.030).clamp(11.0, 12.0) * ts;
-  final double padH = (w * 0.028).clamp(10.0, 14.0);
-  final double padV = (w * 0.020).clamp(6.0, 10.0);
-  const double radius = 14.0;
+  final double sidePad = (size.width * 0.18).clamp(sp(24), sp(100));
+  final double iconSize = sp(18);
+  final double titleFont = sp(13) * ts;
+  final double subFont = sp(12) * ts;
+  final double padH = sp(12);
+  final double padV = sp(8);
+  final double radius = sp(14);
+  final double gapW = sp(8);
+  final double gapH1 = sp(4);
+  final double gapH2 = sp(2);
+  final double elevationBlur = sp(12);
+  final double elevationY = sp(6);
 
   final entry = OverlayEntry(
     builder: (ctx) {
@@ -914,11 +923,11 @@ void showArSnack(
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(radius),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Color(0x1A000000),
-                  blurRadius: 12,
-                  offset: Offset(0, 6),
+                  color: const Color(0x1A000000),
+                  blurRadius: elevationBlur,
+                  offset: Offset(0, elevationY),
                 ),
               ],
               border: Border.all(color: const Color(0x11000000)),
@@ -930,7 +939,7 @@ void showArSnack(
                     children: [
                       if (showIcon) ...[
                         Icon(icon, size: iconSize, color: Colors.black87),
-                        const SizedBox(height: 4),
+                        SizedBox(height: gapH1),
                       ],
                       Text(
                         title,
@@ -944,7 +953,7 @@ void showArSnack(
                         ),
                       ),
                       if (subtitle != null) ...[
-                        const SizedBox(height: 2),
+                        SizedBox(height: gapH2),
                         Text(
                           subtitle,
                           textAlign: TextAlign.center,
@@ -963,7 +972,7 @@ void showArSnack(
                     children: [
                       if (showIcon) ...[
                         Icon(icon, size: iconSize, color: Colors.black87),
-                        const SizedBox(width: 8),
+                        SizedBox(width: gapW),
                       ],
                       Expanded(
                         child: Column(
@@ -980,7 +989,7 @@ void showArSnack(
                               ),
                             ),
                             if (subtitle != null) ...[
-                              const SizedBox(height: 2),
+                              SizedBox(height: gapH2),
                               Text(
                                 subtitle,
                                 maxLines: 1,
@@ -996,7 +1005,7 @@ void showArSnack(
                         ),
                       ),
                       if (actionIcon != null && onAction != null) ...[
-                        const SizedBox(width: 6),
+                        SizedBox(width: sp(6)),
                         _TinyIconButton(icon: actionIcon, onTap: onAction),
                       ],
                     ],
@@ -1008,5 +1017,10 @@ void showArSnack(
   );
 
   overlay.insert(entry);
-  Timer(const Duration(seconds: 2), entry.remove);
+  final baseSec = 2.0;
+  final factor = (shortest / 375.0).clamp(0.9, 1.2);
+  Timer(
+    Duration(milliseconds: (baseSec * 1000 * factor).round()),
+    entry.remove,
+  );
 }

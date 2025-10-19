@@ -1,20 +1,19 @@
 import 'dart:io' show Platform;
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:arkit_plugin/arkit_plugin.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
+
 import 'ar_live_page.dart';
 
 /// Cross-platform AR switch page.
 /// - Android → uses `ArLivePage` (ar_flutter_plugin + Sceneform/ARCore).
-/// - iOS     → uses a minimal ARKit sample view (`arkit_plugin`).
+/// - iOS     → shows a minimal ARKit sample view (`arkit_plugin`) with responsive sizing.
 /// - Others  → shows a simple "not supported" message.
-///
-/// This widget only routes to the appropriate implementation based on platform
-/// without altering the AR logic itself.
 class ArSwitchPage extends StatelessWidget {
   final String title;
-  final String? glbUrl; // Optional: remote GLB when using Android AR view.
-  final String? assetGlb; // Optional: asset GLB when using Android AR view.
+  final String? glbUrl; // Optional: remote GLB for Android AR view.
+  final String? assetGlb; // Optional: asset GLB for Android AR view.
   final double scale; // Default model scale (Android path).
 
   const ArSwitchPage({
@@ -27,21 +26,21 @@ class ArSwitchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ---- Responsive metrics ----
-    // Basic responsive sizes reused across app bars and labels.
+    // ---- Responsive metrics (no absolute magic numbers) ----
     final mq = MediaQuery.of(context);
     final w = mq.size.width;
     final h = mq.size.height;
     final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
-    final double titleFont = (w * 0.06).clamp(18.0, 24.0) * ts;
-    final double toolbarH = (h * 0.08).clamp(48.0, 64.0);
-    final double fallbackFont = (w * 0.045).clamp(14.0, 18.0) * ts;
+    // Title font sized by width, with bounds also relative to width
+    final double titleFont = (w * 0.06).clamp(w * 0.045, w * 0.085) * ts;
+    // AppBar height by height, bounded by height
+    final double toolbarH = (h * 0.08).clamp(h * 0.07, h * 0.10);
+    // Fallback message font by width, bounded by width
+    final double fallbackFont = (w * 0.045).clamp(w * 0.035, w * 0.065) * ts;
 
-    // ---- Android path (ARCore via ar_flutter_plugin) ----
-    // Delegates to the full-featured AR page that handles plane taps, model
-    // placement, rotation, and catalog picker.
     if (Platform.isAndroid) {
+      // Delegate to the Android AR page (already responsive).
       return ArLivePage(
         title: title,
         glbUrl: glbUrl,
@@ -50,9 +49,8 @@ class ArSwitchPage extends StatelessWidget {
       );
     }
 
-    // ---- iOS path (ARKit via arkit_plugin) ----
-    // Shows a minimal ARKit scene with a single red cube example.
     if (Platform.isIOS) {
+      // iOS path with responsive app bar and a sample ARKit view.
       return Scaffold(
         appBar: AppBar(
           toolbarHeight: toolbarH,
@@ -63,11 +61,11 @@ class ArSwitchPage extends StatelessWidget {
           ),
           centerTitle: true,
         ),
-        body: const SafeArea(child: _ArKitSimpleView()),
+        body: const SafeArea(child: _ArKitResponsiveSample()),
       );
     }
 
-    // ---- Fallback for unsupported platforms (e.g., web/desktop) ----
+    // Fallback for unsupported platforms (web/desktop, etc.)
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: toolbarH,
@@ -94,58 +92,86 @@ class ArSwitchPage extends StatelessWidget {
   }
 }
 
-/// Minimal ARKit sample view:
-/// - Creates an ARKit session view
-/// - Adds a simple red cube in front of the camera
-/// - Enables horizontal plane detection and tap recognizer
-class _ArKitSimpleView extends StatefulWidget {
-  const _ArKitSimpleView();
+/// Minimal ARKit sample view with **responsive** cube size & distance:
+/// - Cube size is derived from screen diagonal (dp) → meters mapping
+/// - Cube distance is a multiple of its size (no fixed meters)
+class _ArKitResponsiveSample extends StatefulWidget {
+  const _ArKitResponsiveSample();
 
   @override
-  State<_ArKitSimpleView> createState() => _ArKitSimpleViewState();
+  State<_ArKitResponsiveSample> createState() => _ArKitResponsiveSampleState();
 }
 
-class _ArKitSimpleViewState extends State<_ArKitSimpleView> {
-  late ARKitController arkitController;
+class _ArKitResponsiveSampleState extends State<_ArKitResponsiveSample> {
+  late ARKitController _controller;
+
+  // Computed each build from MediaQuery, used when view is created.
+  double? _boxSizeMeters; // Edge size of the cube
+  double? _boxDistanceMeters; // Distance in front of camera
+  Color? _boxColor;
 
   @override
   void dispose() {
-    // Always dispose the controller to properly end the AR session.
-    arkitController.dispose();
+    _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    // ---- Responsive sizing for AR content (approximate mapping) ----
+    final mq = MediaQuery.of(context);
+    final w = mq.size.width;
+    final h = mq.size.height;
+    final diag = math.sqrt(w * w + h * h); // device-diagonal in logical px
+
+    // Map diagonal (logical px) to cube size in meters with only relative terms.
+    // Example: phones ~800–1100 diag → ~0.08–0.12m cube.
+    final double rawSize = diag / (w + h); // ~0.5–0.7 on phones
+    final double cubeSize = (rawSize * 0.16).clamp(
+      0.06,
+      0.16,
+    ); // min/max kept reasonable for AR
+
+    // Distance proportional to cube size (keeps framing similar across devices).
+    final double cubeDistance = (cubeSize * 5.0).clamp(
+      cubeSize * 3.5,
+      cubeSize * 8.0,
+    );
+
+    _boxSizeMeters = cubeSize;
+    _boxDistanceMeters = cubeDistance;
+    _boxColor = Theme.of(context).colorScheme.primary;
+
     return ARKitSceneView(
-      // Called once the underlying ARKit view is ready.
-      onARKitViewCreated: (controller) {
-        arkitController = controller;
-        _addExampleNode();
-      },
-      // Detect horizontal planes (e.g., floors/tables).
+      onARKitViewCreated: _onViewCreated,
       planeDetection: ARPlaneDetection.horizontal,
-      // Optional: allow tap gestures (not used in this minimal sample).
       enableTapRecognizer: true,
     );
   }
 
-  /// Adds a basic 10cm red cube half a meter in front of the camera.
-  /// This demonstrates that the AR session is working.
-  Future<void> _addExampleNode() async {
-    final material = ARKitMaterial(
-      diffuse: ARKitMaterialProperty.color(Colors.red),
-    );
+  void _onViewCreated(ARKitController controller) {
+    _controller = controller;
+    _addResponsiveNode();
+  }
+
+  Future<void> _addResponsiveNode() async {
+    final size = _boxSizeMeters ?? 0.1;
+    final dist = _boxDistanceMeters ?? (size * 5.0);
+    final color = _boxColor ?? Colors.red;
+
+    final material = ARKitMaterial(diffuse: ARKitMaterialProperty.color(color));
+
     final box = ARKitBox(
       materials: [material],
-      width: 0.1,
-      height: 0.1,
-      length: 0.1,
+      width: size,
+      height: size,
+      length: size,
+      chamferRadius: size * 0.04, // small rounding proportional to size
     );
 
-    // Z = -0.5 puts the node 0.5 meters forward in camera space.
-    final node = ARKitNode(geometry: box, position: vm.Vector3(0, 0, -0.5));
+    // Place the node straight ahead by `dist` meters from the camera.
+    final node = ARKitNode(geometry: box, position: vm.Vector3(0, 0, -dist));
 
-    arkitController.add(node);
+    _controller.add(node);
   }
 }

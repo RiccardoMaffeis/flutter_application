@@ -145,7 +145,6 @@ class _ArLivePageState extends State<ArLivePage> {
     final mq = MediaQuery.of(context);
     final size = mq.size;
     final shortest = math.min(size.width, size.height);
-    // Base scaler: tuned for a 375px baseline
     double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
     final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
@@ -158,19 +157,6 @@ class _ArLivePageState extends State<ArLivePage> {
       sp(6),
       sp(14),
     );
-
-    final double sliderBottom = (size.height * 0.14).clamp(sp(80), sp(130));
-    final double sliderMinW = (size.width * 0.45).clamp(sp(170), sp(260));
-    final double sliderMaxW = (size.width * 0.72).clamp(sp(220), sp(360));
-    final double sliderValueFont = sp(13) * ts;
-    final double sliderIcon = sp(18);
-
-    // Slider theme sizes
-    final double trackH = sp(4);
-    final double thumbR = sp(9);
-    final double overlayR = sp(15);
-    final double labelW = sp(48);
-    final double rowGap = sp(6);
 
     return Scaffold(
       appBar: AppBar(
@@ -187,14 +173,6 @@ class _ArLivePageState extends State<ArLivePage> {
           ARView(
             planeDetectionConfig: PlaneDetectionConfig.horizontal,
             onARViewCreated: _onViewCreated,
-          ),
-
-          // Bottom help card (responsive paddings/radius inside)
-          Positioned(
-            left: sp(12),
-            right: sp(12),
-            bottom: sp(18),
-            child: const _BottomHelpCard(),
           ),
 
           // Add model (top-left)
@@ -247,87 +225,106 @@ class _ArLivePageState extends State<ArLivePage> {
             ),
           ),
 
-          // Rotation slider (bottom-centered)
           Positioned(
-            left: 0,
-            right: 0,
-            bottom: sliderBottom,
-            child: Center(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(sp(18)),
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: sp(10),
-                    vertical: sp(6),
-                  ),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minWidth: sliderMinW,
-                      maxWidth: sliderMaxW,
-                    ),
-                    child: Opacity(
-                      opacity: _selectedId == null ? 0.5 : 1,
-                      child: IgnorePointer(
-                        ignoring: _selectedId == null,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.screen_rotation_alt_outlined,
-                              size: sliderIcon,
-                              color: Colors.white,
+            left: sp(12),
+            right: sp(12),
+            bottom: sp(18),
+            child: SafeArea(
+              minimum: EdgeInsets.only(bottom: sp(4)),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(sp(18)),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: sp(10),
+                          vertical: sp(6),
+                        ),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minWidth: (size.width * 0.45).clamp(
+                              sp(170),
+                              sp(260),
                             ),
-                            SizedBox(width: rowGap),
-                            Expanded(
-                              child: SliderTheme(
-                                data: SliderTheme.of(context).copyWith(
-                                  trackHeight: trackH,
-                                  activeTrackColor: AppTheme.accent,
-                                  inactiveTrackColor: Colors.white,
-                                  thumbColor: AppTheme.accent,
-                                  overlayColor: AppTheme.accent.withOpacity(
-                                    0.12,
+                            maxWidth: (size.width * 0.72).clamp(
+                              sp(220),
+                              sp(360),
+                            ),
+                          ),
+                          child: Opacity(
+                            opacity: _selectedId == null ? 0.5 : 1,
+                            child: IgnorePointer(
+                              ignoring: _selectedId == null,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.screen_rotation_alt_outlined,
+                                    size: sp(18),
+                                    color: Colors.white,
                                   ),
-                                  thumbShape: RoundSliderThumbShape(
-                                    enabledThumbRadius: thumbR,
+                                  SizedBox(width: sp(6)),
+                                  Expanded(
+                                    child: SliderTheme(
+                                      data: SliderTheme.of(context).copyWith(
+                                        trackHeight: sp(4),
+                                        activeTrackColor: AppTheme.accent,
+                                        inactiveTrackColor: Colors.white,
+                                        thumbColor: AppTheme.accent,
+                                        overlayColor: AppTheme.accent
+                                            .withOpacity(0.12),
+                                        thumbShape: RoundSliderThumbShape(
+                                          enabledThumbRadius: sp(9),
+                                        ),
+                                        overlayShape: RoundSliderOverlayShape(
+                                          overlayRadius: sp(15),
+                                        ),
+                                        showValueIndicator:
+                                            ShowValueIndicator.never,
+                                      ),
+                                      child: Slider(
+                                        value: _sliderXDeg.clamp(-180, 180),
+                                        onChanged: (v) => _setSelectedXDeg(v),
+                                        min: -180,
+                                        max: 180,
+                                        divisions: math.max(
+                                          60,
+                                          (180 * (shortest / 375)).round(),
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                  overlayShape: RoundSliderOverlayShape(
-                                    overlayRadius: overlayR,
+                                  SizedBox(width: sp(6)),
+                                  SizedBox(
+                                    width: sp(48),
+                                    child: Text(
+                                      '${_sliderXDeg.toStringAsFixed(0)}°',
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontSize:
+                                            (sp(13) *
+                                            mq.textScaleFactor.clamp(1.0, 1.3)),
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
                                   ),
-                                  showValueIndicator: ShowValueIndicator.never,
-                                ),
-                                child: Slider(
-                                  value: _sliderXDeg.clamp(-180, 180),
-                                  onChanged: (v) => _setSelectedXDeg(v),
-                                  min: -180,
-                                  max: 180,
-                                  // divisions responsive-ish (at least 60 steps)
-                                  divisions: math.max(
-                                    60,
-                                    (180 * (shortest / 375)).round(),
-                                  ),
-                                ),
+                                ],
                               ),
                             ),
-                            SizedBox(width: rowGap),
-                            SizedBox(
-                              width: labelW,
-                              child: Text(
-                                '${_sliderXDeg.toStringAsFixed(0)}°',
-                                textAlign: TextAlign.right,
-                                style: TextStyle(
-                                  fontSize: sliderValueFont,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
+
+                  SizedBox(height: sp(12)),
+
+                  const _BottomHelpCard(),
+                ],
               ),
             ),
           ),
@@ -726,7 +723,6 @@ class _BottomHelpCard extends StatelessWidget {
     final size = mq.size;
     final shortest = math.min(size.width, size.height);
     double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
-    // 🔧 usare TextScaler per il font (niente clamp)
     final scaler = MediaQuery.textScalerOf(context);
 
     final double icon = sp(20);
@@ -892,7 +888,6 @@ void showArSnack(
   final size = mq.size;
   final shortest = math.min(size.width, size.height);
   double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
-  // 🔧 usare TextScaler per i font del popup overlay (niente clamp)
   final scaler = MediaQuery.textScalerOf(context);
 
   final double cornerTop = (mq.padding.top * 0.12 + sp(6)).clamp(sp(6), sp(14));

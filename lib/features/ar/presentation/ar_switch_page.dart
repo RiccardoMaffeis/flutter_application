@@ -12,15 +12,11 @@ import 'package:path/path.dart' as p;
 
 import 'ar_live_page.dart';
 
-/// Cross-platform AR switch page.
-/// - Android → ArLivePage (ar_flutter_plugin)
-/// - iOS     → ARKit “feature parity”: picker, tap-to-place, slider X, clear-all, overlays
-/// - Others  → fallback
 class ArSwitchPage extends StatelessWidget {
   final String title;
-  final String? glbUrl;   // (Android) remote GLB
-  final String? assetGlb; // (Android) asset GLB
-  final double scale;     // default model scale (Android, e usata anche su iOS)
+  final String? glbUrl;
+  final String? assetGlb;
+  final double scale;
 
   const ArSwitchPage({
     super.key,
@@ -53,7 +49,6 @@ class ArSwitchPage extends StatelessWidget {
     if (Platform.isIOS) {
       return _ArKitXtLiveView(
         title: title,
-        // se vuoi, su iOS proverò a usare l’assetGlb → asset .glb.usdz
         androidLikeDefaultGlbAsset: assetGlb,
         defaultScale: scale,
         appBarTitleFont: titleFont,
@@ -84,12 +79,9 @@ class ArSwitchPage extends StatelessWidget {
   }
 }
 
-/// ===============================
-/// iOS: ARKit “feature-parity” view
-/// ===============================
 class _ArKitXtLiveView extends StatefulWidget {
   final String title;
-  final String? androidLikeDefaultGlbAsset; // es. 'lib/3Dmodels/XT5/XT5_4p.glb'
+  final String? androidLikeDefaultGlbAsset;
   final double defaultScale;
   final double appBarTitleFont;
   final double appBarHeight;
@@ -113,7 +105,7 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
   String? _selectedId;
 
   bool _appendMode = false;
-  ARItem? _pendingItem; // riuso il tipo del file Android importato
+  ARItem? _pendingItem;
   bool _placeBusy = false;
 
   double _sliderXDeg = 0;
@@ -155,7 +147,6 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
             onARKitViewCreated: _onViewCreated,
           ),
 
-          // Add model (top-left)
           Positioned(
             left: cornerPad,
             top: cornerTop,
@@ -170,7 +161,6 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
             ),
           ),
 
-          // Remove all (top-right)
           Positioned(
             right: cornerPad,
             top: cornerTop,
@@ -202,7 +192,6 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
             ),
           ),
 
-          // Bottom controls (slider + help)
           Positioned(
             left: sp(12),
             right: sp(12),
@@ -280,7 +269,6 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
             ),
           ),
 
-          // Overlays
           Positioned.fill(child: const _BusyOverlay(visible: false, message: '')),
           Positioned.fill(child: _BusyOverlay(visible: _placeBusy, message: 'Placing…')),
         ],
@@ -288,11 +276,9 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
     );
   }
 
-  // ====== ARKit integration ======
   void _onViewCreated(ARKitController controller) {
     _controller = controller;
 
-    // Tap on plane to place
     _controller.onARTap = (List<ARKitTestResult> hits) async {
       if (_placeBusy) return;
       setState(() => _placeBusy = true);
@@ -300,7 +286,6 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
         await Future.delayed(const Duration(milliseconds: 120));
         if (hits.isEmpty) return;
 
-        // Se non sono in append, pulisco la scena
         if (!_appendMode) {
           await _removeAll();
         }
@@ -312,12 +297,10 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
         final newId = 'mdl_${DateTime.now().microsecondsSinceEpoch}';
         final double s = _pendingItem?.scale ?? widget.defaultScale;
 
-        // Ordine rotazioni: per allineare “fronte” come su Android: yaw 180°
         final yawPi = vm.Vector3(0, math.pi, 0);
 
         ARKitNode node;
 
-        // 1) Item scelto dal picker
         if (_pendingItem != null) {
           final usdzAsset = _iosUsdzFromGlb(_pendingItem!.glbPath);
           final urlPath = await _stageUsdzIntoAppFolder(usdzAsset);
@@ -329,7 +312,6 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
             scale: vm.Vector3(s, s, s),
           );
         }
-        // 2) Asset di default passato come GLB (lo mappo a .glb.usdz)
         else if (widget.androidLikeDefaultGlbAsset != null && widget.androidLikeDefaultGlbAsset!.isNotEmpty) {
           final usdzAsset = _iosUsdzFromGlb(widget.androidLikeDefaultGlbAsset!);
           final urlPath = await _stageUsdzIntoAppFolder(usdzAsset);
@@ -341,7 +323,6 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
             scale: vm.Vector3(s, s, s),
           );
         }
-        // 3) Nessun modello
         else {
           if (!mounted) return;
           showArSnack(
@@ -375,7 +356,6 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
       }
     };
 
-    // Tap on existing node to select (se supportato dalla versione del plugin)
     _controller.onNodeTap = (nodes) {
       if (nodes.isEmpty) return;
       final id = nodes.first;
@@ -399,7 +379,6 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
     };
   }
 
-  // ====== UI actions ======
   Future<void> _onPressAdd() async {
     final picked = await _showModelPickerDialog(context);
     if (picked != null) {
@@ -444,7 +423,6 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
     setState(() => _sliderXDeg = degrees);
   }
 
-  // ====== Dialogs / pickers ======
   Future<ARItem?> _showModelPickerDialog(BuildContext context) async {
     return showDialog<ARItem>(
       context: context,
@@ -489,7 +467,7 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
                       color: Colors.white,
                       child: ListView.separated(
                         shrinkWrap: true,
-                        itemCount: kXtModels.length, // lista definita in ar_live_page.dart
+                        itemCount: kXtModels.length,
                         separatorBuilder: (_, __) => Divider(height: sp(1)),
                         itemBuilder: (_, i) {
                           final it = kXtModels[i];
@@ -603,17 +581,10 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
     );
   }
 
-  // ====== Assets helpers (USDZ) ======
-  /// Converte un path GLB asset stile Android (es. .../XT7_4p.glb)
-  /// nel corrispettivo iOS (.../XT7_4p.glb.usdz) come da tua convenzione.
   String _iosUsdzFromGlb(String glbAssetPath) {
-    if (glbAssetPath.endsWith('.glb.usdz')) return glbAssetPath;
-    if (glbAssetPath.endsWith('.glb')) return '$glbAssetPath.usdz';
-    // se già .usdz, lo lascia così
     return glbAssetPath.endsWith('.usdz') ? glbAssetPath : '$glbAssetPath.usdz';
   }
 
-  /// Copia l’asset .usdz dal bundle Flutter al filesystem app e ritorna un path utilizzabile da ARKit.
   Future<String> _stageUsdzIntoAppFolder(String assetPath) async {
     final data = await rootBundle.load(assetPath);
     final bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
@@ -624,14 +595,11 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
       await outFile.create(recursive: true);
       await outFile.writeAsBytes(bytes, flush: true);
     }
-    return outFile.path; // path filesystem (ok per ARKitReferenceNode.url)
+    return outFile.path;
   }
 
-  /// Mappa 'lib/3Dmodels/XT5/XT5_4p.glb(.usdz)' → 'lib/images/XT5/XT5_4p.png'
   String _imagePathFor(String anyModelPath) {
     var path = anyModelPath.replaceFirst('3Dmodels', 'images');
-    // rimuove suffissi multipli
-    path = path.replaceAll(RegExp(r'\.glb\.usdz$', caseSensitive: false), '');
     path = path.replaceAll(RegExp(r'\.usdz$', caseSensitive: false), '');
     path = path.replaceAll(RegExp(r'\.glb$', caseSensitive: false), '');
     final last = path.lastIndexOf('/');
@@ -641,16 +609,11 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
   }
 }
 
-/// Modello posizionato su iOS (ARKit)
 class _PlacedIOS {
   final String id;
   final ARKitNode node;
   _PlacedIOS({required this.id, required this.node});
 }
-
-/// -----------------------
-/// UI helpers riutilizzati
-/// -----------------------
 
 class _BottomHelpCard extends StatelessWidget {
   const _BottomHelpCard();
@@ -753,13 +716,12 @@ class _BusyOverlay extends StatelessWidget {
   }
 }
 
-/// Snack banner top (overlay) — responsive
 void showArSnack(
   BuildContext context, {
   required String title,
   String? subtitle,
   IconData icon = Icons.info_outline,
-  Color? color, // reserved
+  Color? color,
   IconData? actionIcon,
   VoidCallback? onAction,
   bool centered = false,

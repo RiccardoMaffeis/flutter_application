@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_application/features/cart/presentation/cart_popup.dart';
@@ -11,11 +12,41 @@ import '../controllers/favourites_controller.dart';
 import '../../shop/controllers/shop_controller.dart';
 
 /// Page that displays the user's favourite products (100% responsive).
-class FavouritesPage extends ConsumerWidget {
+class FavouritesPage extends ConsumerStatefulWidget {
   const FavouritesPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<FavouritesPage> createState() => _FavouritesPageState();
+}
+
+class _FavouritesPageState extends ConsumerState<FavouritesPage> {
+
+  bool _navBusy = false;
+  DateTime? _cooldownUntil;
+  final Set<String> _favBusy = <String>{};
+
+  bool get _cooldownActive =>
+      _cooldownUntil != null && DateTime.now().isBefore(_cooldownUntil!);
+
+  void _startCooldown([int ms = 700]) {
+    _cooldownUntil = DateTime.now().add(Duration(milliseconds: ms));
+  }
+
+  void _safeGo(BuildContext context, String route, {int cooldownMs = 500}) {
+    if (_navBusy) return;
+    _navBusy = true;
+    _startCooldown(cooldownMs);
+    setState(() {});
+    context.go(route);
+    Future.delayed(Duration(milliseconds: cooldownMs), () {
+      if (!mounted) return;
+      _navBusy = false;
+      setState(() {});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
     final w = mq.size.width;
     final h = mq.size.height;
@@ -167,12 +198,23 @@ class FavouritesPage extends ConsumerWidget {
                           itemBuilder: (_, i) {
                             final p = items[i];
                             final isFav = shopState.favourites.contains(p.id);
+                            final busy = _favBusy.contains(p.id);
                             return ProductCard(
                               product: p,
                               isFavourite: isFav,
+                              // opzionale: se ProductCard supporta uno stato di busy, passalo
+                              // isBusy: busy,
                               onFavToggle: () async {
-                                await shopCtrl.toggleFavourite(p.id);
-                                await favsCtrl.refresh();
+                                if (busy) return;
+                                setState(() => _favBusy.add(p.id));
+                                try {
+                                  await shopCtrl.toggleFavourite(p.id);
+                                  await favsCtrl.refresh();
+                                } finally {
+                                  if (mounted) {
+                                    setState(() => _favBusy.remove(p.id));
+                                  }
+                                }
                               },
                               onTap: () => context.go('/product/${p.id}'),
                             );
@@ -221,10 +263,12 @@ class FavouritesPage extends ConsumerWidget {
                 child: _BottomPillNav(
                   index: 1,
                   onChanged: (i) {
-                    if (i == 0) context.go('/home');
+                    if (_navBusy || _cooldownActive) return;
+                    _startCooldown(500);
+                    if (i == 0) _safeGo(context, '/home');
                     if (i == 1) return;
-                    if (i == 3) context.go('/profile');
-                    if (i == 2) context.go('/ar');
+                    if (i == 3) _safeGo(context, '/profile');
+                    if (i == 2) _safeGo(context, '/ar');
                   },
                 ),
               ),
@@ -236,7 +280,9 @@ class FavouritesPage extends ConsumerWidget {
   }
 }
 
-/// Reusable bottom navigation with a sliding "pill" highlight (responsive).
+/// Reusable bottom navigation with a sliding "pill" highlight.
+/// - Accepts a `index` to indicate the selected tab
+/// - Calls `onChanged` with the tapped index
 class _BottomPillNav extends StatelessWidget {
   final int index;
   final ValueChanged<int> onChanged;
@@ -246,20 +292,14 @@ class _BottomPillNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final shortest = math.min(size.width, size.height);
-    final scale = (shortest / 375.0).clamp(0.85, 1.30).toDouble();
-    double sp(double v) => v * scale;
-
-    const tabs = 4;
-    final double pad = sp(6);
-    final double height = sp(58);
-    final double pillRadius = sp(22);
-    final double navRadius = sp(28);
+    final s = (shortest / 375.0).clamp(0.85, 1.30);
+    double sp(double v) => (v * s).toDouble();
 
     return Container(
-      height: height,
+      height: sp(58),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(navRadius),
+        borderRadius: BorderRadius.circular(sp(28)),
         boxShadow: [
           BoxShadow(
             color: const Color(0x22000000),
@@ -280,9 +320,11 @@ class _BottomPillNav extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: LayoutBuilder(
         builder: (context, cons) {
-          final slotW = (cons.maxWidth - pad * 2) / tabs;
+          final pad = sp(6);
+          final slotW = (cons.maxWidth - pad * 2) / 4;
           return Stack(
             children: [
+              // Animated pill indicating the selected tab.
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOut,
@@ -293,10 +335,11 @@ class _BottomPillNav extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: AppTheme.accent,
-                    borderRadius: BorderRadius.circular(pillRadius),
+                    borderRadius: BorderRadius.circular(sp(22)),
                   ),
                 ),
               ),
+              // Four icons (Home/Favourites/AR/Profile).
               Padding(
                 padding: EdgeInsets.all(pad),
                 child: Row(
@@ -332,7 +375,8 @@ class _BottomPillNav extends StatelessWidget {
   }
 }
 
-/// Single icon button used by the pill navigation (responsive).
+/// Single icon button used by the pill navigation.
+/// - Changes color to white when selected (due to colored pill background)
 class _NavIcon extends StatelessWidget {
   final IconData icon;
   final bool selected;
@@ -347,8 +391,8 @@ class _NavIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final shortest = math.min(size.width, size.height);
-    final scale = (shortest / 375.0).clamp(0.85, 1.30).toDouble();
-    double sp(double v) => v * scale;
+    final s = (shortest / 375.0).clamp(0.85, 1.30);
+    double sp(double v) => (v * s).toDouble();
 
     return Expanded(
       child: InkWell(

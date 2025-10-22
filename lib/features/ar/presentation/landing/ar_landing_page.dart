@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,11 +11,40 @@ import '../../../ar/domain/ar_choice.dart';
 
 /// Landing screen for the AR section.
 /// Uses Riverpod to read available AR choices and GoRouter for navigation.
-class ARLandingPage extends ConsumerWidget {
+class ARLandingPage extends ConsumerStatefulWidget {
   const ARLandingPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ARLandingPage> createState() => _ARLandingPageState();
+}
+
+class _ARLandingPageState extends ConsumerState<ARLandingPage> {
+
+  bool _navBusy = false;
+  DateTime? _cooldownUntil;
+
+  bool get _cooldownActive =>
+      _cooldownUntil != null && DateTime.now().isBefore(_cooldownUntil!);
+
+  void _startCooldown([int ms = 700]) {
+    _cooldownUntil = DateTime.now().add(Duration(milliseconds: ms));
+  }
+
+  void _safeGo(BuildContext context, String route, {int cooldownMs = 500}) {
+    if (_navBusy) return;
+    _navBusy = true;
+    _startCooldown(cooldownMs);
+    setState(() {});
+    context.go(route);
+    Future.delayed(Duration(milliseconds: cooldownMs), () {
+      if (!mounted) return;
+      _navBusy = false;
+      setState(() {});
+    });
+  }
+  
+  @override
+  Widget build(BuildContext context) {
     // Read the list of AR choices from the controller's state.
     final choices = ref.watch(arLandingControllerProvider).choices;
 
@@ -21,6 +53,9 @@ class ARLandingPage extends ConsumerWidget {
     final w = mq.size.width;
     final h = mq.size.height;
     final ts = mq.textScaleFactor.clamp(1.0, 1.3);
+    final shortest = math.min(w, h);
+    final scale = (shortest / 375.0).clamp(0.85, 1.30).toDouble();
+    double sp(double v) => v * scale;
 
     final double headerHPad = (w * 0.04).clamp(12.0, 22.0);
     final double headerVPad = (h * 0.012).clamp(6.0, 14.0);
@@ -32,13 +67,7 @@ class ARLandingPage extends ConsumerWidget {
     final double listHPad = (w * 0.03).clamp(10.0, 18.0);
     final double listVGap = (h * 0.015).clamp(8.0, 16.0);
 
-    final double assistantBtnSize = (w * 0.11).clamp(40.0, 56.0);
-    final double assistantIcon = (assistantBtnSize * 0.64).clamp(22.0, 34.0);
-    final double assistantBottom = (h * 0.12).clamp(76.0, 110.0);
-    final double assistantRight = (w * 0.04).clamp(12.0, 20.0);
-
     // Bottom nav sizing + reserved space
-    final double navSideMargin = (w * 0.04).clamp(12.0, 20.0);
     final double navHeight = (h * 0.075).clamp(54.0, 70.0);
     final double bottomReserved = navHeight + (h * 0.02).clamp(10.0, 18.0);
 
@@ -72,6 +101,7 @@ class ARLandingPage extends ConsumerWidget {
                     ],
                   ),
                 ),
+
                 // Accent underline under the title (ABB-like red bar)
                 Container(
                   height: accentBarHeight,
@@ -115,23 +145,23 @@ class ARLandingPage extends ConsumerWidget {
               ],
             ),
 
-            // Floating circular button for the assistant, bottom-right
+            // ----- Floating assistant bubble -----
             Positioned(
-              right: assistantRight,
-              bottom: assistantBottom,
+              right: sp(16),
+              bottom: navHeight + mq.padding.bottom + sp(26),
               child: Material(
                 color: Colors.white,
                 shape: const CircleBorder(),
-                elevation: 4,
+                elevation: sp(4),
                 child: InkWell(
-                  onTap: () => context.push('/assistant'),
                   customBorder: const CircleBorder(),
+                  onTap: () => context.push('/assistant'),
                   child: SizedBox(
-                    width: assistantBtnSize,
-                    height: assistantBtnSize,
+                    width: (w * 0.12).clamp(sp(40.0), sp(52.0)),
+                    height: (w * 0.12).clamp(sp(40.0), sp(52.0)),
                     child: Icon(
                       Icons.psychology_alt_outlined,
-                      size: assistantIcon,
+                      size: (w * 0.095).clamp(sp(28.0), sp(36.0)),
                     ),
                   ),
                 ),
@@ -139,16 +169,18 @@ class ARLandingPage extends ConsumerWidget {
             ),
 
             Positioned(
-              left: navSideMargin,
-              right: navSideMargin,
-              bottom: (h * 0.02).clamp(10.0, 18.0),
+              left: sp(16),
+              right: sp(16),
+              bottom: sp(16),
               child: _BottomPillNav(
                 index: 2,
                 onChanged: (i) {
+                  if (_navBusy || _cooldownActive) return;
+                  _startCooldown(500);
                   if (i == 2) return;
-                  if (i == 1) context.go('/favourites');
-                  if (i == 3) context.go('/profile');
-                  if (i == 0) context.go('/home');
+                  if (i == 1) _safeGo(context, '/favourites');
+                  if (i == 3) _safeGo(context, '/profile');
+                  if (i == 0) _safeGo(context, '/home');
                 },
               ),
             ),
@@ -256,22 +288,27 @@ class _BottomPillNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final shortest = math.min(size.width, size.height);
+    final s = (shortest / 375.0).clamp(0.85, 1.30);
+    double sp(double v) => (v * s).toDouble();
+
     return Container(
-      height: 58,
+      height: sp(58),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: const [
+        borderRadius: BorderRadius.circular(sp(28)),
+        boxShadow: [
           BoxShadow(
-            color: Color(0x22000000),
-            blurRadius: 22,
-            spreadRadius: 2,
-            offset: Offset(0, 10),
+            color: const Color(0x22000000),
+            blurRadius: sp(22),
+            spreadRadius: sp(2),
+            offset: Offset(0, sp(10)),
           ),
           BoxShadow(
-            color: Color(0x14000000),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+            color: const Color(0x14000000),
+            blurRadius: sp(8),
+            offset: Offset(0, sp(2)),
           ),
         ],
         border: Border.fromBorderSide(
@@ -281,7 +318,7 @@ class _BottomPillNav extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: LayoutBuilder(
         builder: (context, cons) {
-          const pad = 6.0;
+          final pad = sp(6);
           final slotW = (cons.maxWidth - pad * 2) / 4;
           return Stack(
             children: [
@@ -296,13 +333,13 @@ class _BottomPillNav extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: AppTheme.accent,
-                    borderRadius: BorderRadius.circular(22),
+                    borderRadius: BorderRadius.circular(sp(22)),
                   ),
                 ),
               ),
               // Four icons (Home/Favourites/AR/Profile).
               Padding(
-                padding: const EdgeInsets.all(pad),
+                padding: EdgeInsets.all(pad),
                 child: Row(
                   children: [
                     _NavIcon(
@@ -350,14 +387,19 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final shortest = math.min(size.width, size.height);
+    final s = (shortest / 375.0).clamp(0.85, 1.30);
+    double sp(double v) => (v * s).toDouble();
+
     return Expanded(
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(sp(22)),
         child: Center(
           child: Icon(
             icon,
-            size: 34,
+            size: sp(34),
             color: selected ? Colors.white : Colors.black87,
           ),
         ),

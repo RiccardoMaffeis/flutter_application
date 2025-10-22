@@ -56,19 +56,6 @@ class _ShopPageState extends ConsumerState<ShopPage> {
     });
   }
 
-  void _safePush(BuildContext context, String route, {int cooldownMs = 500}) {
-    if (_navBusy) return;
-    _navBusy = true;
-    _startCooldown(cooldownMs);
-    setState(() {});
-    context.push(route);
-    Future.delayed(Duration(milliseconds: cooldownMs), () {
-      if (!mounted) return;
-      _navBusy = false;
-      setState(() {});
-    });
-  }
-
   String _familyLabel(Product p) {
     final id = p.categoryId.toUpperCase();
     if (id.startsWith('XT')) return id.toUpperCase();
@@ -176,12 +163,14 @@ class _ShopPageState extends ConsumerState<ShopPage> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, cons) {
+            final mq = MediaQuery.of(context);
             final w = cons.maxWidth;
             final h = cons.maxHeight;
 
             final shortest = math.min(w, h);
             final s = (shortest / 375.0).clamp(0.85, 1.30);
             double sp(double v) => (v * s).toDouble();
+            final double navHeight = sp(58);
 
             final double searchIconSize = (w * 0.085)
                 .clamp(sp(26.0), sp(35.0))
@@ -236,7 +225,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                 .floor()
                 .clamp(2, 6);
 
-            final double fabSize = (w * 0.12)
+            (w * 0.12)
                 .clamp(sp(40.0), sp(52.0))
                 .toDouble();
             final double bottomPad = (h * 0.11)
@@ -566,22 +555,20 @@ class _ShopPageState extends ConsumerState<ShopPage> {
 
                 Positioned(
                   right: sp(16),
-                  bottom: bottomPad + sp(16),
+                  bottom: navHeight + mq.padding.bottom + sp(26),
                   child: Material(
                     color: Colors.white,
                     shape: const CircleBorder(),
                     elevation: sp(4),
                     child: InkWell(
                       customBorder: const CircleBorder(),
-                      onTap: () => _safePush(context, '/assistant'),
+                      onTap: () => context.push('/assistant'),
                       child: SizedBox(
-                        width: fabSize,
-                        height: fabSize,
+                        width: (w * 0.12).clamp(sp(40.0), sp(52.0)),
+                        height: (w * 0.12).clamp(sp(40.0), sp(52.0)),
                         child: Icon(
                           Icons.psychology_alt_outlined,
-                          size: (fabSize * 0.8)
-                              .clamp(sp(28.0), sp(35.0))
-                              .toDouble(),
+                          size: (w * 0.095).clamp(sp(28.0), sp(36.0)),
                         ),
                       ),
                     ),
@@ -623,7 +610,6 @@ class _BottomPillNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Scala locale per rendere il nav completamente responsive
     final size = MediaQuery.of(context).size;
     final shortest = math.min(size.width, size.height);
     final s = (shortest / 375.0).clamp(0.85, 1.30);

@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application/features/assistant/controllers/ai_chat_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,8 +14,36 @@ import '../controllers/profile_controller.dart';
 /// - Shows basic user info (name/email/DOB/city) from `profileControllerProvider`
 /// - Lets the user log out (confirms via dialog, clears relevant providers)
 /// - Uses a custom bottom pill navigation at the bottom
-class ProfilePage extends ConsumerWidget {
+class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends ConsumerState<ProfilePage> {
+  bool _navBusy = false;
+  DateTime? _cooldownUntil;
+
+  bool get _cooldownActive =>
+      _cooldownUntil != null && DateTime.now().isBefore(_cooldownUntil!);
+
+  void _startCooldown([int ms = 700]) {
+    _cooldownUntil = DateTime.now().add(Duration(milliseconds: ms));
+  }
+
+  void _safeGo(BuildContext context, String route, {int cooldownMs = 500}) {
+    if (_navBusy) return;
+    _navBusy = true;
+    _startCooldown(cooldownMs);
+    setState(() {});
+    context.go(route);
+    Future.delayed(Duration(milliseconds: cooldownMs), () {
+      if (!mounted) return;
+      _navBusy = false;
+      setState(() {});
+    });
+  }
 
   /// Formats a DateTime as DD/MM/YYYY (returns '—' if null).
   String _fmtDob(DateTime? d) {
@@ -38,12 +69,13 @@ class ProfilePage extends ConsumerWidget {
       await FirebaseAuth.instance.signOut();
       ref.invalidate(aiChatControllerProvider);
       ref.invalidate(profileControllerProvider);
-      if (context.mounted) context.go('/welcome');
+      if (!mounted) return;
+      context.go('/welcome');
     }
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     // Watches the profile async state (loading/data/error).
     final prof = ref.watch(profileControllerProvider);
 
@@ -259,12 +291,14 @@ class ProfilePage extends ConsumerWidget {
               right: sp(16),
               bottom: sp(16),
               child: _BottomPillNav(
-                index: 3, // Profile tab selected.
+                index: 3,
                 onChanged: (i) {
-                  if (i == 0) context.go('/home');
-                  if (i == 1) context.go('/favourites');
+                  if (_navBusy || _cooldownActive) return;
+                  _startCooldown(500);
+                  if (i == 0) _safeGo(context, '/home');
+                  if (i == 1) _safeGo(context, '/favourites');
                   if (i == 3) return;
-                  if (i == 2) context.go('/ar');
+                  if (i == 2) _safeGo(context, '/ar');
                 },
               ),
             ),
@@ -412,9 +446,9 @@ class _BottomPillNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final shortest = size.shortestSide;
+    final shortest = math.min(size.width, size.height);
     final s = (shortest / 375.0).clamp(0.85, 1.30);
-    double sp(double v) => v * s;
+    double sp(double v) => (v * s).toDouble();
 
     return Container(
       height: sp(58),
@@ -434,7 +468,9 @@ class _BottomPillNav extends StatelessWidget {
             offset: Offset(0, sp(2)),
           ),
         ],
-        border: Border.all(color: const Color(0x11000000), width: sp(1)),
+        border: Border.fromBorderSide(
+          const BorderSide(color: Color(0x11000000)),
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: LayoutBuilder(
@@ -508,9 +544,10 @@ class _NavIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final shortest = MediaQuery.of(context).size.shortestSide;
+    final size = MediaQuery.of(context).size;
+    final shortest = math.min(size.width, size.height);
     final s = (shortest / 375.0).clamp(0.85, 1.30);
-    double sp(double v) => v * s;
+    double sp(double v) => (v * s).toDouble();
 
     return Expanded(
       child: InkWell(

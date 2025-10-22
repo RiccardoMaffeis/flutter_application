@@ -1,20 +1,26 @@
-import 'dart:io' show Platform;
+import 'dart:async';
+import 'dart:io' show Platform, File;
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:arkit_plugin/arkit_plugin.dart';
 import 'package:vector_math/vector_math_64.dart' as vm;
 
+import 'package:flutter/services.dart' show rootBundle, HapticFeedback;
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+
 import 'ar_live_page.dart';
 
 /// Cross-platform AR switch page.
-/// - Android → uses `ArLivePage` (ar_flutter_plugin + Sceneform/ARCore).
-/// - iOS     → shows a minimal ARKit sample view (`arkit_plugin`) with responsive sizing.
-/// - Others  → shows a simple "not supported" message.
+/// - Android → ArLivePage (ar_flutter_plugin)
+/// - iOS     → ARKit “feature parity”: picker, tap-to-place, slider X, clear-all, overlays
+/// - Others  → fallback
 class ArSwitchPage extends StatelessWidget {
   final String title;
-  final String? glbUrl; // Optional: remote GLB for Android AR view.
-  final String? assetGlb; // Optional: asset GLB for Android AR view.
-  final double scale; // Default model scale (Android path).
+  final String? glbUrl;   // (Android) remote GLB
+  final String? assetGlb; // (Android) asset GLB
+  final double scale;     // default model scale (Android, e usata anche su iOS)
 
   const ArSwitchPage({
     super.key,
@@ -26,21 +32,16 @@ class ArSwitchPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ---- Responsive metrics (no absolute magic numbers) ----
     final mq = MediaQuery.of(context);
     final w = mq.size.width;
     final h = mq.size.height;
     final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
-    // Title font sized by width, with bounds also relative to width
     final double titleFont = (w * 0.06).clamp(w * 0.045, w * 0.085) * ts;
-    // AppBar height by height, bounded by height
-    final double toolbarH = (h * 0.08).clamp(h * 0.07, h * 0.10);
-    // Fallback message font by width, bounded by width
+    final double toolbarH  = (h * 0.08).clamp(h * 0.07,  h * 0.10);
     final double fallbackFont = (w * 0.045).clamp(w * 0.035, w * 0.065) * ts;
 
     if (Platform.isAndroid) {
-      // Delegate to the Android AR page (already responsive).
       return ArLivePage(
         title: title,
         glbUrl: glbUrl,
@@ -50,22 +51,16 @@ class ArSwitchPage extends StatelessWidget {
     }
 
     if (Platform.isIOS) {
-      // iOS path with responsive app bar and a sample ARKit view.
-      return Scaffold(
-        appBar: AppBar(
-          toolbarHeight: toolbarH,
-          title: Text(
-            title,
-            style: TextStyle(fontSize: titleFont, fontWeight: FontWeight.w800),
-            overflow: TextOverflow.ellipsis,
-          ),
-          centerTitle: true,
-        ),
-        body: const SafeArea(child: _ArKitResponsiveSample()),
+      return _ArKitXtLiveView(
+        title: title,
+        // se vuoi, su iOS proverò a usare l’assetGlb → asset .glb.usdz
+        androidLikeDefaultGlbAsset: assetGlb,
+        defaultScale: scale,
+        appBarTitleFont: titleFont,
+        appBarHeight: toolbarH,
       );
     }
 
-    // Fallback for unsupported platforms (web/desktop, etc.)
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: toolbarH,
@@ -81,9 +76,675 @@ class ArSwitchPage extends StatelessWidget {
           child: Text(
             'AR not supported on this platform',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: fallbackFont,
-              fontWeight: FontWeight.w600,
+            style: TextStyle(fontSize: fallbackFont, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// ===============================
+/// iOS: ARKit “feature-parity” view
+/// ===============================
+class _ArKitXtLiveView extends StatefulWidget {
+  final String title;
+  final String? androidLikeDefaultGlbAsset; // es. 'lib/3Dmodels/XT5/XT5_4p.glb'
+  final double defaultScale;
+  final double appBarTitleFont;
+  final double appBarHeight;
+
+  const _ArKitXtLiveView({
+    required this.title,
+    this.androidLikeDefaultGlbAsset,
+    this.defaultScale = 0.2,
+    required this.appBarTitleFont,
+    required this.appBarHeight,
+  });
+
+  @override
+  State<_ArKitXtLiveView> createState() => _ArKitXtLiveViewState();
+}
+
+class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
+  late ARKitController _controller;
+
+  final List<_PlacedIOS> _placed = [];
+  String? _selectedId;
+
+  bool _appendMode = false;
+  ARItem? _pendingItem; // riuso il tipo del file Android importato
+  bool _placeBusy = false;
+
+  double _sliderXDeg = 0;
+
+  @override
+  void dispose() {
+    _removeAll();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final size = mq.size;
+    final shortest = math.min(size.width, size.height);
+    double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
+    final ts = mq.textScaleFactor.clamp(1.0, 1.3);
+
+    final double cornerIcon = sp(32);
+    final double cornerPad  = sp(10);
+    final double cornerTop  = (mq.padding.top * 0.12 + sp(6)).clamp(sp(6), sp(14));
+
+    return Scaffold(
+      appBar: AppBar(
+        toolbarHeight: widget.appBarHeight,
+        title: Text(
+          widget.title,
+          style: TextStyle(fontSize: widget.appBarTitleFont, fontWeight: FontWeight.w800),
+          overflow: TextOverflow.ellipsis,
+        ),
+        centerTitle: true,
+      ),
+      body: Stack(
+        children: [
+          ARKitSceneView(
+            planeDetection: ARPlaneDetection.horizontal,
+            enableTapRecognizer: true,
+            onARKitViewCreated: _onViewCreated,
+          ),
+
+          // Add model (top-left)
+          Positioned(
+            left: cornerPad,
+            top: cornerTop,
+            child: Material(
+              type: MaterialType.transparency,
+              child: IconButton(
+                icon: Icon(Icons.add, size: cornerIcon, color: Colors.white),
+                tooltip: 'Add a model',
+                onPressed: _onPressAdd,
+                splashRadius: (cornerIcon * 0.6).clamp(sp(18), sp(28)),
+              ),
+            ),
+          ),
+
+          // Remove all (top-right)
+          Positioned(
+            right: cornerPad,
+            top: cornerTop,
+            child: Material(
+              type: MaterialType.transparency,
+              child: IconButton(
+                icon: Icon(
+                  Icons.delete_outline,
+                  size: cornerIcon,
+                  color: _placed.isEmpty ? Colors.white.withOpacity(0.4) : Colors.white,
+                ),
+                tooltip: 'Remove all models',
+                onPressed: _placed.isEmpty
+                    ? null
+                    : () async {
+                        final ok = await _confirmClearAll(context);
+                        if (ok == true) {
+                          await _removeAll();
+                          if (mounted) {
+                            showArSnack(context,
+                              title: 'All models removed',
+                              icon: Icons.delete_outline,
+                            );
+                          }
+                        }
+                      },
+                splashRadius: (cornerIcon * 0.6).clamp(sp(18), sp(28)),
+              ),
+            ),
+          ),
+
+          // Bottom controls (slider + help)
+          Positioned(
+            left: sp(12),
+            right: sp(12),
+            bottom: sp(18),
+            child: SafeArea(
+              minimum: EdgeInsets.only(bottom: sp(4)),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(sp(18)),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: sp(10), vertical: sp(6)),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minWidth: (size.width * 0.45).clamp(sp(170), sp(260)),
+                            maxWidth: (size.width * 0.72).clamp(sp(220), sp(360)),
+                          ),
+                          child: Opacity(
+                            opacity: _selectedId == null ? 0.5 : 1,
+                            child: IgnorePointer(
+                              ignoring: _selectedId == null,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.screen_rotation_alt_outlined, size: sp(18), color: Colors.white),
+                                  SizedBox(width: sp(6)),
+                                  Expanded(
+                                    child: SliderTheme(
+                                      data: SliderTheme.of(context).copyWith(
+                                        trackHeight: sp(4),
+                                        activeTrackColor: const Color(0xFFED1C24), // ABB-ish accent
+                                        inactiveTrackColor: Colors.white,
+                                        thumbColor: const Color(0xFFED1C24),
+                                        overlayColor: const Color(0xFFED1C24).withOpacity(0.12),
+                                        thumbShape: RoundSliderThumbShape(enabledThumbRadius: sp(9)),
+                                        overlayShape: RoundSliderOverlayShape(overlayRadius: sp(15)),
+                                        showValueIndicator: ShowValueIndicator.never,
+                                      ),
+                                      child: Slider(
+                                        value: _sliderXDeg.clamp(-180, 180),
+                                        onChanged: (v) => _setSelectedXDeg(v),
+                                        min: -180, max: 180,
+                                        divisions: math.max(60, (180 * (shortest / 375)).round()),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: sp(6)),
+                                  SizedBox(
+                                    width: sp(48),
+                                    child: Text(
+                                      '${_sliderXDeg.toStringAsFixed(0)}°',
+                                      textAlign: TextAlign.right,
+                                      style: TextStyle(
+                                        fontSize: (sp(13) * ts),
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: sp(12)),
+                  const _BottomHelpCard(),
+                ],
+              ),
+            ),
+          ),
+
+          // Overlays
+          Positioned.fill(child: const _BusyOverlay(visible: false, message: '')),
+          Positioned.fill(child: _BusyOverlay(visible: _placeBusy, message: 'Placing…')),
+        ],
+      ),
+    );
+  }
+
+  // ====== ARKit integration ======
+  void _onViewCreated(ARKitController controller) {
+    _controller = controller;
+
+    // Tap on plane to place
+    _controller.onARTap = (List<ARKitTestResult> hits) async {
+      if (_placeBusy) return;
+      setState(() => _placeBusy = true);
+      try {
+        await Future.delayed(const Duration(milliseconds: 120));
+        if (hits.isEmpty) return;
+
+        // Se non sono in append, pulisco la scena
+        if (!_appendMode) {
+          await _removeAll();
+        }
+
+        final hit = hits.first;
+        final col = hit.worldTransform.getColumn(3);
+        final pos = vm.Vector3(col.x, col.y, col.z);
+
+        final newId = 'mdl_${DateTime.now().microsecondsSinceEpoch}';
+        final double s = _pendingItem?.scale ?? widget.defaultScale;
+
+        // Ordine rotazioni: per allineare “fronte” come su Android: yaw 180°
+        final yawPi = vm.Vector3(0, math.pi, 0);
+
+        ARKitNode node;
+
+        // 1) Item scelto dal picker
+        if (_pendingItem != null) {
+          final usdzAsset = _iosUsdzFromGlb(_pendingItem!.glbPath);
+          final urlPath = await _stageUsdzIntoAppFolder(usdzAsset);
+          node = ARKitReferenceNode(
+            name: newId,
+            url: urlPath,
+            position: pos,
+            eulerAngles: yawPi,
+            scale: vm.Vector3(s, s, s),
+          );
+        }
+        // 2) Asset di default passato come GLB (lo mappo a .glb.usdz)
+        else if (widget.androidLikeDefaultGlbAsset != null && widget.androidLikeDefaultGlbAsset!.isNotEmpty) {
+          final usdzAsset = _iosUsdzFromGlb(widget.androidLikeDefaultGlbAsset!);
+          final urlPath = await _stageUsdzIntoAppFolder(usdzAsset);
+          node = ARKitReferenceNode(
+            name: newId,
+            url: urlPath,
+            position: pos,
+            eulerAngles: yawPi,
+            scale: vm.Vector3(s, s, s),
+          );
+        }
+        // 3) Nessun modello
+        else {
+          if (!mounted) return;
+          showArSnack(
+            context,
+            title: 'No 3D model provided',
+            centered: true,
+            showIcon: false,
+          );
+          return;
+        }
+
+        await _controller.add(node);
+        if (mounted) {
+          setState(() {
+            _placed.add(_PlacedIOS(id: newId, node: node));
+            _appendMode = false;
+            _pendingItem = null;
+            _selectedId = newId;
+            _sliderXDeg = 0;
+          });
+        }
+
+        showArSnack(
+          context,
+          title: 'Model placed',
+          subtitle: 'Tap again to add more or move around',
+          icon: Icons.check,
+        );
+      } finally {
+        if (mounted) setState(() => _placeBusy = false);
+      }
+    };
+
+    // Tap on existing node to select (se supportato dalla versione del plugin)
+    _controller.onNodeTap = (nodes) {
+      if (nodes.isEmpty) return;
+      final id = nodes.first;
+      final idx = _placed.indexWhere((e) => e.id == id);
+      if (idx != -1) {
+        final node = _placed[idx].node;
+        final xDeg = (node.eulerAngles.x) * 180.0 / math.pi;
+        setState(() {
+          _selectedId = id;
+          _sliderXDeg  = xDeg;
+        });
+        showArSnack(
+          context,
+          title: 'Model selected',
+          subtitle: 'Use the slider to rotate (X axis)',
+          icon: Icons.check,
+        );
+      } else {
+        setState(() => _selectedId = id);
+      }
+    };
+  }
+
+  // ====== UI actions ======
+  Future<void> _onPressAdd() async {
+    final picked = await _showModelPickerDialog(context);
+    if (picked != null) {
+      setState(() {
+        _pendingItem = picked;
+        _appendMode  = true;
+      });
+      showArSnack(
+        context,
+        title: 'Add mode enabled',
+        subtitle: 'Tap a plane to place "${picked.title}"',
+        icon: Icons.add,
+      );
+    }
+  }
+
+  Future<void> _removeAll() async {
+    for (final e in List<_PlacedIOS>.from(_placed)) {
+      try {
+        await _controller.remove(e.id);
+      } catch (_) {}
+    }
+    _placed.clear();
+    _selectedId = null;
+    _sliderXDeg = 0;
+    if (mounted) setState(() {});
+  }
+
+  void _setSelectedXDeg(double degrees) {
+    if (_selectedId == null) {
+      setState(() => _sliderXDeg = degrees);
+      return;
+    }
+    final idx = _placed.indexWhere((e) => e.id == _selectedId);
+    if (idx == -1) {
+      setState(() => _sliderXDeg = degrees);
+      return;
+    }
+    final node = _placed[idx].node;
+    final eul  = node.eulerAngles;
+    node.eulerAngles = vm.Vector3(degrees * math.pi / 180.0, eul.y, eul.z);
+    setState(() => _sliderXDeg = degrees);
+  }
+
+  // ====== Dialogs / pickers ======
+  Future<ARItem?> _showModelPickerDialog(BuildContext context) async {
+    return showDialog<ARItem>(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) {
+        final mq = MediaQuery.of(ctx);
+        final size = mq.size;
+        final shortest = math.min(size.width, size.height);
+        double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
+        final ts = mq.textScaleFactor.clamp(1.0, 1.3);
+
+        final double titleFont = sp(28) * ts;
+        final double listMaxH = (size.height * 0.55).clamp(sp(240), sp(520));
+        final double thumb = sp(52);
+        final double itemFont = sp(16) * ts;
+        final double btnH = sp(46);
+        final double btnFont = sp(16) * ts;
+        final double dlgRadius = sp(18);
+        final double listRadius = sp(12);
+        final EdgeInsets pad = EdgeInsets.fromLTRB(sp(20), sp(18), sp(20), sp(18));
+        final EdgeInsets tilePad = EdgeInsets.symmetric(horizontal: sp(8), vertical: sp(6));
+
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(dlgRadius)),
+          child: Padding(
+            padding: pad,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(height: sp(6)),
+                Text('Pick a device', style: TextStyle(fontSize: titleFont, fontWeight: FontWeight.w800)),
+                SizedBox(height: sp(12)),
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: listMaxH,
+                    minHeight: (listMaxH * 0.45).clamp(sp(180), sp(260)),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(listRadius),
+                    child: Material(
+                      color: Colors.white,
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: kXtModels.length, // lista definita in ar_live_page.dart
+                        separatorBuilder: (_, __) => Divider(height: sp(1)),
+                        itemBuilder: (_, i) {
+                          final it = kXtModels[i];
+                          final tpath = _imagePathFor(it.glbPath);
+                          return ListTile(
+                            contentPadding: tilePad,
+                            leading: ClipRRect(
+                              borderRadius: BorderRadius.circular(sp(8)),
+                              child: Image.asset(
+                                tpath,
+                                width: thumb, height: thumb, fit: BoxFit.contain,
+                                errorBuilder: (c, e, s) => const Icon(Icons.precision_manufacturing),
+                              ),
+                            ),
+                            title: Text(it.title, style: TextStyle(fontSize: itemFont, fontWeight: FontWeight.w600)),
+                            onTap: () => Navigator.of(ctx).pop(it),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: sp(12)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(ctx).pop(null),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: Size(0, btnH),
+                          padding: EdgeInsets.symmetric(vertical: sp(10)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(sp(18))),
+                          side: const BorderSide(color: Color(0x22000000)),
+                        ),
+                        child: Text('Cancel', style: TextStyle(fontSize: btnFont)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<bool?> _confirmClearAll(BuildContext context) async {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) {
+        final mq = MediaQuery.of(ctx);
+        final size = mq.size;
+        final shortest = math.min(size.width, size.height);
+        double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
+        final ts = mq.textScaleFactor.clamp(1.0, 1.3);
+
+        final double titleFont = sp(28) * ts;
+        final double btnH = sp(48);
+        final double btnFont = sp(17) * ts;
+        final double dlgRadius = sp(18);
+        final EdgeInsets pad = EdgeInsets.fromLTRB(sp(20), sp(18), sp(20), sp(18));
+
+        return Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(dlgRadius)),
+          child: Padding(
+            padding: pad,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(height: sp(6)),
+                Text('Remove all?', style: TextStyle(fontSize: titleFont, fontWeight: FontWeight.w800)),
+                SizedBox(height: sp(16)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: Size(0, btnH),
+                          padding: EdgeInsets.symmetric(vertical: sp(10)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(sp(18))),
+                          side: const BorderSide(color: Color(0x22000000)),
+                        ),
+                        child: Text('Cancel', style: TextStyle(fontSize: btnFont)),
+                      ),
+                    ),
+                    SizedBox(width: sp(8)),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(ctx).pop(true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFED1C24),
+                          minimumSize: Size(0, btnH),
+                          padding: EdgeInsets.symmetric(vertical: sp(10)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(sp(18))),
+                          elevation: 0,
+                        ),
+                        child: Text('Remove', style: TextStyle(fontSize: btnFont, color: Colors.white, fontWeight: FontWeight.w700)),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ====== Assets helpers (USDZ) ======
+  /// Converte un path GLB asset stile Android (es. .../XT7_4p.glb)
+  /// nel corrispettivo iOS (.../XT7_4p.glb.usdz) come da tua convenzione.
+  String _iosUsdzFromGlb(String glbAssetPath) {
+    if (glbAssetPath.endsWith('.glb.usdz')) return glbAssetPath;
+    if (glbAssetPath.endsWith('.glb')) return '$glbAssetPath.usdz';
+    // se già .usdz, lo lascia così
+    return glbAssetPath.endsWith('.usdz') ? glbAssetPath : '$glbAssetPath.usdz';
+  }
+
+  /// Copia l’asset .usdz dal bundle Flutter al filesystem app e ritorna un path utilizzabile da ARKit.
+  Future<String> _stageUsdzIntoAppFolder(String assetPath) async {
+    final data = await rootBundle.load(assetPath);
+    final bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    final docs = await getApplicationDocumentsDirectory();
+    final fileName = p.basename(assetPath);
+    final outFile = File(p.join(docs.path, fileName));
+    if (!await outFile.exists()) {
+      await outFile.create(recursive: true);
+      await outFile.writeAsBytes(bytes, flush: true);
+    }
+    return outFile.path; // path filesystem (ok per ARKitReferenceNode.url)
+  }
+
+  /// Mappa 'lib/3Dmodels/XT5/XT5_4p.glb(.usdz)' → 'lib/images/XT5/XT5_4p.png'
+  String _imagePathFor(String anyModelPath) {
+    var path = anyModelPath.replaceFirst('3Dmodels', 'images');
+    // rimuove suffissi multipli
+    path = path.replaceAll(RegExp(r'\.glb\.usdz$', caseSensitive: false), '');
+    path = path.replaceAll(RegExp(r'\.usdz$', caseSensitive: false), '');
+    path = path.replaceAll(RegExp(r'\.glb$', caseSensitive: false), '');
+    final last = path.lastIndexOf('/');
+    final dir = path.substring(0, last + 1);
+    final file = path.substring(last + 1);
+    return '$dir$file.png';
+  }
+}
+
+/// Modello posizionato su iOS (ARKit)
+class _PlacedIOS {
+  final String id;
+  final ARKitNode node;
+  _PlacedIOS({required this.id, required this.node});
+}
+
+/// -----------------------
+/// UI helpers riutilizzati
+/// -----------------------
+
+class _BottomHelpCard extends StatelessWidget {
+  const _BottomHelpCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final size = mq.size;
+    final shortest = math.min(size.width, size.height);
+    double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
+    final scaler = MediaQuery.textScalerOf(context);
+
+    final double icon  = sp(20);
+    final double font  = scaler.scale(sp(13));
+    final double padH  = sp(14);
+    final double padV  = sp(10);
+    final double gap   = sp(10);
+    final double radius= sp(14);
+
+    return SafeArea(
+      minimum: EdgeInsets.zero,
+      child: Card(
+        color: Theme.of(context).colorScheme.surface,
+        elevation: sp(6),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius)),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+          child: Row(
+            children: [
+              Icon(Icons.touch_app_outlined, size: icon),
+              SizedBox(width: gap),
+              Expanded(
+                child: Text(
+                  'Tap a plane to place the model.\n'
+                  'Press “+” (top-left) to pick a device to add.\n'
+                  'Tap the trash (top-right) to remove all models.',
+                  style: TextStyle(fontSize: font, height: 1.25),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BusyOverlay extends StatelessWidget {
+  final bool visible;
+  final String message;
+  const _BusyOverlay({required this.visible, this.message = 'Loading…'});
+
+  @override
+  Widget build(BuildContext context) {
+    final mq = MediaQuery.of(context);
+    final size = mq.size;
+    final shortest = math.min(size.width, size.height);
+    double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
+    final ts = mq.textScaleFactor.clamp(1.0, 1.3);
+
+    final double boxPadH = sp(14);
+    final double boxPadV = sp(10);
+    final double textSize= sp(14) * ts;
+    final double spinner = sp(18);
+    final double radius  = sp(12);
+    final double blur    = sp(16);
+    final double offsetY = sp(8);
+    final double gap     = sp(10);
+    final double stroke  = (spinner / 10).clamp(1.5, 2.5);
+
+    return IgnorePointer(
+      ignoring: !visible,
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 150),
+        opacity: visible ? 1 : 0,
+        child: Container(
+          color: Colors.black.withOpacity(0.15),
+          child: Center(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: boxPadH, vertical: boxPadV),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(radius),
+                boxShadow: [BoxShadow(color: const Color(0x22000000), blurRadius: blur, offset: Offset(0, offsetY))],
+                border: Border.all(color: const Color(0x11000000)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(width: spinner, height: spinner, child: CircularProgressIndicator(strokeWidth: stroke)),
+                  SizedBox(width: gap),
+                  Text(message, style: TextStyle(fontWeight: FontWeight.w800, fontSize: textSize, color: Colors.black87)),
+                ],
+              ),
             ),
           ),
         ),
@@ -92,86 +753,110 @@ class ArSwitchPage extends StatelessWidget {
   }
 }
 
-/// Minimal ARKit sample view with **responsive** cube size & distance:
-/// - Cube size is derived from screen diagonal (dp) → meters mapping
-/// - Cube distance is a multiple of its size (no fixed meters)
-class _ArKitResponsiveSample extends StatefulWidget {
-  const _ArKitResponsiveSample();
+/// Snack banner top (overlay) — responsive
+void showArSnack(
+  BuildContext context, {
+  required String title,
+  String? subtitle,
+  IconData icon = Icons.info_outline,
+  Color? color, // reserved
+  IconData? actionIcon,
+  VoidCallback? onAction,
+  bool centered = false,
+  bool showIcon = true,
+}) {
+  HapticFeedback.lightImpact();
 
-  @override
-  State<_ArKitResponsiveSample> createState() => _ArKitResponsiveSampleState();
-}
+  final overlay = Overlay.of(context);
+  final mq = MediaQuery.of(context);
+  final size = mq.size;
+  final shortest = math.min(size.width, size.height);
+  double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
+  final scaler = MediaQuery.textScalerOf(context);
 
-class _ArKitResponsiveSampleState extends State<_ArKitResponsiveSample> {
-  late ARKitController _controller;
+  final double cornerTop = (mq.padding.top * 0.12 + sp(6)).clamp(sp(6), sp(14));
+  final double appBarTop = mq.padding.top + kToolbarHeight;
+  final double topY      = appBarTop + cornerTop;
 
-  // Computed each build from MediaQuery, used when view is created.
-  double? _boxSizeMeters; // Edge size of the cube
-  double? _boxDistanceMeters; // Distance in front of camera
-  Color? _boxColor;
+  final double sidePad   = (size.width * 0.18).clamp(sp(24), sp(100));
+  final double iconSize  = sp(18);
+  final double titleFont = scaler.scale(sp(13));
+  final double subFont   = scaler.scale(sp(12));
+  final double padH      = sp(12);
+  final double padV      = sp(8);
+  final double radius    = sp(14);
+  final double gapW      = sp(8);
+  final double gapH2     = sp(2);
+  final double elevationBlur = sp(12);
+  final double elevationY    = sp(6);
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  final entry = OverlayEntry(
+    builder: (ctx) => Positioned(
+      top: topY, left: sidePad, right: sidePad,
+      child: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(radius),
+            boxShadow: [BoxShadow(color: const Color(0x1A000000), blurRadius: elevationBlur, offset: Offset(0, elevationY))],
+            border: Border.all(color: const Color(0x11000000)),
+          ),
+          child: centered
+              ? Column(
+                  mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (showIcon) ...[Icon(icon, size: iconSize, color: Colors.black87), SizedBox(height: gapH2)],
+                    Text(title, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: titleFont, color: Colors.black87)),
+                    if (subtitle != null) ...[
+                      SizedBox(height: gapH2),
+                      Text(subtitle, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: subFont, color: Colors.black54, height: 1.2)),
+                    ],
+                  ],
+                )
+              : Row(
+                  children: [
+                    if (showIcon) ...[Icon(icon, size: iconSize, color: Colors.black87), SizedBox(width: gapW)],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
+                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: titleFont, color: Colors.black87)),
+                          if (subtitle != null) ...[
+                            SizedBox(height: gapH2),
+                            Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: subFont, color: Colors.black54, height: 1.2)),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (actionIcon != null && onAction != null) ...[
+                      SizedBox(width: sp(6)),
+                      SizedBox(
+                        width: sp(30), height: sp(30),
+                        child: Material(
+                          color: Colors.white, shape: const CircleBorder(),
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: onAction,
+                            child: Icon(actionIcon, size: sp(18)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+        ),
+      ),
+    ),
+  );
 
-  @override
-  Widget build(BuildContext context) {
-    // ---- Responsive sizing for AR content (approximate mapping) ----
-    final mq = MediaQuery.of(context);
-    final w = mq.size.width;
-    final h = mq.size.height;
-    final diag = math.sqrt(w * w + h * h); // device-diagonal in logical px
-
-    // Map diagonal (logical px) to cube size in meters with only relative terms.
-    // Example: phones ~800–1100 diag → ~0.08–0.12m cube.
-    final double rawSize = diag / (w + h); // ~0.5–0.7 on phones
-    final double cubeSize = (rawSize * 0.16).clamp(
-      0.06,
-      0.16,
-    ); // min/max kept reasonable for AR
-
-    // Distance proportional to cube size (keeps framing similar across devices).
-    final double cubeDistance = (cubeSize * 5.0).clamp(
-      cubeSize * 3.5,
-      cubeSize * 8.0,
-    );
-
-    _boxSizeMeters = cubeSize;
-    _boxDistanceMeters = cubeDistance;
-    _boxColor = Theme.of(context).colorScheme.primary;
-
-    return ARKitSceneView(
-      onARKitViewCreated: _onViewCreated,
-      planeDetection: ARPlaneDetection.horizontal,
-      enableTapRecognizer: true,
-    );
-  }
-
-  void _onViewCreated(ARKitController controller) {
-    _controller = controller;
-    _addResponsiveNode();
-  }
-
-  Future<void> _addResponsiveNode() async {
-    final size = _boxSizeMeters ?? 0.1;
-    final dist = _boxDistanceMeters ?? (size * 5.0);
-    final color = _boxColor ?? Colors.red;
-
-    final material = ARKitMaterial(diffuse: ARKitMaterialProperty.color(color));
-
-    final box = ARKitBox(
-      materials: [material],
-      width: size,
-      height: size,
-      length: size,
-      chamferRadius: size * 0.04, // small rounding proportional to size
-    );
-
-    // Place the node straight ahead by `dist` meters from the camera.
-    final node = ARKitNode(geometry: box, position: vm.Vector3(0, 0, -dist));
-
-    _controller.add(node);
-  }
+  overlay.insert(entry);
+  final baseSec = 2.0;
+  final factor  = (shortest / 375.0).clamp(0.9, 1.2);
+  Timer(Duration(milliseconds: (baseSec * 1000 * factor).round()), entry.remove);
 }

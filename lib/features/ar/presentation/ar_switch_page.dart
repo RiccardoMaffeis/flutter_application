@@ -34,7 +34,7 @@ class ArSwitchPage extends StatelessWidget {
     final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
     final double titleFont = (w * 0.06).clamp(w * 0.045, w * 0.085) * ts;
-    final double toolbarH  = (h * 0.08).clamp(h * 0.07,  h * 0.10);
+    final double toolbarH = (h * 0.08).clamp(h * 0.07, h * 0.10);
     final double fallbackFont = (w * 0.045).clamp(w * 0.035, w * 0.065) * ts;
 
     if (Platform.isAndroid) {
@@ -71,7 +71,10 @@ class ArSwitchPage extends StatelessWidget {
           child: Text(
             'AR not supported on this platform',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: fallbackFont, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: fallbackFont,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -126,15 +129,21 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
     final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
     final double cornerIcon = sp(32);
-    final double cornerPad  = sp(10);
-    final double cornerTop  = (mq.padding.top * 0.12 + sp(6)).clamp(sp(6), sp(14));
+    final double cornerPad = sp(10);
+    final double cornerTop = (mq.padding.top * 0.12 + sp(6)).clamp(
+      sp(6),
+      sp(14),
+    );
 
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: widget.appBarHeight,
         title: Text(
           widget.title,
-          style: TextStyle(fontSize: widget.appBarTitleFont, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            fontSize: widget.appBarTitleFont,
+            fontWeight: FontWeight.w800,
+          ),
           overflow: TextOverflow.ellipsis,
         ),
         centerTitle: true,
@@ -170,7 +179,9 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
                 icon: Icon(
                   Icons.delete_outline,
                   size: cornerIcon,
-                  color: _placed.isEmpty ? Colors.white.withOpacity(0.4) : Colors.white,
+                  color: _placed.isEmpty
+                      ? Colors.white.withOpacity(0.4)
+                      : Colors.white,
                 ),
                 tooltip: 'Remove all models',
                 onPressed: _placed.isEmpty
@@ -180,7 +191,8 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
                         if (ok == true) {
                           await _removeAll();
                           if (mounted) {
-                            showArSnack(context,
+                            showArSnack(
+                              context,
                               title: 'All models removed',
                               icon: Icons.delete_outline,
                             );
@@ -206,11 +218,20 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(sp(18)),
                       child: Container(
-                        padding: EdgeInsets.symmetric(horizontal: sp(10), vertical: sp(6)),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: sp(10),
+                          vertical: sp(6),
+                        ),
                         child: ConstrainedBox(
                           constraints: BoxConstraints(
-                            minWidth: (size.width * 0.45).clamp(sp(170), sp(260)),
-                            maxWidth: (size.width * 0.72).clamp(sp(220), sp(360)),
+                            minWidth: (size.width * 0.45).clamp(
+                              sp(170),
+                              sp(260),
+                            ),
+                            maxWidth: (size.width * 0.72).clamp(
+                              sp(220),
+                              sp(360),
+                            ),
                           ),
                           child: Opacity(
                             opacity: _selectedId == null ? 0.5 : 1,
@@ -219,25 +240,42 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.screen_rotation_alt_outlined, size: sp(18), color: Colors.white),
+                                  Icon(
+                                    Icons.screen_rotation_alt_outlined,
+                                    size: sp(18),
+                                    color: Colors.white,
+                                  ),
                                   SizedBox(width: sp(6)),
                                   Expanded(
                                     child: SliderTheme(
                                       data: SliderTheme.of(context).copyWith(
                                         trackHeight: sp(4),
-                                        activeTrackColor: const Color(0xFFED1C24), // ABB-ish accent
+                                        activeTrackColor: const Color(
+                                          0xFFED1C24,
+                                        ), // ABB-ish accent
                                         inactiveTrackColor: Colors.white,
                                         thumbColor: const Color(0xFFED1C24),
-                                        overlayColor: const Color(0xFFED1C24).withOpacity(0.12),
-                                        thumbShape: RoundSliderThumbShape(enabledThumbRadius: sp(9)),
-                                        overlayShape: RoundSliderOverlayShape(overlayRadius: sp(15)),
-                                        showValueIndicator: ShowValueIndicator.never,
+                                        overlayColor: const Color(
+                                          0xFFED1C24,
+                                        ).withOpacity(0.12),
+                                        thumbShape: RoundSliderThumbShape(
+                                          enabledThumbRadius: sp(9),
+                                        ),
+                                        overlayShape: RoundSliderOverlayShape(
+                                          overlayRadius: sp(15),
+                                        ),
+                                        showValueIndicator:
+                                            ShowValueIndicator.never,
                                       ),
                                       child: Slider(
                                         value: _sliderXDeg.clamp(-180, 180),
                                         onChanged: (v) => _setSelectedXDeg(v),
-                                        min: -180, max: 180,
-                                        divisions: math.max(60, (180 * (shortest / 375)).round()),
+                                        min: -180,
+                                        max: 180,
+                                        divisions: math.max(
+                                          60,
+                                          (180 * (shortest / 375)).round(),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -269,8 +307,12 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
             ),
           ),
 
-          Positioned.fill(child: const _BusyOverlay(visible: false, message: '')),
-          Positioned.fill(child: _BusyOverlay(visible: _placeBusy, message: 'Placing…')),
+          Positioned.fill(
+            child: const _BusyOverlay(visible: false, message: ''),
+          ),
+          Positioned.fill(
+            child: _BusyOverlay(visible: _placeBusy, message: 'Placing…'),
+          ),
         ],
       ),
     );
@@ -311,8 +353,8 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
             eulerAngles: yawPi,
             scale: vm.Vector3(s, s, s),
           );
-        }
-        else if (widget.androidLikeDefaultGlbAsset != null && widget.androidLikeDefaultGlbAsset!.isNotEmpty) {
+        } else if (widget.androidLikeDefaultGlbAsset != null &&
+            widget.androidLikeDefaultGlbAsset!.isNotEmpty) {
           final usdzAsset = _iosUsdzFromGlb(widget.androidLikeDefaultGlbAsset!);
           final urlPath = await _stageUsdzIntoAppFolder(usdzAsset);
           node = ARKitReferenceNode(
@@ -322,8 +364,7 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
             eulerAngles: yawPi,
             scale: vm.Vector3(s, s, s),
           );
-        }
-        else {
+        } else {
           if (!mounted) return;
           showArSnack(
             context,
@@ -365,7 +406,7 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
         final xDeg = (node.eulerAngles.x) * 180.0 / math.pi;
         setState(() {
           _selectedId = id;
-          _sliderXDeg  = xDeg;
+          _sliderXDeg = xDeg;
         });
         showArSnack(
           context,
@@ -384,7 +425,7 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
     if (picked != null) {
       setState(() {
         _pendingItem = picked;
-        _appendMode  = true;
+        _appendMode = true;
       });
       showArSnack(
         context,
@@ -401,6 +442,7 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
         await _controller.remove(e.id);
       } catch (_) {}
     }
+
     _placed.clear();
     _selectedId = null;
     _sliderXDeg = 0;
@@ -418,7 +460,7 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
       return;
     }
     final node = _placed[idx].node;
-    final eul  = node.eulerAngles;
+    final eul = node.eulerAngles;
     node.eulerAngles = vm.Vector3(degrees * math.pi / 180.0, eul.y, eul.z);
     setState(() => _sliderXDeg = degrees);
   }
@@ -442,19 +484,35 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
         final double btnFont = sp(16) * ts;
         final double dlgRadius = sp(18);
         final double listRadius = sp(12);
-        final EdgeInsets pad = EdgeInsets.fromLTRB(sp(20), sp(18), sp(20), sp(18));
-        final EdgeInsets tilePad = EdgeInsets.symmetric(horizontal: sp(8), vertical: sp(6));
+        final EdgeInsets pad = EdgeInsets.fromLTRB(
+          sp(20),
+          sp(18),
+          sp(20),
+          sp(18),
+        );
+        final EdgeInsets tilePad = EdgeInsets.symmetric(
+          horizontal: sp(8),
+          vertical: sp(6),
+        );
 
         return Dialog(
           backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(dlgRadius)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(dlgRadius),
+          ),
           child: Padding(
             padding: pad,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(height: sp(6)),
-                Text('Pick a device', style: TextStyle(fontSize: titleFont, fontWeight: FontWeight.w800)),
+                Text(
+                  'Pick a device',
+                  style: TextStyle(
+                    fontSize: titleFont,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
                 SizedBox(height: sp(12)),
                 ConstrainedBox(
                   constraints: BoxConstraints(
@@ -478,11 +536,20 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
                               borderRadius: BorderRadius.circular(sp(8)),
                               child: Image.asset(
                                 tpath,
-                                width: thumb, height: thumb, fit: BoxFit.contain,
-                                errorBuilder: (c, e, s) => const Icon(Icons.precision_manufacturing),
+                                width: thumb,
+                                height: thumb,
+                                fit: BoxFit.contain,
+                                errorBuilder: (c, e, s) =>
+                                    const Icon(Icons.precision_manufacturing),
                               ),
                             ),
-                            title: Text(it.title, style: TextStyle(fontSize: itemFont, fontWeight: FontWeight.w600)),
+                            title: Text(
+                              it.title,
+                              style: TextStyle(
+                                fontSize: itemFont,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                             onTap: () => Navigator.of(ctx).pop(it),
                           );
                         },
@@ -499,10 +566,15 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
                         style: OutlinedButton.styleFrom(
                           minimumSize: Size(0, btnH),
                           padding: EdgeInsets.symmetric(vertical: sp(10)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(sp(18))),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(sp(18)),
+                          ),
                           side: const BorderSide(color: Color(0x22000000)),
                         ),
-                        child: Text('Cancel', style: TextStyle(fontSize: btnFont)),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(fontSize: btnFont),
+                        ),
                       ),
                     ),
                   ],
@@ -530,18 +602,31 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
         final double btnH = sp(48);
         final double btnFont = sp(17) * ts;
         final double dlgRadius = sp(18);
-        final EdgeInsets pad = EdgeInsets.fromLTRB(sp(20), sp(18), sp(20), sp(18));
+        final EdgeInsets pad = EdgeInsets.fromLTRB(
+          sp(20),
+          sp(18),
+          sp(20),
+          sp(18),
+        );
 
         return Dialog(
           backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(dlgRadius)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(dlgRadius),
+          ),
           child: Padding(
             padding: pad,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(height: sp(6)),
-                Text('Remove all?', style: TextStyle(fontSize: titleFont, fontWeight: FontWeight.w800)),
+                Text(
+                  'Remove all?',
+                  style: TextStyle(
+                    fontSize: titleFont,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
                 SizedBox(height: sp(16)),
                 Row(
                   children: [
@@ -551,10 +636,15 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
                         style: OutlinedButton.styleFrom(
                           minimumSize: Size(0, btnH),
                           padding: EdgeInsets.symmetric(vertical: sp(10)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(sp(18))),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(sp(18)),
+                          ),
                           side: const BorderSide(color: Color(0x22000000)),
                         ),
-                        child: Text('Cancel', style: TextStyle(fontSize: btnFont)),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(fontSize: btnFont),
+                        ),
                       ),
                     ),
                     SizedBox(width: sp(8)),
@@ -565,10 +655,19 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
                           backgroundColor: const Color(0xFFED1C24),
                           minimumSize: Size(0, btnH),
                           padding: EdgeInsets.symmetric(vertical: sp(10)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(sp(18))),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(sp(18)),
+                          ),
                           elevation: 0,
                         ),
-                        child: Text('Remove', style: TextStyle(fontSize: btnFont, color: Colors.white, fontWeight: FontWeight.w700)),
+                        child: Text(
+                          'Remove',
+                          style: TextStyle(
+                            fontSize: btnFont,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -581,13 +680,21 @@ class _ArKitXtLiveViewState extends State<_ArKitXtLiveView> {
     );
   }
 
-  String _iosUsdzFromGlb(String glbAssetPath) {
-    return glbAssetPath.endsWith('.usdz') ? glbAssetPath : '$glbAssetPath.usdz';
+  String _iosUsdzFromGlb(String pathInCatalog) {
+    final lower = pathInCatalog.toLowerCase();
+    if (lower.endsWith('.usdz')) return pathInCatalog;
+    if (lower.endsWith('.glb')) {
+      return pathInCatalog.substring(0, pathInCatalog.length - 4) + '.usdz';
+    }
+    return '$pathInCatalog.usdz';
   }
 
   Future<String> _stageUsdzIntoAppFolder(String assetPath) async {
     final data = await rootBundle.load(assetPath);
-    final bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    final bytes = data.buffer.asUint8List(
+      data.offsetInBytes,
+      data.lengthInBytes,
+    );
     final docs = await getApplicationDocumentsDirectory();
     final fileName = p.basename(assetPath);
     final outFile = File(p.join(docs.path, fileName));
@@ -626,19 +733,21 @@ class _BottomHelpCard extends StatelessWidget {
     double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
     final scaler = MediaQuery.textScalerOf(context);
 
-    final double icon  = sp(20);
-    final double font  = scaler.scale(sp(13));
-    final double padH  = sp(14);
-    final double padV  = sp(10);
-    final double gap   = sp(10);
-    final double radius= sp(14);
+    final double icon = sp(20);
+    final double font = scaler.scale(sp(13));
+    final double padH = sp(14);
+    final double padV = sp(10);
+    final double gap = sp(10);
+    final double radius = sp(14);
 
     return SafeArea(
       minimum: EdgeInsets.zero,
       child: Card(
         color: Theme.of(context).colorScheme.surface,
         elevation: sp(6),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radius)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(radius),
+        ),
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
           child: Row(
@@ -676,13 +785,13 @@ class _BusyOverlay extends StatelessWidget {
 
     final double boxPadH = sp(14);
     final double boxPadV = sp(10);
-    final double textSize= sp(14) * ts;
+    final double textSize = sp(14) * ts;
     final double spinner = sp(18);
-    final double radius  = sp(12);
-    final double blur    = sp(16);
+    final double radius = sp(12);
+    final double blur = sp(16);
     final double offsetY = sp(8);
-    final double gap     = sp(10);
-    final double stroke  = (spinner / 10).clamp(1.5, 2.5);
+    final double gap = sp(10);
+    final double stroke = (spinner / 10).clamp(1.5, 2.5);
 
     return IgnorePointer(
       ignoring: !visible,
@@ -693,19 +802,39 @@ class _BusyOverlay extends StatelessWidget {
           color: Colors.black.withOpacity(0.15),
           child: Center(
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: boxPadH, vertical: boxPadV),
+              padding: EdgeInsets.symmetric(
+                horizontal: boxPadH,
+                vertical: boxPadV,
+              ),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(radius),
-                boxShadow: [BoxShadow(color: const Color(0x22000000), blurRadius: blur, offset: Offset(0, offsetY))],
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0x22000000),
+                    blurRadius: blur,
+                    offset: Offset(0, offsetY),
+                  ),
+                ],
                 border: Border.all(color: const Color(0x11000000)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(width: spinner, height: spinner, child: CircularProgressIndicator(strokeWidth: stroke)),
+                  SizedBox(
+                    width: spinner,
+                    height: spinner,
+                    child: CircularProgressIndicator(strokeWidth: stroke),
+                  ),
                   SizedBox(width: gap),
-                  Text(message, style: TextStyle(fontWeight: FontWeight.w800, fontSize: textSize, color: Colors.black87)),
+                  Text(
+                    message,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: textSize,
+                      color: Colors.black87,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -738,23 +867,25 @@ void showArSnack(
 
   final double cornerTop = (mq.padding.top * 0.12 + sp(6)).clamp(sp(6), sp(14));
   final double appBarTop = mq.padding.top + kToolbarHeight;
-  final double topY      = appBarTop + cornerTop;
+  final double topY = appBarTop + cornerTop;
 
-  final double sidePad   = (size.width * 0.18).clamp(sp(24), sp(100));
-  final double iconSize  = sp(18);
+  final double sidePad = (size.width * 0.18).clamp(sp(24), sp(100));
+  final double iconSize = sp(18);
   final double titleFont = scaler.scale(sp(13));
-  final double subFont   = scaler.scale(sp(12));
-  final double padH      = sp(12);
-  final double padV      = sp(8);
-  final double radius    = sp(14);
-  final double gapW      = sp(8);
-  final double gapH2     = sp(2);
+  final double subFont = scaler.scale(sp(12));
+  final double padH = sp(12);
+  final double padV = sp(8);
+  final double radius = sp(14);
+  final double gapW = sp(8);
+  final double gapH2 = sp(2);
   final double elevationBlur = sp(12);
-  final double elevationY    = sp(6);
+  final double elevationY = sp(6);
 
   final entry = OverlayEntry(
     builder: (ctx) => Positioned(
-      top: topY, left: sidePad, right: sidePad,
+      top: topY,
+      left: sidePad,
+      right: sidePad,
       child: Material(
         color: Colors.transparent,
         child: Container(
@@ -762,36 +893,83 @@ void showArSnack(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(radius),
-            boxShadow: [BoxShadow(color: const Color(0x1A000000), blurRadius: elevationBlur, offset: Offset(0, elevationY))],
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0x1A000000),
+                blurRadius: elevationBlur,
+                offset: Offset(0, elevationY),
+              ),
+            ],
             border: Border.all(color: const Color(0x11000000)),
           ),
           child: centered
               ? Column(
-                  mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    if (showIcon) ...[Icon(icon, size: iconSize, color: Colors.black87), SizedBox(height: gapH2)],
-                    Text(title, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: titleFont, color: Colors.black87)),
+                    if (showIcon) ...[
+                      Icon(icon, size: iconSize, color: Colors.black87),
+                      SizedBox(height: gapH2),
+                    ],
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: titleFont,
+                        color: Colors.black87,
+                      ),
+                    ),
                     if (subtitle != null) ...[
                       SizedBox(height: gapH2),
-                      Text(subtitle, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: TextStyle(fontSize: subFont, color: Colors.black54, height: 1.2)),
+                      Text(
+                        subtitle,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: subFont,
+                          color: Colors.black54,
+                          height: 1.2,
+                        ),
+                      ),
                     ],
                   ],
                 )
               : Row(
                   children: [
-                    if (showIcon) ...[Icon(icon, size: iconSize, color: Colors.black87), SizedBox(width: gapW)],
+                    if (showIcon) ...[
+                      Icon(icon, size: iconSize, color: Colors.black87),
+                      SizedBox(width: gapW),
+                    ],
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(title, maxLines: 1, overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: titleFont, color: Colors.black87)),
+                          Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: titleFont,
+                              color: Colors.black87,
+                            ),
+                          ),
                           if (subtitle != null) ...[
                             SizedBox(height: gapH2),
-                            Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: TextStyle(fontSize: subFont, color: Colors.black54, height: 1.2)),
+                            Text(
+                              subtitle,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: subFont,
+                                color: Colors.black54,
+                                height: 1.2,
+                              ),
+                            ),
                           ],
                         ],
                       ),
@@ -799,9 +977,11 @@ void showArSnack(
                     if (actionIcon != null && onAction != null) ...[
                       SizedBox(width: sp(6)),
                       SizedBox(
-                        width: sp(30), height: sp(30),
+                        width: sp(30),
+                        height: sp(30),
                         child: Material(
-                          color: Colors.white, shape: const CircleBorder(),
+                          color: Colors.white,
+                          shape: const CircleBorder(),
                           child: InkWell(
                             customBorder: const CircleBorder(),
                             onTap: onAction,
@@ -819,6 +999,9 @@ void showArSnack(
 
   overlay.insert(entry);
   final baseSec = 2.0;
-  final factor  = (shortest / 375.0).clamp(0.9, 1.2);
-  Timer(Duration(milliseconds: (baseSec * 1000 * factor).round()), entry.remove);
+  final factor = (shortest / 375.0).clamp(0.9, 1.2);
+  Timer(
+    Duration(milliseconds: (baseSec * 1000 * factor).round()),
+    entry.remove,
+  );
 }

@@ -100,7 +100,6 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
             Column(
               children: [
                 // ----- Header (title centered regardless of trailing width) -----
-                // ----- Header (match Shop: [left slot] [title] [cart]) -----
                 Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: sp(12),
@@ -108,7 +107,6 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
                   ),
                   child: Row(
                     children: [
-                      // Slot sinistro: IconButton invisibile per avere le stesse dimensioni di Shop
                       IgnorePointer(
                         child: Opacity(
                           opacity: 0,
@@ -118,7 +116,6 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
                           ),
                         ),
                       ),
-                      // Titolo centrato
                       Expanded(
                         child: Center(
                           child: Text(
@@ -132,7 +129,6 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
                           ),
                         ),
                       ),
-                      // Carrello a destra
                       CartIconButton(
                         onPressed: () => showCartPopup(context, ref),
                       ),

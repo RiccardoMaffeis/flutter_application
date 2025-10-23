@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_application/features/assistant/controllers/ai_chat_controller.dart';
@@ -22,28 +21,6 @@ class ProfilePage extends ConsumerStatefulWidget {
 }
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
-  bool _navBusy = false;
-  DateTime? _cooldownUntil;
-
-  bool get _cooldownActive =>
-      _cooldownUntil != null && DateTime.now().isBefore(_cooldownUntil!);
-
-  void _startCooldown([int ms = 700]) {
-    _cooldownUntil = DateTime.now().add(Duration(milliseconds: ms));
-  }
-
-  void _safeGo(BuildContext context, String route, {int cooldownMs = 500}) {
-    if (_navBusy) return;
-    _navBusy = true;
-    _startCooldown(cooldownMs);
-    setState(() {});
-    context.go(route);
-    Future.delayed(Duration(milliseconds: cooldownMs), () {
-      if (!mounted) return;
-      _navBusy = false;
-      setState(() {});
-    });
-  }
 
   /// Formats a DateTime as DD/MM/YYYY (returns '—' if null).
   String _fmtDob(DateTime? d) {
@@ -284,24 +261,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
               ],
             ),
-
-            // ----- Bottom pill navigation (fixed) -----
-            Positioned(
-              left: sp(16),
-              right: sp(16),
-              bottom: sp(16),
-              child: _BottomPillNav(
-                index: 3,
-                onChanged: (i) {
-                  if (_navBusy || _cooldownActive) return;
-                  _startCooldown(500);
-                  if (i == 0) _safeGo(context, '/home');
-                  if (i == 1) _safeGo(context, '/favourites');
-                  if (i == 3) return;
-                  if (i == 2) _safeGo(context, '/ar');
-                },
-              ),
-            ),
           ],
         ),
       ),
@@ -431,136 +390,6 @@ class _ProfileRow extends StatelessWidget {
       contentPadding: EdgeInsets.symmetric(horizontal: sp(20), vertical: sp(6)),
       title: Text(label, style: labelStyle),
       trailing: Text(value, style: valueStyle, overflow: TextOverflow.ellipsis),
-    );
-  }
-}
-
-/// Reusable bottom navigation with a sliding "pill" highlight.
-/// - Accepts a `index` to indicate the selected tab
-/// - Calls `onChanged` with the tapped index
-class _BottomPillNav extends StatelessWidget {
-  final int index;
-  final ValueChanged<int> onChanged;
-  const _BottomPillNav({required this.index, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final shortest = math.min(size.width, size.height);
-    final s = (shortest / 375.0).clamp(0.85, 1.30);
-    double sp(double v) => (v * s).toDouble();
-
-    return Container(
-      height: sp(58),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(sp(28)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0x22000000),
-            blurRadius: sp(22),
-            spreadRadius: sp(2),
-            offset: Offset(0, sp(10)),
-          ),
-          BoxShadow(
-            color: const Color(0x14000000),
-            blurRadius: sp(8),
-            offset: Offset(0, sp(2)),
-          ),
-        ],
-        border: Border.fromBorderSide(
-          const BorderSide(color: Color(0x11000000)),
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: LayoutBuilder(
-        builder: (context, cons) {
-          final pad = sp(6);
-          final slotW = (cons.maxWidth - pad * 2) / 4;
-          return Stack(
-            children: [
-              // Animated pill indicating the selected tab.
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOut,
-                left: pad + index * slotW,
-                top: pad,
-                bottom: pad,
-                width: slotW,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppTheme.accent,
-                    borderRadius: BorderRadius.circular(sp(22)),
-                  ),
-                ),
-              ),
-              // Four icons (Home/Favourites/AR/Profile).
-              Padding(
-                padding: EdgeInsets.all(pad),
-                child: Row(
-                  children: [
-                    _NavIcon(
-                      icon: Icons.shopping_bag_outlined,
-                      selected: index == 0,
-                      onTap: () => onChanged(0),
-                    ),
-                    _NavIcon(
-                      icon: Icons.favorite_border,
-                      selected: index == 1,
-                      onTap: () => onChanged(1),
-                    ),
-                    _NavIcon(
-                      icon: Icons.view_in_ar,
-                      selected: index == 2,
-                      onTap: () => onChanged(2),
-                    ),
-                    _NavIcon(
-                      icon: Icons.person_outline,
-                      selected: index == 3,
-                      onTap: () => onChanged(3),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// Single icon button used by the pill navigation.
-/// - Changes color to white when selected (due to colored pill background)
-class _NavIcon extends StatelessWidget {
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-  const _NavIcon({
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    final shortest = math.min(size.width, size.height);
-    final s = (shortest / 375.0).clamp(0.85, 1.30);
-    double sp(double v) => (v * s).toDouble();
-
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(sp(22)),
-        child: Center(
-          child: Icon(
-            icon,
-            size: sp(34),
-            color: selected ? Colors.white : Colors.black87,
-          ),
-        ),
-      ),
     );
   }
 }

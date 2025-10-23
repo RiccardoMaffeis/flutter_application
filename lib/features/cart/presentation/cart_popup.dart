@@ -239,18 +239,6 @@ class _CartDialog extends ConsumerWidget {
               SizedBox(height: gapM),
 
               // -------- Totals section --------
-              _TotalRow(
-                label: 'Order Amount',
-                value: cart.subtotal,
-                labelFont: totalsLabelFont,
-                valueFont: totalsValueFont,
-              ),
-              _TotalRow(
-                label: 'Tax',
-                value: cart.tax,
-                labelFont: totalsLabelFont,
-                valueFont: totalsValueFont,
-              ),
               Divider(height: sepH, thickness: sepThick),
               _TotalRow(
                 label: 'Total Payment',

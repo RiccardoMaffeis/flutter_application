@@ -1,5 +1,8 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 
 /// Simple value object describing an AR item (UI label + GLB asset path + scale).
@@ -91,15 +94,16 @@ class ARXTPage extends StatelessWidget {
     final w = mq.size.width;
     final h = mq.size.height;
     final ts = mq.textScaleFactor.clamp(1.0, 1.3);
+    final shortest = math.min(w, h);
+    final scale = (shortest / 375.0).clamp(0.85, 1.30).toDouble();
+    double sp(double v) => v * scale;
+    final double searchIconSize = (w * 0.085)
+        .clamp(sp(26.0), sp(35.0))
+        .toDouble();
 
     // Header sizing
-    final double iconSize = (w * 0.075).clamp(24.0, 36.0);
-    final double titleSize = (w * 0.075).clamp(22.0, 38.0) * ts;
-    final double headerHPad = (w * 0.016).clamp(6.0, 12.0);
-    final double headerVPad = (h * 0.01).clamp(6.0, 10.0);
-    final double accentHMargin = (w * 0.04).clamp(12.0, 20.0);
-    final double accentHeight = (h * 0.005).clamp(3.0, 6.0);
-
+    final double titleSize = (w * 0.07).clamp(22.0, 38.0) * ts;
+    final double barH = (w * 0.01).clamp(sp(3.0), sp(4.0)).toDouble();
     // List spacing
     final EdgeInsets listPad = EdgeInsets.fromLTRB(
       (w * 0.03).clamp(10.0, 16.0),
@@ -117,46 +121,56 @@ class ARXTPage extends StatelessWidget {
             SizedBox(height: (h * 0.006).clamp(4.0, 8.0)),
             // Header
             Padding(
-              padding: EdgeInsets.fromLTRB(
-                headerHPad,
-                headerVPad,
-                headerHPad,
-                headerVPad,
+              padding: EdgeInsets.symmetric(
+                horizontal: sp(12),
+                vertical: sp(6),
               ),
               child: Row(
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back),
-                    iconSize: iconSize,
+                    iconSize: searchIconSize,
                     onPressed: () => _handleBack(context),
                   ),
+
                   Expanded(
-                    child: Text(
-                      'Augmented Reality',
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            fontSize: titleSize,
-                          ),
+                    child: Center(
+                      child: Text(
+                        'Augmented Reality',
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              fontSize: titleSize,
+                            ),
+                      ),
                     ),
                   ),
-                  // Spacer with same width of leading icon for perfect centering
-                  SizedBox(width: iconSize + headerHPad * 2),
+                  SizedBox(width: searchIconSize + 16)
                 ],
               ),
             ),
+
             // Accent bar
             Container(
-              height: accentHeight,
-              margin: EdgeInsets.symmetric(horizontal: accentHMargin),
+              height: barH,
+              margin: EdgeInsets.symmetric(horizontal: sp(12)),
               decoration: BoxDecoration(
-                color: const Color(0xFFE53935),
-                borderRadius: BorderRadius.circular(3),
+                color: AppTheme.accent,
+                borderRadius: BorderRadius.circular(sp(3)),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.accent.withOpacity(0.45),
+                    blurRadius: sp(3),
+                    spreadRadius: sp(0.4),
+                    offset: Offset(0, sp(3)),
+                  ),
+                ],
               ),
             ),
-            SizedBox(height: (h * 0.01).clamp(6.0, 12.0)),
+
+            SizedBox(height: sp(12)),
 
             // List
             Expanded(

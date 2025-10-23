@@ -63,16 +63,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     return null;
   }
 
-  double _arScaleFor(String famUp) {
-    switch (famUp) {
-      case 'XT1':
-      case 'XT2':
-        return 0.18;
-      default:
-        return 0.20;
-    }
-  }
-
   double _familyImageScale(String famUp) => 0.82;
 
   @override
@@ -133,7 +123,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
 
     // Card/Sheet styling
     final bgScaffold = theme.scaffoldBackgroundColor;
-    final bgSurface = cs.surface;
     final onSurface = cs.onSurface.withOpacity(0.85);
     final dividerColor = cs.outlineVariant;
 
@@ -266,7 +255,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                 bottom: 0,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: bgSurface,
+                    color: Colors.white,
                     borderRadius: BorderRadius.vertical(
                       top: Radius.circular(sheetTopRadius),
                     ),
@@ -339,7 +328,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                       extra: {
                                         'title': p.id,
                                         'assetGlb': modelPath,
-                                        'scale': _arScaleFor(famUp),
                                       },
                                     );
                                   },
@@ -374,14 +362,25 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                     ),
                                   ),
                                   SizedBox(height: h * 0.01),
-                                  ...d.specs.entries.map(
-                                    (e) => _SpecRow(
-                                      title: e.key,
-                                      value: e.value,
-                                      titleSize: specTitleSize,
-                                      valueSize: specValueSize,
-                                    ),
-                                  ),
+                                  ...d.specs.entries
+                                      .where((e) {
+                                        final k = e.key.trim().toLowerCase();
+                                        return !{
+                                          'price',
+                                          'prezzo',
+                                          'unit price',
+                                          'list price',
+                                        }.contains(k);
+                                      })
+                                      .map(
+                                        (e) => _SpecRow(
+                                          title: e.key,
+                                          value: e.value,
+                                          titleSize: specTitleSize,
+                                          valueSize: specValueSize,
+                                        ),
+                                      ),
+
                                   Divider(
                                     height: h * 0.04,
                                     thickness: 1,
@@ -810,11 +809,11 @@ void showAddToCartSnack(
               width: w * 0.085,
               height: w * 0.085,
               decoration: BoxDecoration(
-                color: cs.primaryContainer,
+                color: Colors.green,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: cs.primaryContainer.withOpacity(0.35),
+                    color: Colors.green.withOpacity(0.35),
                     blurRadius: w * 0.02,
                     offset: Offset(0, w * 0.01),
                   ),
@@ -824,7 +823,7 @@ void showAddToCartSnack(
               child: Icon(
                 Icons.check,
                 size: w * 0.055,
-                color: cs.onPrimaryContainer,
+                color: Colors.white,
               ),
             ),
             SizedBox(width: w * 0.03),

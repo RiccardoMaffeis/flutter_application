@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:math';
 import 'package:flutter/services.dart' show rootBundle;
 
 import '../domain/products_repository.dart';
@@ -11,7 +10,6 @@ import 'dto/product_dto_mapper.dart';
 import 'package:flutter_application/features/shop/domain/product_details.dart';
 
 class ProductsRepositoryImpl implements ProductsRepository {
-  final _rng = Random(1);
   final _favs = <String>{};
 
   static const List<Category> _cats = <Category>[
@@ -27,7 +25,6 @@ class ProductsRepositoryImpl implements ProductsRepository {
 
   List<Product>? _all;
 
-  /// Elenca tutti gli asset JSON sotto lib/json/ usando l'AssetManifest
   Future<List<String>> _listJsonAssets() async {
     final manifestStr = await rootBundle.loadString('AssetManifest.json');
     final dynamic manifest = json.decode(manifestStr);
@@ -40,8 +37,42 @@ class ProductsRepositoryImpl implements ProductsRepository {
             ..sort();
       return paths;
     }
-    // fallback se il manifest non è nel formato atteso
     return const ['lib/json/XT1.json'];
+  }
+
+  double _parsePrice(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is num) return value.toDouble();
+
+    final s0 = value.toString().trim();
+    if (s0.isEmpty) return 0.0;
+
+    String s = s0.replaceAll(RegExp(r'[^\d,\.]'), '');
+
+    final commas = RegExp(',').allMatches(s).length;
+    final dots = RegExp(r'\.').allMatches(s).length;
+
+    if (commas > 0 && dots > 0) {
+      s = s.replaceAll('.', '');
+      s = s.replaceAll(',', '.');
+    } else if (commas == 1 && dots == 0) {
+      s = s.replaceAll(',', '.');
+    } else {
+    }
+
+    return double.tryParse(s) ?? 0.0;
+  }
+
+  double _extractPrice(Map<String, dynamic> m) {
+    final general = (m['general'] is Map)
+        ? (m['general'] as Map).cast<String, dynamic>()
+        : null;
+    final specs = (general != null && general['specs'] is Map)
+        ? (general['specs'] as Map).cast<String, dynamic>()
+        : null;
+
+    final raw = specs?['price'] ?? general?['price'] ?? m['price'];
+    return _parsePrice(raw);
   }
 
   Future<void> _ensureLoaded() async {
@@ -68,8 +99,7 @@ class ProductsRepositoryImpl implements ProductsRepository {
         final dto = ProductDto.fromJson(m);
         if (dto.code.isEmpty || !seenCodes.add(dto.code)) continue;
 
-        final price = 100 + _rng.nextInt(200) + _rng.nextDouble();
-
+        final price = _extractPrice(m);
         out.add(dto.toDomain(price));
       }
     }

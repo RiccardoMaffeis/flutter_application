@@ -85,10 +85,8 @@ class ShopController extends StateNotifier<ShopState> {
     final cats = await _repo.fetchCategories();
     state = state.copyWith(categories: cats);
 
-    // Reagisci ai cambi di login e collega gli stream per-utente
     ref.listen<AsyncValue<AppUser?>>(authControllerProvider, (prev, next) {
-      final uid = next.value?.uid; // <-- se il campo è 'uid', cambia qui
-      // chiudi eventuali listener precedenti
+      final uid = next.value?.uid;
       _favSub?.close();
       _cartSub?.close();
 
@@ -129,10 +127,9 @@ class ShopController extends StateNotifier<ShopState> {
   }
 
   Future<void> toggleFavourite(String productId) async {
-    final uid = ref.read(authControllerProvider).value?.uid; // <- o .uid
-    if (uid == null) return; // eventualmente mostra login
+    final uid = ref.read(authControllerProvider).value?.uid;
+    if (uid == null) return;
     await ref.read(favoritesRepoProvider).toggle(uid, productId);
-    // lo stream aggiorna state.favourites
   }
 
   @override

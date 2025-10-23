@@ -128,7 +128,6 @@ class _ProductCardState extends State<ProductCard> {
         extra: {
           'title': widget.product.code,
           'assetGlb': modelPath,
-          'scale': 0.18,
         },
       );
     } finally {

@@ -20,7 +20,6 @@ class FavouritesPage extends ConsumerStatefulWidget {
 }
 
 class _FavouritesPageState extends ConsumerState<FavouritesPage> {
-
   bool _navBusy = false;
   DateTime? _cooldownUntil;
   final Set<String> _favBusy = <String>{};
@@ -56,14 +55,13 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
 
     final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
-    // ---- Responsive metrics ----
-    final double headerHeight = sp(56);
     final double titleFont = (w * 0.09).clamp(sp(24.0), sp(40.0)) * ts;
 
-    final double barH = (w * 0.01).clamp(sp(3.0), sp(4.0));
-    final double barRadius = sp(3);
-    final double barBlur = sp(3);
-    final double barOffsetY = sp(3);
+    final double searchIconSize = (w * 0.085)
+        .clamp(sp(26.0), sp(35.0))
+        .toDouble();
+
+    final double barH = (w * 0.01).clamp(sp(3.0), sp(4.0)).toDouble();
 
     final double stateFont = (w * 0.045).clamp(sp(14.0), sp(18.0)) * ts;
 
@@ -102,17 +100,27 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
             Column(
               children: [
                 // ----- Header (title centered regardless of trailing width) -----
+                // ----- Header (match Shop: [left slot] [title] [cart]) -----
                 Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: sp(12),
                     vertical: sp(6),
                   ),
-                  child: SizedBox(
-                    height: headerHeight,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Center(
+                  child: Row(
+                    children: [
+                      // Slot sinistro: IconButton invisibile per avere le stesse dimensioni di Shop
+                      IgnorePointer(
+                        child: Opacity(
+                          opacity: 0,
+                          child: IconButton(
+                            onPressed: () {},
+                            icon: Icon(Icons.search, size: searchIconSize),
+                          ),
+                        ),
+                      ),
+                      // Titolo centrato
+                      Expanded(
+                        child: Center(
                           child: Text(
                             'Favourite',
                             textAlign: TextAlign.center,
@@ -123,34 +131,34 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
                                 ),
                           ),
                         ),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: CartIconButton(
-                            onPressed: () => showCartPopup(context, ref),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                      // Carrello a destra
+                      CartIconButton(
+                        onPressed: () => showCartPopup(context, ref),
+                      ),
+                    ],
                   ),
                 ),
+
                 // Accent bar
                 Container(
                   height: barH,
                   margin: EdgeInsets.symmetric(horizontal: sp(12)),
                   decoration: BoxDecoration(
                     color: AppTheme.accent,
-                    borderRadius: BorderRadius.circular(barRadius),
+                    borderRadius: BorderRadius.circular(sp(3)),
                     boxShadow: [
                       BoxShadow(
                         color: AppTheme.accent.withOpacity(0.45),
-                        blurRadius: barBlur,
+                        blurRadius: sp(3),
                         spreadRadius: sp(0.4),
-                        offset: Offset(0, barOffsetY),
+                        offset: Offset(0, sp(3)),
                       ),
                     ],
                   ),
                 ),
-                SizedBox(height: (h * 0.02).clamp(sp(8.0), sp(16.0))),
+
+                SizedBox(height: sp(12)),
 
                 // ----- Content -----
                 Expanded(

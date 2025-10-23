@@ -19,7 +19,6 @@ class ARLandingPage extends ConsumerStatefulWidget {
 }
 
 class _ARLandingPageState extends ConsumerState<ARLandingPage> {
-
   bool _navBusy = false;
   DateTime? _cooldownUntil;
 
@@ -42,7 +41,7 @@ class _ARLandingPageState extends ConsumerState<ARLandingPage> {
       setState(() {});
     });
   }
-  
+
   @override
   Widget build(BuildContext context) {
     // Read the list of AR choices from the controller's state.
@@ -59,13 +58,15 @@ class _ARLandingPageState extends ConsumerState<ARLandingPage> {
 
     final double headerHPad = (w * 0.04).clamp(12.0, 22.0);
     final double headerVPad = (h * 0.012).clamp(6.0, 14.0);
-    final double headerTitleSize = (w * 0.085).clamp(28.0, 44.0) * ts;
-
-    final double accentBarHeight = (h * 0.005).clamp(3.0, 6.0);
-    final double accentBarHMargin = (w * 0.04).clamp(12.0, 24.0);
+    final double headerTitleSize = (w * 0.075).clamp(28.0, 44.0) * ts;
+    final double barH = (w * 0.01).clamp(sp(3.0), sp(4.0)).toDouble();
 
     final double listHPad = (w * 0.03).clamp(10.0, 18.0);
     final double listVGap = (h * 0.015).clamp(8.0, 16.0);
+
+    final double searchIconSize = (w * 0.085)
+        .clamp(sp(26.0), sp(35.0))
+        .toDouble();
 
     // Bottom nav sizing + reserved space
     final double navHeight = (h * 0.075).clamp(54.0, 70.0);
@@ -78,6 +79,7 @@ class _ARLandingPageState extends ConsumerState<ARLandingPage> {
           children: [
             Column(
               children: [
+                // ----- Header (match Shop/Favourites: [left slot] [title] [cart]) -----
                 Padding(
                   padding: EdgeInsets.fromLTRB(
                     headerHPad,
@@ -87,16 +89,33 @@ class _ARLandingPageState extends ConsumerState<ARLandingPage> {
                   ),
                   child: Row(
                     children: [
-                      Expanded(
-                        child: Text(
-                          'Augmented Reality',
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                fontSize: headerTitleSize,
-                              ),
+                      // Slot sinistro: IconButton invisibile per avere la stessa larghezza di Shop
+                      IgnorePointer(
+                        child: Opacity(
+                          opacity: 0,
+                          child: IconButton(
+                            onPressed: () {},
+                            icon: Icon(Icons.search, size: searchIconSize),
+                          ),
                         ),
+                      ),
+                      // Titolo centrato
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            'Augmented Reality',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.headlineMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: headerTitleSize,
+                                ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: (w * 0.085).clamp(sp(26.0), sp(35.0)),
+                        child: const SizedBox.shrink(),
                       ),
                     ],
                   ),
@@ -104,23 +123,23 @@ class _ARLandingPageState extends ConsumerState<ARLandingPage> {
 
                 // Accent underline under the title (ABB-like red bar)
                 Container(
-                  height: accentBarHeight,
-                  margin: EdgeInsets.symmetric(horizontal: accentBarHMargin),
+                  height: barH,
+                  margin: EdgeInsets.symmetric(horizontal: sp(12)),
                   decoration: BoxDecoration(
                     color: AppTheme.accent,
-                    borderRadius: BorderRadius.circular(3),
+                    borderRadius: BorderRadius.circular(sp(3)),
                     boxShadow: [
                       BoxShadow(
                         color: AppTheme.accent.withOpacity(0.45),
-                        blurRadius: 3,
-                        spreadRadius: 0.4,
-                        offset: const Offset(0, 3),
+                        blurRadius: sp(3),
+                        spreadRadius: sp(0.4),
+                        offset: Offset(0, sp(3)),
                       ),
                     ],
                   ),
                 ),
 
-                SizedBox(height: (h * 0.018).clamp(10.0, 20.0)),
+                SizedBox(height: sp(12)),
 
                 // Vertical list of tappable AR choices (big chip-like tiles)
                 Padding(

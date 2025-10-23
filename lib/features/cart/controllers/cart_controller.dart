@@ -6,15 +6,20 @@ import '../domain/cart_item.dart';
 import '../data/cart_repository_firebase.dart';
 import '../../../core/firebase/firebase_providers.dart';
 
-/// Immutable cart state used by the CartController.
-/// - `items` holds the async list of CartItem (loading/data/error)
-/// - `taxRate` is applied to the computed subtotal
-/// - Provides computed getters for `subtotal`, `tax`, and `total`
+/// Prezzi già IVA inclusa: nessun ricalcolo IVA.
+/// - subtotal = somma (unitPrice * qty) [lordo]
+/// - tax      = 0.0
+/// - total    = subtotal
 class CartState {
   final AsyncValue<List<CartItem>> items;
+
+  /// Tenuto per compatibilità; non influisce sui totali.
   final double taxRate;
 
-  const CartState({required this.items, this.taxRate = 0.22});
+  const CartState({
+    required this.items,
+    this.taxRate = 0.0, // IVA non applicata
+  });
 
   /// Creates a new state instance overriding any provided fields.
   CartState copyWith({AsyncValue<List<CartItem>>? items, double? taxRate}) =>
@@ -26,14 +31,15 @@ class CartState {
     orElse: () => 0.0,
   );
 
-  /// Tax amount computed from the current subtotal and taxRate.
-  double get tax => subtotal * taxRate;
+  /// Nessuna IVA aggiunta: già inclusa nei prezzi.
+  double get tax => 0.0;
 
-  /// Grand total including tax.
-  double get total => subtotal + tax;
+  /// Grand total coincide con il lordo (IVA inclusa).
+  double get total => subtotal;
 
-  /// Initial state with loading items and default taxRate.
-  static CartState initial() => const CartState(items: AsyncLoading());
+  /// Initial state with loading items.
+  static CartState initial() =>
+      const CartState(items: AsyncLoading(), taxRate: 0.0);
 }
 
 /// Provides a concrete Firebase-backed repository for the cart.
@@ -60,7 +66,7 @@ class CartController extends StateNotifier<CartState> {
   /// sets an empty list.
   Future<void> load() async {
     try {
-      final uid = ref.read(authControllerProvider).value?.uid; // <- o .uid
+      final uid = ref.read(authControllerProvider).value?.uid;
       if (uid == null) {
         state = state.copyWith(items: const AsyncData([]));
         return;
@@ -75,7 +81,7 @@ class CartController extends StateNotifier<CartState> {
   /// Adds a product to the cart or increases its quantity by `qty`.
   /// Reloads the state after the repository call.
   Future<void> add(Product p, {int qty = 1}) async {
-    final uid = ref.read(authControllerProvider).value?.uid; // <- o .uid
+    final uid = ref.read(authControllerProvider).value?.uid;
     if (uid == null) return;
     await _repo.addOrIncrease(
       uid,
@@ -84,7 +90,7 @@ class CartController extends StateNotifier<CartState> {
         code: p.code,
         displayName: p.displayName,
         imageUrl: p.imageUrl,
-        unitPrice: p.price,
+        unitPrice: p.price, // già IVA inclusa
         qty: qty,
       ),
       by: qty,
@@ -95,7 +101,7 @@ class CartController extends StateNotifier<CartState> {
   /// Sets an absolute quantity for a specific product in the cart.
   /// If qty <= 0, the item will be removed by the repo. Reloads afterwards.
   Future<void> setQty(String productId, int qty) async {
-    final uid = ref.read(authControllerProvider).value?.uid; // <- o .uid
+    final uid = ref.read(authControllerProvider).value?.uid;
     if (uid == null) return;
     await _repo.setQty(uid, productId, qty);
     await load();
@@ -103,7 +109,7 @@ class CartController extends StateNotifier<CartState> {
 
   /// Removes a product line from the cart, then reloads.
   Future<void> remove(String productId) async {
-    final uid = ref.read(authControllerProvider).value?.uid; // <- o .uid
+    final uid = ref.read(authControllerProvider).value?.uid;
     if (uid == null) return;
     await _repo.remove(uid, productId);
     await load();
@@ -111,7 +117,7 @@ class CartController extends StateNotifier<CartState> {
 
   /// Clears the entire cart for the current user, then reloads.
   Future<void> clear() async {
-    final uid = ref.read(authControllerProvider).value?.uid; // <- o .uid
+    final uid = ref.read(authControllerProvider).value?.uid;
     if (uid == null) return;
     await _repo.clear(uid);
     await load();

@@ -1,4 +1,7 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+import 'package:flutter_application/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 
 /// Generic "Coming Soon" screen with a centered message and a
@@ -37,20 +40,18 @@ class ComingSoonPage extends StatelessWidget {
     final w = mq.size.width;
     final h = mq.size.height;
     final ts = mq.textScaleFactor.clamp(1.0, 1.3);
+    final shortest = math.min(w, h);
+    final scale = (shortest / 375.0).clamp(0.85, 1.30).toDouble();
+    double sp(double v) => v * scale;
+    final double searchIconSize = (w * 0.085)
+        .clamp(sp(26.0), sp(35.0))
+        .toDouble();
 
     // Header sizing (icon/button area + title)
-    final double iconSize = (w * 0.075).clamp(24.0, 36.0);
-    final double headerHPad = (w * 0.016).clamp(6.0, 12.0);
-    final double headerVPad = (h * 0.01).clamp(6.0, 10.0);
     final double headerTopGap = (h * 0.006).clamp(4.0, 8.0);
     final double headerTitleSize = (w * 0.075).clamp(22.0, 38.0) * ts;
+    final double barH = (w * 0.01).clamp(sp(3.0), sp(4.0)).toDouble();
 
-    // Thin brand accent bar below the header
-    final double accentHMargin = (w * 0.04).clamp(12.0, 20.0);
-    final double accentHeight = (h * 0.005).clamp(3.0, 6.0);
-
-    // Main body content sizing
-    final double bodyTopGap = (h * 0.03).clamp(16.0, 28.0);
     final double bodyBottomGap = (h * 0.03).clamp(16.0, 28.0);
     final double centerIcon = (w * 0.18).clamp(56.0, 92.0);
     final double centerIconGap = (h * 0.015).clamp(8.0, 14.0);
@@ -64,56 +65,66 @@ class ComingSoonPage extends StatelessWidget {
           children: [
             SizedBox(height: headerTopGap),
 
-            // ---- Header (Back button • Centered title • Spacer) ----
-            // The trailing SizedBox mirrors the leading IconButton's width
-            // so the title remains visually centered.
             Padding(
-              padding: EdgeInsets.fromLTRB(
-                headerHPad,
-                headerVPad,
-                headerHPad,
-                headerVPad,
+              padding: EdgeInsets.symmetric(
+                horizontal: sp(12),
+                vertical: sp(6),
               ),
               child: Row(
                 children: [
-                  // Back navigation
                   IconButton(
                     icon: const Icon(Icons.arrow_back),
-                    iconSize: iconSize,
+                    iconSize: searchIconSize,
                     onPressed: () => _handleBack(context),
                   ),
 
-                  // Centered section title (ellipsis to avoid overflow)
                   Expanded(
-                    child: Text(
-                      'Augmented Reality',
-                      textAlign: TextAlign.center,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            fontSize: headerTitleSize,
-                          ),
+                    child: Center(
+                      child: Text(
+                        'Augmented Reality',
+                        textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              fontSize: headerTitleSize,
+                            ),
+                      ),
                     ),
                   ),
 
-                  // Keep title perfectly centered by reserving equal trailing space
-                  SizedBox(width: iconSize + headerHPad * 2),
+                  IgnorePointer(
+                    child: Opacity(
+                      opacity: 0,
+                      child: IconButton(
+                        onPressed: () {},
+                        icon: Icon(Icons.search, size: searchIconSize),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
 
             // ---- Accent bar under header ----
             Container(
-              height: accentHeight,
-              margin: EdgeInsets.symmetric(horizontal: accentHMargin),
+              height: barH,
+              margin: EdgeInsets.symmetric(horizontal: sp(12)),
               decoration: BoxDecoration(
-                color: const Color(0xFFE53935),
-                borderRadius: BorderRadius.circular(3),
+                color: AppTheme.accent,
+                borderRadius: BorderRadius.circular(sp(3)),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.accent.withOpacity(0.45),
+                    blurRadius: sp(3),
+                    spreadRadius: sp(0.4),
+                    offset: Offset(0, sp(3)),
+                  ),
+                ],
               ),
             ),
 
-            SizedBox(height: bodyTopGap),
+            SizedBox(height: sp(12)),
 
             // ---- Body: icon + title + message ----
             // Uses Expanded+Center to keep it vertically centered on taller screens.

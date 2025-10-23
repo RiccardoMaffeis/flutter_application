@@ -182,7 +182,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                 .clamp(sp(14.0), sp(18.0))
                 .toDouble();
             final double barH = (w * 0.01).clamp(sp(3.0), sp(4.0)).toDouble();
-            final double chipRowH = (h * 0.075)
+            final double chipRowH = (h * 0.085)
                 .clamp(sp(48.0), sp(64.0))
                 .toDouble();
             final double chipFont = (w * 0.04)
@@ -363,8 +363,6 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                       ),
                     ),
 
-                    SizedBox(height: sp(4)),
-
                     Expanded(
                       child: state.products.when(
                         loading: () =>
@@ -394,7 +392,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                     child: Padding(
                                       padding: EdgeInsets.fromLTRB(
                                         sp(12),
-                                        sp(12),
+                                        sp(6),
                                         sp(12),
                                         sp(6),
                                       ),

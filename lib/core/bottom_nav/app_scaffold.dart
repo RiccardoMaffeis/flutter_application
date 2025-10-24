@@ -28,9 +28,7 @@ class AppScaffold extends ConsumerWidget {
 
     final navHeight = sp(58);
     final btnSize = (w * 0.12).clamp(sp(40.0), sp(52.0)).toDouble();
-    final iconSize = (w * 0.095).clamp(sp(28.0), sp(36.0)).toDouble();
 
-    // Offset per l’icona solo quando è visibile (se fosse visibile senza nav, si appoggerebbe al SafeArea)
     final double assistantBottomOffset = hideNav
         ? (mq.padding.bottom + sp(30))
         : (navHeight + mq.padding.bottom + sp(30));
@@ -43,7 +41,6 @@ class AppScaffold extends ConsumerWidget {
         children: [
           Positioned.fill(child: shell),
 
-          // Mostra l’icona solo se NON nascondiamo il chrome
           if (!hideNav)
             Positioned(
               right: sp(16),
@@ -52,13 +49,23 @@ class AppScaffold extends ConsumerWidget {
                 color: Colors.white,
                 shape: const CircleBorder(),
                 elevation: sp(4),
+                clipBehavior: Clip.antiAlias,
                 child: InkWell(
                   customBorder: const CircleBorder(),
                   onTap: () => context.push('/assistant'),
                   child: SizedBox(
                     width: btnSize,
                     height: btnSize,
-                    child: Icon(Icons.psychology_alt_outlined, size: iconSize),
+                    child: Center(
+                      child: FractionallySizedBox(
+                        widthFactor: 0.75,
+                        heightFactor: 0.75,
+                        child: Image.asset(
+                          'lib/images/general/chatbot.png',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -66,7 +73,6 @@ class AppScaffold extends ConsumerWidget {
         ],
       ),
 
-      // Niente bottom bar quando hideNav = true
       bottomNavigationBar: hideNav
           ? null
           : SafeArea(
@@ -142,7 +148,7 @@ class _BottomPillNav extends StatelessWidget {
                 child: Container(
                   decoration: BoxDecoration(
                     color: AppTheme.accent,
-                    borderRadius: BorderRadius.circular(pad * 3.6), // ~sp(22)
+                    borderRadius: BorderRadius.circular(sp(22)),
                   ),
                 ),
               ),

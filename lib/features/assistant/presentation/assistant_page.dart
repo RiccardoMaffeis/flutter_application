@@ -21,9 +21,11 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Stato del provider (AsyncValue)
+    final chatAV = ref.watch(aiChatControllerProvider);
+    final bool isGenerating = chatAV.isLoading;
     // Current list of messages (falls back to empty list if provider has no value yet).
-    final msgs =
-        ref.watch(aiChatControllerProvider).value ?? const <AiMessage>[];
+    final msgs = chatAV.value ?? const <AiMessage>[];
 
     // --- Responsive metrics ---
     final mq = MediaQuery.of(context);
@@ -249,8 +251,9 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                                     ),
                                   ),
                                 ),
-                                // Allow sending with the keyboard enter key.
-                                onSubmitted: _onSend,
+                                onSubmitted: (v) {
+                                  if (!isGenerating) _onSend(v);
+                                },
                               ),
                             ),
                             SizedBox(
@@ -260,21 +263,62 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                               height: sendBtnH,
                               width: sendBtnW,
                               child: ElevatedButton(
-                                onPressed: () => _onSend(_c.text),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppTheme.accent,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      sendRadius,
+                                onPressed: isGenerating
+                                    ? null
+                                    : () => _onSend(_c.text),
+                                style: ButtonStyle(
+                                  backgroundColor:
+                                      MaterialStateProperty.resolveWith<Color>(
+                                        (states) => AppTheme.accent,
+                                      ),
+                                  foregroundColor:
+                                      const MaterialStatePropertyAll<Color>(
+                                        Colors.white,
+                                      ),
+                                  shape: MaterialStatePropertyAll(
+                                    RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                        sendRadius,
+                                      ),
                                     ),
                                   ),
-                                  padding: EdgeInsets.zero,
-                                  elevation: sp(2.0),
+                                  padding: const MaterialStatePropertyAll(
+                                    EdgeInsets.zero,
+                                  ),
+                                  elevation: MaterialStatePropertyAll(sp(2.0)),
                                 ),
-                                child: Icon(
-                                  Icons.send,
-                                  color: Colors.white,
-                                  size: sendIcon,
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 200),
+                                  switchInCurve: Curves.easeOut,
+                                  switchOutCurve: Curves.easeIn,
+                                  transitionBuilder: (child, anim) =>
+                                      FadeTransition(
+                                        opacity: anim,
+                                        child: ScaleTransition(
+                                          scale: anim,
+                                          child: child,
+                                        ),
+                                      ),
+                                  child: isGenerating
+                                      ? SizedBox(
+                                          key: const ValueKey('spinner'),
+                                          width: sendIcon,
+                                          height: sendIcon,
+                                          child:
+                                              const CircularProgressIndicator(
+                                                strokeWidth: 2.2,
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                      Color
+                                                    >(Colors.white),
+                                              ),
+                                        )
+                                      : Icon(
+                                          key: const ValueKey('send'),
+                                          Icons.send,
+                                          color: Colors.white,
+                                          size: sendIcon,
+                                        ),
                                 ),
                               ),
                             ),
@@ -328,9 +372,19 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
     );
   }
 
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
   /// Sends the trimmed text through the chat controller (RAG-only),
   /// then clears the input field. Empty strings are ignored.
   void _onSend(String text) {
+    // Blocca se sta già generando
+    final isGenerating = ref.read(aiChatControllerProvider).isLoading;
+    if (isGenerating) return;
+
     final t = text.trim();
     if (t.isEmpty) return;
     final ctrl = ref.read(aiChatControllerProvider.notifier);

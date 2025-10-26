@@ -127,9 +127,15 @@ class AiChatController extends StateNotifier<AsyncValue<List<AiMessage>>> {
   }
 
   Future<void> send(String userText) async {
+    if (state.isLoading) return;
+
     final history = state.value ?? const <AiMessage>[];
     final updated = [...history, AiMessage('user', userText)];
-    state = AsyncValue.data(updated);
+
+    // ignore: invalid_use_of_internal_member
+    state = const AsyncLoading<List<AiMessage>>().copyWithPrevious(
+      AsyncValue.data(updated),
+    );
 
     try {
       final rag = _ref.read(aiRagServiceProvider);

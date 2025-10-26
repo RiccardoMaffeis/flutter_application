@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_application/core/bottom_nav/app_scaffold.dart';
+import 'package:flutter_application/core/intro/visual_intro_scene.dart';
 import 'package:flutter_application/features/ar/presentation/ar_switch_page.dart';
 import 'package:flutter_application/features/ar/presentation/select/ar_coming_soon_page.dart';
 import 'package:flutter_application/features/ar/presentation/select/ar_xt_page.dart';
@@ -45,7 +46,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 
   return GoRouter(
-    initialLocation: '/welcome',
+    initialLocation: '/intro',
     refreshListenable: refresh,
     redirect: (context, state) {
       final auth = ref.read(authControllerProvider);
@@ -63,6 +64,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(path: '/intro',    builder: (_, __) => const VisualIntroScene()),
       GoRoute(path: '/welcome', builder: (_, __) => const WelcomePage()),
       GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
       GoRoute(path: '/signup', builder: (_, __) => const SignupPage()),

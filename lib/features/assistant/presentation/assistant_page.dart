@@ -141,7 +141,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
                         ),
                         SizedBox(height: (h * 0.015).clamp(sp(10.0), sp(16.0))),
 
-                        // -------- Messages panel --------
                         ConstrainedBox(
                           constraints: BoxConstraints(
                             maxHeight: listMaxH,
@@ -231,7 +230,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
                         SizedBox(height: (h * 0.016).clamp(sp(10.0), sp(16.0))),
 
-                        // -------- Input row (TextField + Send button) --------
                         Row(
                           children: [
                             Expanded(
@@ -327,7 +325,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
 
                         SizedBox(height: (h * 0.016).clamp(sp(10.0), sp(16.0))),
 
-                        // -------- Bottom actions (Cancel) --------
                         Row(
                           children: [
                             Expanded(
@@ -381,7 +378,6 @@ class _AssistantPageState extends ConsumerState<AssistantPage> {
   /// Sends the trimmed text through the chat controller (RAG-only),
   /// then clears the input field. Empty strings are ignored.
   void _onSend(String text) {
-    // Blocca se sta già generando
     final isGenerating = ref.read(aiChatControllerProvider).isLoading;
     if (isGenerating) return;
 

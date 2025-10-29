@@ -5,21 +5,23 @@ import '../../domain/product.dart';
 import '../../controllers/shop_controller.dart';
 import 'package:go_router/go_router.dart';
 
+// SearchDelegate implementation for Product lookup.
+// - Leverages Riverpod to fetch products and read favourites.
+// - Filters locally by tokens matched against product code + name.
+// - Opens product details using GoRouter when a result is tapped.
 class ProductSearchDelegate extends SearchDelegate<Product?> {
   final WidgetRef ref;
   ProductSearchDelegate(this.ref);
 
-  // Label statico; lo stile/size viene gestito in appBarTheme() -> hintStyle
   @override
   String get searchFieldLabel => 'Search for code or name...';
 
-  // Stile di fallback (verrà sovrascritto in appBarTheme)
   @override
   TextStyle? get searchFieldStyle => const TextStyle(fontSize: 16);
 
-  // Rende responsivi font/icone del Search AppBar
   @override
   ThemeData appBarTheme(BuildContext context) {
+    // Make search AppBar match the app's visual language and scale fonts/icons responsively.
     final theme = Theme.of(context);
     final media = MediaQuery.of(context);
     final w = media.size.width;
@@ -35,7 +37,6 @@ class ProductSearchDelegate extends SearchDelegate<Product?> {
       ),
       textTheme: theme.textTheme.copyWith(
         titleLarge: TextStyle(
-          // usato internamente dal campo di ricerca
           fontSize: fieldFont,
           fontWeight: FontWeight.w400,
           color: Colors.black87,
@@ -53,6 +54,7 @@ class ProductSearchDelegate extends SearchDelegate<Product?> {
     );
   }
 
+  // Closes the delegate and navigates to the product detail route.
   void _openProduct(BuildContext ctx, Product p) {
     close(ctx, p);
     Future.microtask(() => ctx.push('/product/${p.id}'));
@@ -60,6 +62,7 @@ class ProductSearchDelegate extends SearchDelegate<Product?> {
 
   @override
   Widget buildResults(BuildContext context) {
+    // Reuses the same widget for both suggestions and results.
     return _ResultsList(
       ref: ref,
       query: query,
@@ -69,6 +72,7 @@ class ProductSearchDelegate extends SearchDelegate<Product?> {
 
   @override
   Widget buildSuggestions(BuildContext context) {
+    // As-you-type suggestions share the same filtering logic as results.
     return _ResultsList(
       ref: ref,
       query: query,
@@ -94,6 +98,8 @@ class ProductSearchDelegate extends SearchDelegate<Product?> {
   );
 }
 
+// Results list that fetches products once, filters client-side, and renders tiles.
+// Uses ConsumerWidget to read favourites and the controller for toggling.
 class _ResultsList extends ConsumerWidget {
   final WidgetRef ref;
   final String query;
@@ -107,20 +113,25 @@ class _ResultsList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Direct repository read to fetch the full catalog (categoryId: null ⇒ all).
     final repo = ref.read(productsRepositoryProvider);
 
     return FutureBuilder<List<Product>>(
       future: () async {
         final items = await repo.fetchProducts(categoryId: null);
 
+        // Normalize query and short-circuit empty searches.
         final q = query.trim().toLowerCase();
         if (q.isEmpty) return List<Product>.from(items);
 
+        // Tokenize query on alphanumerics; keep only meaningful tokens.
         final tokens = RegExp(
           r'[a-z0-9]+',
         ).allMatches(q).map((m) => m.group(0)!).toList();
         if (tokens.isEmpty) return List<Product>.from(items);
 
+        // Predicate: a product matches if all tokens appear either in the raw haystack
+        // (name + code) or in a sanitized version (removed non-alphanumerics).
         bool matches(Product p) {
           final hay = ('${p.displayName} ${p.code}').toLowerCase();
           final hayClean = hay.replaceAll(RegExp(r'[^a-z0-9]'), '');
@@ -133,7 +144,7 @@ class _ResultsList extends ConsumerWidget {
         return items.where(matches).toList();
       }(),
       builder: (context, snap) {
-        // Metriche responsive per lista/tile/immagini/font
+        // Responsive metrics for list items.
         final media = MediaQuery.of(context);
         final w = media.size.width;
         final textScale = media.textScaleFactor.clamp(1.0, 1.3);
@@ -148,11 +159,13 @@ class _ResultsList extends ConsumerWidget {
         final double dividerIndent = (w * 0.18).clamp(64.0, 96.0);
 
         if (!snap.hasData) {
+          // Initial/awaiting state: show a spinner.
           return const Center(child: CircularProgressIndicator());
         }
 
         final results = snap.data!;
         if (results.isEmpty) {
+          // Empty state for no matches.
           return Center(
             child: Text(
               'No results',
@@ -164,9 +177,11 @@ class _ResultsList extends ConsumerWidget {
           );
         }
 
+        // Read favourites from the ShopState (kept in sync elsewhere).
         final favs = ref.watch(shopControllerProvider).favourites;
         final shopCtrl = ref.read(shopControllerProvider.notifier);
 
+        // Render results with favourite toggle and product navigation.
         return ListView.separated(
           itemCount: results.length,
           separatorBuilder: (_, __) =>
@@ -187,6 +202,7 @@ class _ResultsList extends ConsumerWidget {
                   child: Image.asset(
                     p.imageUrl,
                     fit: BoxFit.contain,
+                    // Gracefully handle missing assets.
                     errorBuilder: (_, __, ___) =>
                         const Icon(Icons.broken_image_outlined),
                   ),

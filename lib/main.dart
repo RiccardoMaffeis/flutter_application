@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application/core/tour/coach_tour.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:showcaseview/showcaseview.dart'; // NEW
+import 'package:showcaseview/showcaseview.dart';
 
 import 'core/theme/app_theme.dart';
 import 'app_router.dart';

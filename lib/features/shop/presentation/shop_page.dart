@@ -7,8 +7,8 @@ import 'package:flutter_application/features/shop/presentation/search/product_se
 import 'package:flutter_application/features/shop/presentation/widgets/cart_icon_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:showcaseview/showcaseview.dart'; // coach marks
-import 'package:flutter_application/core/tour/coach_tour.dart'; // tour service
+import 'package:showcaseview/showcaseview.dart';
+import 'package:flutter_application/core/tour/coach_tour.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../controllers/shop_controller.dart';
@@ -21,6 +21,7 @@ class ShopPage extends ConsumerStatefulWidget {
 }
 
 class _ShopPageState extends ConsumerState<ShopPage> {
+  // --- Tap throttling to avoid spamming actions ---
   DateTime? _cooldownUntil;
   final Set<String> _favBusy = <String>{};
   bool get _cooldownActive =>
@@ -29,6 +30,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
     _cooldownUntil = DateTime.now().add(Duration(milliseconds: ms));
   }
 
+  // --- Showcase (guided tour) targets ---
   final _kSearch = GlobalKey();
   final _kFilters = GlobalKey();
   final _kCart = GlobalKey();
@@ -36,6 +38,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
 
   bool _tourScheduled = false;
 
+  /// Schedules the guided tour once products are loaded and the UI is laid out.
   void _scheduleTourAfterData() {
     if (_tourScheduled) return;
     _tourScheduled = true;
@@ -48,6 +51,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
     });
   }
 
+  /// Safely toggles a favourite with per-item "busy" protection.
   Future<void> _onFavToggle(String productId) async {
     if (_favBusy.contains(productId)) return;
     _favBusy.add(productId);
@@ -62,6 +66,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
     }
   }
 
+  /// Computes a family label (e.g., XT3) from product info; falls back to Other.
   String _familyLabel(Product p) {
     final id = p.categoryId.toUpperCase();
     if (id.startsWith('XT')) return id.toUpperCase();
@@ -72,6 +77,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
     return m != null ? 'XT${m.group(1)!}' : 'Other';
   }
 
+  /// Groups products by family (XT1..XT7/Other) and returns a map sorted by family rank.
   Map<String, List<Product>> _groupByFamily(List<Product> items) {
     final map = <String, List<Product>>{};
     for (final p in items) {
@@ -88,6 +94,8 @@ class _ShopPageState extends ConsumerState<ShopPage> {
     return {for (final k in keys) k: map[k]!};
   }
 
+  /// For a specific XT family, groups by variant (e.g., XT1N/XT1B/…) and poles (3p/4p).
+  /// Keys are sorted by variant order, then by poles (3p before 4p).
   Map<String, List<Product>> _groupXtByVariantAndPoles(
     List<Product> items,
     String family,
@@ -106,6 +114,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
       (map[key] ??= <Product>[]).add(p);
     }
 
+    // Preferred ordering for known variants
     const order = ['N', 'B', 'H', 'S', 'F', 'D'];
     int variantRank(String key) {
       final m = RegExp('^${RegExp.escape(fam)}([A-Z])').firstMatch(key);
@@ -130,10 +139,12 @@ class _ShopPageState extends ConsumerState<ShopPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Observe shop state (products, categories, favourites, etc.)
     final state = ref.watch(shopControllerProvider);
     final isProductsLoading = state.products.isLoading;
     final ctrl = ref.read(shopControllerProvider.notifier);
 
+    // Static display labels for chips; rely on indices aligned with categories.
     const categoryLabels = [
       'All',
       'XT1',
@@ -145,6 +156,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
       'XT7',
     ];
 
+    // Compute selected section label from current category id.
     final selectedIdx = state.categories.indexWhere(
       (c) => c.id == state.selectedCategoryId,
     );
@@ -159,6 +171,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, cons) {
+            // ---- Responsive metrics ----
             final w = cons.maxWidth;
             final h = cons.maxHeight;
             final shortest = math.min(w, h);
@@ -217,6 +230,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
 
             return Column(
               children: [
+                // --- Header with centered title, search on the left and help+cart on the right ---
                 Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: sp(12),
@@ -244,7 +258,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                           ),
                         ),
 
-                        // Left: Search (Showcase)
+                        // Left: Search (Showcase target)
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Showcase(
@@ -256,6 +270,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                               onPressed: () async {
                                 if (_cooldownActive) return;
                                 _startCooldown(500);
+                                // Hide global chrome while the search UI is shown.
                                 ref.read(hideChromeProvider.notifier).state =
                                     true;
                                 try {
@@ -273,7 +288,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                           ),
                         ),
 
-                        // Right: Help + Cart (Cart in Showcase)
+                        // Right: Help to trigger tour + Cart button (Showcase target)
                         Align(
                           alignment: Alignment.centerRight,
                           child: Row(
@@ -312,6 +327,8 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                     ),
                   ),
                 ),
+
+                // ABB accent bar
                 Container(
                   height: barH,
                   margin: EdgeInsets.symmetric(horizontal: sp(12)),
@@ -330,6 +347,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                 ),
                 SizedBox(height: sp(12)),
 
+                // --- Category chips row (All, XT1..XT7) with Showcase target ---
                 Showcase(
                   key: _kFilters,
                   description: 'Filter by family (XT1–XT7) or show all.',
@@ -377,6 +395,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                           selectedColor: AppTheme.accent,
                           selected: selected,
                           onSelected: (_) {
+                            // Ignore redundant clicks or while loading or within cooldown.
                             if (selected ||
                                 isProductsLoading ||
                                 _cooldownActive)
@@ -402,6 +421,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                   ),
                 ),
 
+                // --- Main content: three layouts (All -> carousels by family, XTn -> carousels by variant/poles, else -> grid) ---
                 Expanded(
                   child: state.products.when(
                     loading: () =>
@@ -414,6 +434,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                       ),
                     ),
                     data: (items) {
+                      // Start the tour once we actually have content to highlight.
                       if (items.isNotEmpty) {
                         _scheduleTourAfterData();
                       }
@@ -422,6 +443,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                       final isAll = titleUp == 'ALL';
                       final isXtFamily = RegExp(r'^XT[1-7]$').hasMatch(titleUp);
 
+                      // We only bind the card Showcase once (first visible card).
                       bool cardTipBound = false;
                       Widget wrapCardTipIfFirst(Widget child) {
                         if (cardTipBound) return child;
@@ -438,6 +460,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                         );
                       }
 
+                      // ---- 1) ALL: show families as horizontal carousels ----
                       if (isAll) {
                         final families = _groupByFamily(items);
                         return CustomScrollView(
@@ -445,6 +468,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                           physics: const BouncingScrollPhysics(),
                           slivers: [
                             for (final entry in families.entries) ...[
+                              // Family title
                               SliverToBoxAdapter(
                                 child: Padding(
                                   padding: EdgeInsets.fromLTRB(
@@ -463,6 +487,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                   ),
                                 ),
                               ),
+                              // Family carousel of ProductCard
                               SliverToBoxAdapter(
                                 child: SizedBox(
                                   height: carouselH,
@@ -487,6 +512,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                               context.go('/product/${p.id}'),
                                         ),
                                       );
+                                      // Attach the guided tip to the very first card only.
                                       if (!cardTipBound && i == 0) {
                                         card = wrapCardTipIfFirst(card);
                                       }
@@ -499,6 +525,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                 ),
                               ),
                             ],
+                            // Bottom padding for safe scroll end
                             SliverToBoxAdapter(
                               child: SizedBox(height: bottomSpacer),
                             ),
@@ -506,6 +533,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                         );
                       }
 
+                      // ---- 2) XTn: show groups by variant+poles as horizontal carousels ----
                       if (isXtFamily) {
                         final groups = _groupXtByVariantAndPoles(
                           items,
@@ -516,6 +544,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                           physics: const BouncingScrollPhysics(),
                           slivers: [
                             for (final entry in groups.entries) ...[
+                              // Variant+poles title (e.g., XT1N 3p)
                               SliverToBoxAdapter(
                                 child: Padding(
                                   padding: EdgeInsets.fromLTRB(
@@ -533,6 +562,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                   ),
                                 ),
                               ),
+                              // Carousel of ProductCard for this group
                               SliverToBoxAdapter(
                                 child: SizedBox(
                                   height: carouselH,
@@ -559,7 +589,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                         ),
                                       );
                                       if (!cardTipBound && i == 0) {
-                                        // NEW
+                                        // Bind the card tip to the first card of the first group only.
                                         card = wrapCardTipIfFirst(card);
                                       }
                                       return card;
@@ -578,7 +608,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                         );
                       }
 
-                      // GRID
+                      // ---- 3) Other categories: fallback grid layout ----
                       return Padding(
                         padding: EdgeInsets.fromLTRB(
                           sp(12),

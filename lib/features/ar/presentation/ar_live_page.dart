@@ -24,6 +24,7 @@ import 'package:vector_math/vector_math_64.dart' as vm;
 import 'package:flutter_application/core/theme/app_theme.dart';
 import 'package:flutter_application/core/tour/coach_tour.dart';
 
+/// Lightweight descriptor for an AR model entry shown in pickers/lists.
 class ARItem {
   final String title;
   final String glbPath;
@@ -31,6 +32,7 @@ class ARItem {
   const ARItem(this.title, this.glbPath, this.scale);
 }
 
+/// Static catalog of XT models available for placement in AR.
 const List<ARItem> kXtModels = [
   ARItem('XT1 3 poli', 'lib/3Dmodels/XT1/XT1_3p.glb', 0.20),
   ARItem('XT1 4 poli', 'lib/3Dmodels/XT1/XT1_4p.glb', 0.20),
@@ -46,11 +48,16 @@ const List<ARItem> kXtModels = [
   ARItem('XT7 4 poli', 'lib/3Dmodels/XT7/XT7_4p.glb', 0.20),
 ];
 
+/// Live AR page:
+/// - Detects planes
+/// - Lets the user place GLB models
+/// - Allows rotating the selected model along X with a bottom slider
+/// - Uses ShowcaseView for an onboarding tour of key controls
 class ArLivePage extends ConsumerStatefulWidget {
   final String title;
-  final String? glbUrl;
-  final String? assetGlb;
-  final double scale;
+  final String? glbUrl; // Optional remote GLB to load
+  final String? assetGlb; // Optional bundled GLB asset to load
+  final double scale; // Default scale for the model when added
 
   const ArLivePage({
     super.key,
@@ -65,19 +72,28 @@ class ArLivePage extends ConsumerStatefulWidget {
 }
 
 class _ArLivePageState extends ConsumerState<ArLivePage> {
+  // ARCore/ARKit managers provided by ar_flutter_plugin.
   ARSessionManager? _session;
   ARObjectManager? _objectMgr;
   ARAnchorManager? _anchorMgr;
 
+  // Guard to prevent multiple placements while an operation is in flight.
   bool _placeBusy = false;
 
+  // List of placed nodes + their anchors, and current selection id.
   final List<_Placed> _placed = [];
   String? _selectedId;
 
+  // Current rotation (X axis) of selected model, in degrees.
   double _sliderXDeg = 0;
+
+  // When true, new placement appends instead of replacing existing ones.
   bool _appendMode = false;
+
+  // If user pre-picked a catalog item, it is stored here before placement.
   ARItem? _pendingItem;
 
+  // Showcase keys for the page tour: back, add, delete, rotate controls.
   final _kBack = GlobalKey();
   final _kAdd = GlobalKey();
   final _kDelete = GlobalKey();
@@ -86,6 +102,8 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
   @override
   void initState() {
     super.initState();
+    // Schedule the AR page tour; CoachTourService ensures the section
+    // is shown only once per device unless reset.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(coachTourServiceProvider).startOrQueue(
         context,
@@ -97,11 +115,13 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
 
   @override
   void dispose() {
+    // Clean up all placed nodes/anchors and AR session on dispose.
     _removeAll();
     _session?.dispose();
     super.dispose();
   }
 
+  /// Removes all nodes and anchors from the scene and clears local state.
   Future<void> _removeAll() async {
     for (final e in List<_Placed>.from(_placed)) {
       await _objectMgr?.removeNode(e.node);
@@ -115,6 +135,7 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
     if (mounted) setState(() {});
   }
 
+  /// Updates the X-axis rotation of the selected node (in degrees).
   void _setSelectedXDeg(double degrees) {
     if (_selectedId == null || _objectMgr == null) {
       setState(() => _sliderXDeg = degrees);
@@ -131,6 +152,8 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
     setState(() => _sliderXDeg = degrees);
   }
 
+  /// Copies a bundled GLB asset into the app's documents directory
+  /// so it can be loaded by ar_flutter_plugin using fileSystemAppFolder path.
   Future<String> _stageGlbIntoAppFolder(String assetPath) async {
     final data = await rootBundle.load(assetPath);
     final bytes = data.buffer.asUint8List(
@@ -147,6 +170,8 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
     return fileName;
   }
 
+  /// Gets a preview image path that mirrors a given GLB path.
+  /// Example: lib/3Dmodels/.../XT1_3p.glb -> lib/images/.../XT1_3p.png
   String _imagePathFor(ARItem item) {
     var path = item.glbPath.replaceFirst('3Dmodels', 'images');
     path = path.replaceFirst(RegExp(r'\.glb$', caseSensitive: false), '');
@@ -159,15 +184,18 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Responsive metrics helpers (scale based on the shortest side).
     final mq = MediaQuery.of(context);
     final size = mq.size;
     final shortest = math.min(size.width, size.height);
     double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
     final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
+    // AppBar sizing.
     final double toolbarH = sp(58);
     final double titleFont = sp(19) * ts;
 
+    // Corner icon placement (for add/trash overlay buttons).
     final double cornerIcon = sp(32);
     final double cornerPad = sp(10);
     final double cornerTop = (mq.padding.top * 0.12 + sp(6)).clamp(
@@ -200,6 +228,7 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
         ),
         centerTitle: true,
         actions: [
+          // Manual trigger to replay the page tour.
           IconButton(
             icon: const Icon(Icons.help_outline),
             tooltip: 'Show page tour',
@@ -216,11 +245,13 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
       ),
       body: Stack(
         children: [
+          // Main AR view with horizontal plane detection and interaction.
           ARView(
             planeDetectionConfig: PlaneDetectionConfig.horizontal,
             onARViewCreated: _onViewCreated,
           ),
 
+          // Floating "+" button (top-left) to choose a model to place.
           Positioned(
             left: cornerPad,
             top: cornerTop,
@@ -241,6 +272,7 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
             ),
           ),
 
+          // Floating "trash" button (top-right) to clear all placed models.
           Positioned(
             right: cornerPad,
             top: cornerTop,
@@ -281,6 +313,7 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
             ),
           ),
 
+          // Bottom controls: rotation slider (X axis) with a Showcase bubble.
           Positioned(
             left: sp(12),
             right: sp(12),
@@ -390,12 +423,14 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
 
                   SizedBox(height: sp(12)),
 
+                  // Static bottom help card with quick tips.
                   const _BottomHelpCard(),
                 ],
               ),
             ),
           ),
 
+          // Busy overlay for placement flow (shows a spinner and a message).
           Positioned.fill(
             child: const _BusyOverlay(visible: false, message: ''),
           ),
@@ -407,6 +442,8 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
     );
   }
 
+  /// Opens the picker dialog; if user selects an item,
+  /// switches to append mode and shows a toast with instructions.
   Future<void> _onPressAdd() async {
     final picked = await _showModelPickerDialog(context);
     if (picked != null) {
@@ -424,6 +461,7 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
     }
   }
 
+  /// Simple modal that lists available models (with thumbnail) to pick from.
   Future<ARItem?> _showModelPickerDialog(BuildContext context) async {
     return showDialog<ARItem>(
       context: context,
@@ -546,6 +584,9 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
     );
   }
 
+  /// Configures AR managers and wires up tap gestures:
+  /// - onNodeTap: selects a model and syncs the rotation slider
+  /// - onPlaneOrPointTap: places a new model at the first hit pose
   Future<void> _onViewCreated(
     ARSessionManager session,
     ARObjectManager objectMgr,
@@ -567,6 +608,7 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
     );
     await _objectMgr!.onInitialize();
 
+    // Select node on tap and update the slider to reflect current X rotation.
     _objectMgr!.onNodeTap = (List<String> nodeNames) {
       if (nodeNames.isEmpty) return;
       final id = nodeNames.first;
@@ -591,6 +633,7 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
       );
     };
 
+    // Place node on plane tap. Handles append/replace and GLB source selection.
     _session!.onPlaneOrPointTap = (hits) async {
       if (_placeBusy) return;
       setState(() => _placeBusy = true);
@@ -607,11 +650,12 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
         final okAnchor = await _anchorMgr!.addAnchor(anchor);
         if (okAnchor != true) return;
 
-        final yaw180 = vm.Vector4(0, 1, 0, math.pi);
+        final yaw180 = vm.Vector4(0, 1, 0, math.pi); // Face the camera
         final newId = 'mdl_${DateTime.now().microsecondsSinceEpoch}';
 
         ARNode node;
         if (_pendingItem != null) {
+          // Use the catalog item selected in the picker.
           final fileName = await _stageGlbIntoAppFolder(_pendingItem!.glbPath);
           node = ARNode(
             name: newId,
@@ -626,6 +670,7 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
             rotation: yaw180,
           );
         } else if (widget.assetGlb != null && widget.assetGlb!.isNotEmpty) {
+          // Use the GLB provided by widget as bundled asset.
           final fileName = await _stageGlbIntoAppFolder(widget.assetGlb!);
           node = ARNode(
             name: newId,
@@ -636,6 +681,7 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
             rotation: yaw180,
           );
         } else if (widget.glbUrl != null && widget.glbUrl!.isNotEmpty) {
+          // Use a remote GLB.
           node = ARNode(
             name: newId,
             type: NodeType.webGLB,
@@ -645,6 +691,7 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
             rotation: yaw180,
           );
         } else {
+          // No model source available.
           if (!mounted) return;
           showArSnack(
             context,
@@ -678,6 +725,7 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
     };
   }
 
+  /// Confirmation dialog before removing all nodes from the scene.
   Future<bool?> _confirmClearAll(BuildContext context) async {
     return showDialog<bool>(
       context: context,
@@ -772,6 +820,7 @@ class _ArLivePageState extends ConsumerState<ArLivePage> {
   }
 }
 
+/// Small container to bind a node to its anchor with a unique id.
 class _Placed {
   final String id;
   final ARPlaneAnchor anchor;
@@ -779,6 +828,7 @@ class _Placed {
   _Placed({required this.id, required this.anchor, required this.node});
 }
 
+/// Bottom helper card with quick instructions for AR interactions.
 class _BottomHelpCard extends StatelessWidget {
   const _BottomHelpCard();
 
@@ -827,6 +877,7 @@ class _BottomHelpCard extends StatelessWidget {
   }
 }
 
+/// Full-screen busy overlay used while placing models or doing heavy AR work.
 class _BusyOverlay extends StatelessWidget {
   final bool visible;
   final String message;
@@ -902,6 +953,7 @@ class _BusyOverlay extends StatelessWidget {
   }
 }
 
+/// Small circular icon button used inside the snackbar action area.
 class _TinyIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -933,6 +985,8 @@ class _TinyIconButton extends StatelessWidget {
   }
 }
 
+/// Lightweight top-of-screen toast/snackbar with subtle elevation.
+/// Uses an OverlayEntry and auto-dismisses after a short duration.
 void showArSnack(
   BuildContext context, {
   required String title,
@@ -953,6 +1007,7 @@ void showArSnack(
   double sp(double v) => v * (shortest / 375.0).clamp(0.80, 1.35);
   final scaler = MediaQuery.textScalerOf(context);
 
+  // Position just under the AppBar, centered horizontally with side padding.
   final double cornerTop = (mq.padding.top * 0.12 + sp(6)).clamp(sp(6), sp(14));
   final double appBarTop = mq.padding.top + kToolbarHeight;
   final double topY = appBarTop + cornerTop;
@@ -1077,6 +1132,7 @@ void showArSnack(
   );
 
   overlay.insert(entry);
+  // Auto-dismiss duration scaled by device size for consistency.
   final baseSec = 2.0;
   final factor = (shortest / 375.0).clamp(0.9, 1.2);
   Timer(

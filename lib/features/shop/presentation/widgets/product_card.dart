@@ -5,6 +5,10 @@ import 'package:flutter_application/core/ar/arcore_check.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../domain/product.dart';
 
+/// Product card widget used inside grids/lists.
+/// - Shows product code, image, display name.
+/// - Provides favourite toggle and "open in AR" action.
+/// - Includes simple cooldowns/spinners to avoid rapid repeated taps.
 class ProductCard extends StatefulWidget {
   final Product product;
   final bool isFavourite;
@@ -24,22 +28,29 @@ class ProductCard extends StatefulWidget {
 }
 
 class _ProductCardState extends State<ProductCard> {
+  // Local UI state flags to prevent double taps and show loaders.
   bool _cardBusy = false;
   bool _favBusy = false;
   bool _arBusy = false;
 
+  // Lightweight debounce/cooldown to avoid spamming actions.
   DateTime? _cooldownUntil;
   bool get _cooldownActive =>
       _cooldownUntil != null && DateTime.now().isBefore(_cooldownUntil!);
   void _startCooldown([int ms = 600]) =>
       _cooldownUntil = DateTime.now().add(Duration(milliseconds: ms));
 
+  // Regex to infer family (xt1..xt7) and poles from product metadata.
   static final RegExp _reFamily = RegExp(r'xt\d+', caseSensitive: false);
   static final RegExp _rePoles = RegExp(
     r'([23468])\s*(?:p|poli|pole|poles)\b',
     caseSensitive: false,
   );
 
+  /// Attempts to resolve a GLB model asset path based on:
+  /// - family (XT1..XT7)
+  /// - poles (3p, 4p, 6p, 8p)
+  /// Tries multiple candidate locations and returns the first existing path.
   static Future<String?> _findModelPath(Product p) async {
     final hay = '${p.categoryId} ${p.code} ${p.displayName}'.toLowerCase();
     final fam = _reFamily.firstMatch(hay)?.group(0)?.toUpperCase();
@@ -59,6 +70,7 @@ class _ProductCardState extends State<ProductCard> {
     return null;
   }
 
+  /// Checks if a given asset exists in the bundle.
   static Future<bool> _assetExists(String path) async {
     try {
       await rootBundle.load(path);
@@ -68,6 +80,8 @@ class _ProductCardState extends State<ProductCard> {
     }
   }
 
+  /// Handles the whole-card tap with a short cooldown and busy flag.
+  /// Delegates to the injected [widget.onTap].
   void _safeCardTap() {
     if (_cardBusy || _cooldownActive) return;
     _cardBusy = true;
@@ -81,6 +95,7 @@ class _ProductCardState extends State<ProductCard> {
     });
   }
 
+  /// Debounced favourite toggle with small spinner while in-flight.
   Future<void> _safeFavToggle() async {
     if (_favBusy || _cooldownActive) return;
     setState(() {
@@ -97,6 +112,10 @@ class _ProductCardState extends State<ProductCard> {
     }
   }
 
+  /// Opens the AR viewer route if:
+  /// - a matching 3D model asset is found
+  /// - ARCore/ARKit availability passes the check
+  /// Shows a SnackBar if the asset is missing.
   Future<void> _openAR() async {
     if (_arBusy || _cooldownActive) return;
     setState(() {
@@ -125,10 +144,7 @@ class _ProductCardState extends State<ProductCard> {
 
       await context.push(
         '/ar-live',
-        extra: {
-          'title': widget.product.code,
-          'assetGlb': modelPath,
-        },
+        extra: {'title': widget.product.code, 'assetGlb': modelPath},
       );
     } finally {
       if (mounted) setState(() => _arBusy = false);
@@ -142,9 +158,9 @@ class _ProductCardState extends State<ProductCard> {
 
     return LayoutBuilder(
       builder: (context, cons) {
-        // ---- Responsive metrics based on card width ----
         final w = cons.maxWidth;
 
+        // Responsive metrics derived from card width.
         final double radius = (w * 0.11).clamp(16.0, 24.0);
         final double codeFont = (w * 0.075).clamp(14.0, 18.0);
         final double nameFont = (w * 0.06).clamp(12.0, 14.0);
@@ -171,7 +187,7 @@ class _ProductCardState extends State<ProductCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Code (top)
+                // Header: product code
                 Padding(
                   padding: EdgeInsets.fromLTRB(innerHPad, topPad, innerHPad, 6),
                   child: Text(
@@ -186,7 +202,7 @@ class _ProductCardState extends State<ProductCard> {
                   ),
                 ),
 
-                // Image
+                // Central image area (expanded to fill remaining space)
                 Expanded(
                   child: ClipRRect(
                     borderRadius: BorderRadius.vertical(
@@ -196,7 +212,7 @@ class _ProductCardState extends State<ProductCard> {
                       color: Colors.white,
                       alignment: Alignment.center,
                       child: Transform.scale(
-                        scale: 1.05,
+                        scale: 1.05, // Slight upscale for better framing
                         child: Image.asset(
                           product.imageUrl,
                           fit: BoxFit.contain,
@@ -217,7 +233,7 @@ class _ProductCardState extends State<ProductCard> {
                   ),
                 ),
 
-                // Name + actions
+                // Footer: name + actions (favourite, AR)
                 Padding(
                   padding: EdgeInsets.fromLTRB(
                     innerHPad,
@@ -228,6 +244,7 @@ class _ProductCardState extends State<ProductCard> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Display name, constrained to two lines with consistent height.
                       ConstrainedBox(
                         constraints: BoxConstraints(minHeight: twoLinesHeight),
                         child: Text(
@@ -247,10 +264,11 @@ class _ProductCardState extends State<ProductCard> {
                           ),
                         ),
                       ),
+                      // Action row: favourite toggle (left) and AR (right)
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Favourite
+                          // Favourite button with small loader while busy.
                           IconButton(
                             padding: EdgeInsets.zero,
                             constraints: BoxConstraints.tightFor(
@@ -277,7 +295,7 @@ class _ProductCardState extends State<ProductCard> {
                                   ),
                           ),
 
-                          // AR
+                          // AR action: circular InkWell with spinner while resolving/launching.
                           Material(
                             color: Colors.white,
                             shape: const CircleBorder(),

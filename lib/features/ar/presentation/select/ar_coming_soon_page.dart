@@ -33,7 +33,6 @@ class ComingSoonPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ---- Responsive metrics pulled from MediaQuery ----
     // We compute a few sizes based on screen width/height and text scale
     // to keep the layout consistent across devices.
     final mq = MediaQuery.of(context);
@@ -106,7 +105,6 @@ class ComingSoonPage extends StatelessWidget {
               ),
             ),
 
-            // ---- Accent bar under header ----
             Container(
               height: barH,
               margin: EdgeInsets.symmetric(horizontal: sp(12)),
@@ -126,7 +124,6 @@ class ComingSoonPage extends StatelessWidget {
 
             SizedBox(height: sp(12)),
 
-            // ---- Body: icon + title + message ----
             // Uses Expanded+Center to keep it vertically centered on taller screens.
             Expanded(
               child: Center(

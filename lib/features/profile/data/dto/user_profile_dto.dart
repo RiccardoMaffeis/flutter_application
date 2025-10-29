@@ -1,13 +1,24 @@
-// features/profile/data/dto/user_profile_dto.dart
+// Data Transfer Object (DTO) representing a user's profile as stored/transferred.
+// - Can be constructed from Firestore maps (plus FirebaseAuth User fallback fields).
+// - Can be constructed from generic JSON (e.g., API/local storage).
+// - Supports multiple DOB formats and normalizes to DateTime.
+// - Serializers produce Firestore/JSON maps, stripping nulls for cleanliness.
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' show User;
 
 class UserProfileDto {
+  // Stable user identifier (from FirebaseAuth).
   final String uid;
+  // Optional email (may be absent in profile document).
   final String? email;
+  // Optional display name (can come from doc or FirebaseAuth).
   final String? displayName;
+  // Optional date of birth (normalized DateTime).
   final DateTime? dob;
+  // Optional city.
   final String? city;
+  // Optional avatar/photo URL.
   final String? photoUrl;
 
   const UserProfileDto({
@@ -19,13 +30,17 @@ class UserProfileDto {
     required this.photoUrl,
   });
 
-  // ---- parse helper (Timestamp | int epoch(ms/s) | String ISO o dd/MM/yyyy)
+  // Best-effort coercion of various DOB representations to DateTime:
+  // - Firestore Timestamp
+  // - DateTime
+  // - int (seconds or milliseconds since epoch, heuristic via threshold)
+  // - ISO 8601 string
+  // - "dd/MM/yyyy" string
   static DateTime? _parseDob(dynamic v) {
     if (v == null) return null;
     if (v is Timestamp) return v.toDate();
     if (v is DateTime) return v;
     if (v is int) {
-      // se arriva in millisecondi o secondi
       return v > 2000000000
           ? DateTime.fromMillisecondsSinceEpoch(v)
           : DateTime.fromMillisecondsSinceEpoch(v * 1000);
@@ -46,7 +61,9 @@ class UserProfileDto {
     return null;
   }
 
-  // ---- factories
+  // Factory that merges Firestore document data with FirebaseAuth's User fields
+  // as fallbacks (e.g., email/displayName/photoUrl) when missing in the doc.
+  // Also recognizes several possible keys for DOB in the stored document.
   factory UserProfileDto.fromFirestore(
     Map<String, dynamic> data,
     User firebaseUser,
@@ -69,6 +86,9 @@ class UserProfileDto {
     );
   }
 
+  // Factory that builds the DTO from a generic JSON map.
+  // - Accepts an optional uidFallback when JSON doesn't include 'uid'.
+  // - Accepts multiple key variants for DOB, then parses them.
   factory UserProfileDto.fromJson(
     Map<String, dynamic> json, {
     String? uidFallback,
@@ -89,6 +109,9 @@ class UserProfileDto {
     );
   }
 
+  // Serializer for Firestore write:
+  // - Includes both 'dob' and 'dateOfBirth' for compatibility.
+  // - Removes nulls to avoid storing empty fields.
   Map<String, dynamic> toFirestore() {
     return {
       'email': email,
@@ -100,6 +123,10 @@ class UserProfileDto {
     }..removeWhere((_, v) => v == null);
   }
 
+  // Serializer for JSON (e.g., network/local storage):
+  // - Uses ISO8601 string for DateTime.
+  // - Duplicates DOB under 'dob' and 'dateOfBirth' for consumers using either key.
+  // - Removes nulls.
   Map<String, dynamic> toJson() {
     return {
       'uid': uid,

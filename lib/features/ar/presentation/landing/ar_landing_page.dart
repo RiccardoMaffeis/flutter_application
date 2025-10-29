@@ -8,8 +8,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../ar/controllers/ar_landing_controller.dart';
 import '../../../ar/domain/ar_choice.dart';
 
-/// Landing screen for the AR section.
-/// Uses Riverpod to read available AR choices and GoRouter for navigation.
+/// Entry page for AR features. It lists available AR experiences (choices)
+/// and navigates to the selected route on tap.
 class ARLandingPage extends ConsumerStatefulWidget {
   const ARLandingPage({super.key});
 
@@ -20,10 +20,10 @@ class ARLandingPage extends ConsumerStatefulWidget {
 class _ARLandingPageState extends ConsumerState<ARLandingPage> {
   @override
   Widget build(BuildContext context) {
-    // Read the list of AR choices from the controller's state.
+    // Read AR choices from the controller (Riverpod state).
     final choices = ref.watch(arLandingControllerProvider).choices;
 
-    // ---- Responsive metrics ----
+    // Responsive metrics and scaling factors.
     final mq = MediaQuery.of(context);
     final w = mq.size.width;
     final h = mq.size.height;
@@ -32,26 +32,29 @@ class _ARLandingPageState extends ConsumerState<ARLandingPage> {
     final scale = (shortest / 375.0).clamp(0.85, 1.30).toDouble();
     double sp(double v) => v * scale;
 
+    // Header layout constants.
     final double headerHPad = (w * 0.04).clamp(12.0, 22.0);
     final double headerVPad = (h * 0.012).clamp(6.0, 14.0);
     final double headerTitleSize = (w * 0.075).clamp(28.0, 44.0) * ts;
     final double barH = (w * 0.01).clamp(sp(3.0), sp(4.0)).toDouble();
 
+    // List section paddings and gaps.
     final double listHPad = (w * 0.03).clamp(10.0, 18.0);
     final double listVGap = (h * 0.015).clamp(8.0, 16.0);
 
+    // Placeholder leading icon size (used only to keep title centered).
     final double searchIconSize = (w * 0.085)
         .clamp(sp(26.0), sp(35.0))
         .toDouble();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F7), // Light neutral background
+      backgroundColor: const Color(0xFFF5F5F7),
       body: SafeArea(
         child: Stack(
           children: [
             Column(
               children: [
-                // ----- Header (match Shop/Favourites: [left slot] [title] [cart]) -----
+                // Header with centered title and invisible leading to balance layout.
                 Padding(
                   padding: EdgeInsets.fromLTRB(
                     headerHPad,
@@ -61,7 +64,7 @@ class _ARLandingPageState extends ConsumerState<ARLandingPage> {
                   ),
                   child: Row(
                     children: [
-                      // Slot sinistro: IconButton invisibile per avere la stessa larghezza di Shop
+                      // Invisible leading icon to keep the title perfectly centered.
                       IgnorePointer(
                         child: Opacity(
                           opacity: 0,
@@ -71,7 +74,7 @@ class _ARLandingPageState extends ConsumerState<ARLandingPage> {
                           ),
                         ),
                       ),
-                      // Titolo centrato
+                      // Centered page title.
                       Expanded(
                         child: Center(
                           child: Text(
@@ -85,6 +88,7 @@ class _ARLandingPageState extends ConsumerState<ARLandingPage> {
                           ),
                         ),
                       ),
+                      // Trailing spacer with same width of the (invisible) leading.
                       SizedBox(
                         width: (w * 0.085).clamp(sp(26.0), sp(35.0)),
                         child: const SizedBox.shrink(),
@@ -93,7 +97,7 @@ class _ARLandingPageState extends ConsumerState<ARLandingPage> {
                   ),
                 ),
 
-                // Accent underline under the title (ABB-like red bar)
+                // Accent bar under the header.
                 Container(
                   height: barH,
                   margin: EdgeInsets.symmetric(horizontal: sp(12)),
@@ -113,7 +117,7 @@ class _ARLandingPageState extends ConsumerState<ARLandingPage> {
 
                 SizedBox(height: sp(12)),
 
-                // Vertical list of tappable AR choices (big chip-like tiles)
+                // Static list of AR choices (cards) with image + chevron.
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: listHPad),
                   child: Column(
@@ -137,16 +141,15 @@ class _ARLandingPageState extends ConsumerState<ARLandingPage> {
   }
 }
 
-/// Tappable tile representing one AR choice.
-/// Shows the choice title and a right-aligned preview image (if available).
+/// Single AR choice tile: shows a title, a small preview image, and a chevron.
+/// Tapping the tile triggers the provided callback.
 class _ChoiceTile extends StatelessWidget {
   final ARChoice choice;
   final VoidCallback onTap;
 
   const _ChoiceTile({required this.choice, required this.onTap});
 
-  /// Build a strict asset path from the choice's asset, forcing it into
-  /// 'lib/images/general' and ensuring the '.png' extension.
+  /// Computes the asset path for the preview image from the `choice.asset` hint.
   String get _assetPath {
     final base = choice.asset.split('/').last;
     final name = base.endsWith('.png') ? base : '$base.png';
@@ -157,9 +160,11 @@ class _ChoiceTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (ctx, cons) {
+        // Use the available width to adapt the tile proportions.
         final w = cons.maxWidth;
         final ts = MediaQuery.of(ctx).textScaleFactor.clamp(1.0, 1.3);
 
+        // Card/tile sizing.
         final double cardRadius = (w * 0.055).clamp(18.0, 26.0);
         final double hPad = (w * 0.04).clamp(12.0, 20.0);
         final double tileHeight = (w * 0.18).clamp(64.0, 92.0);
@@ -182,7 +187,7 @@ class _ChoiceTile extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: hPad),
               child: Row(
                 children: [
-                  // Choice title
+                  // Title area (expands to take remaining space).
                   Expanded(
                     child: Text(
                       choice.title,
@@ -196,7 +201,7 @@ class _ChoiceTile extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: gap),
-                  // Right preview image
+                  // Small preview image (fallback to icon on error).
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.asset(
@@ -213,6 +218,7 @@ class _ChoiceTile extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: gap),
+                  // Chevron to suggest forward navigation.
                   Icon(Icons.chevron_right, size: chevron),
                 ],
               ),

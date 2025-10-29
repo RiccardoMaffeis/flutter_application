@@ -18,11 +18,12 @@ class FavouritesPage extends ConsumerStatefulWidget {
 }
 
 class _FavouritesPageState extends ConsumerState<FavouritesPage> {
-
+  // Local "busy" guard set to prevent rapid repeated favorite toggles per item.
   final Set<String> _favBusy = <String>{};
 
   @override
   Widget build(BuildContext context) {
+    // Responsive metrics based on shortest screen side.
     final mq = MediaQuery.of(context);
     final w = mq.size.width;
     final h = mq.size.height;
@@ -32,6 +33,7 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
 
     final ts = mq.textScaleFactor.clamp(1.0, 1.3);
 
+    // Typography and layout tokens (responsive and text-scale aware).
     final double titleFont = (w * 0.09).clamp(sp(24.0), sp(40.0)) * ts;
 
     final double searchIconSize = (w * 0.085)
@@ -42,11 +44,11 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
 
     final double stateFont = (w * 0.045).clamp(sp(14.0), sp(18.0)) * ts;
 
-    // Bottom nav reserved height (matches nav container height) + bottom safe inset + padding
+    // Reserve bottom space for the nav and add safe area padding.
     final double navHeight = sp(58);
     final double bottomSpacer = navHeight + mq.padding.bottom + sp(24);
 
-    // Grid breakpoints by width
+    // Grid columns breakpoints and item aspect ratio tuning.
     int columns;
     if (w >= 1000) {
       columns = 4;
@@ -57,13 +59,15 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
     }
     final double aspect = columns >= 4 ? 0.70 : (columns == 3 ? 0.60 : 0.52);
 
+    // Read favorites state (AsyncValue<List<Product>>) and controller.
     final favs = ref.watch(favouritesControllerProvider);
     final favsCtrl = ref.read(favouritesControllerProvider.notifier);
 
+    // Read shop state (contains favourites IDs) and controller for toggles.
     final shopState = ref.watch(shopControllerProvider);
     final shopCtrl = ref.read(shopControllerProvider.notifier);
 
-    // Refresh favourites list whenever favourite IDs change.
+    // When the shop favourites set changes, refresh the favourites list.
     ref.listen<Set<String>>(
       shopControllerProvider.select((s) => s.favourites),
       (_, __) => favsCtrl.refresh(),
@@ -76,7 +80,7 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
           children: [
             Column(
               children: [
-                // ----- Header (title centered regardless of trailing width) -----
+                // Top bar with title centered and cart icon on the right.
                 Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: sp(12),
@@ -84,6 +88,7 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
                   ),
                   child: Row(
                     children: [
+                      // Placeholder (invisible) leading icon to keep title centered.
                       IgnorePointer(
                         child: Opacity(
                           opacity: 0,
@@ -93,6 +98,7 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
                           ),
                         ),
                       ),
+                      // Page title
                       Expanded(
                         child: Center(
                           child: Text(
@@ -106,6 +112,7 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
                           ),
                         ),
                       ),
+                      // Cart action opens a popup overlay
                       CartIconButton(
                         onPressed: () => showCartPopup(context, ref),
                       ),
@@ -113,7 +120,7 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
                   ),
                 ),
 
-                // Accent bar
+                // ABB-style accent bar under the header.
                 Container(
                   height: barH,
                   margin: EdgeInsets.symmetric(horizontal: sp(12)),
@@ -133,11 +140,13 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
 
                 SizedBox(height: sp(12)),
 
-                // ----- Content -----
+                // Body: reactive area for favorites list/grid.
                 Expanded(
                   child: favs.when(
+                    // Loading spinner while fetching favorites.
                     loading: () =>
                         const Center(child: CircularProgressIndicator()),
+                    // Error state with a compact message.
                     error: (e, _) => Center(
                       child: Text(
                         'Failed to load: $e',
@@ -148,6 +157,7 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
                         ),
                       ),
                     ),
+                    // Data state: empty → message; else → grid of ProductCard.
                     data: (items) {
                       if (items.isEmpty) {
                         return Center(
@@ -183,8 +193,7 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
                             return ProductCard(
                               product: p,
                               isFavourite: isFav,
-                              // opzionale: se ProductCard supporta uno stato di busy, passalo
-                              // isBusy: busy,
+                              // Toggle favorite with per-item busy guard and refresh.
                               onFavToggle: () async {
                                 if (busy) return;
                                 setState(() => _favBusy.add(p.id));
@@ -197,6 +206,7 @@ class _FavouritesPageState extends ConsumerState<FavouritesPage> {
                                   }
                                 }
                               },
+                              // Navigate to product details on tap.
                               onTap: () => context.go('/product/${p.id}'),
                             );
                           },

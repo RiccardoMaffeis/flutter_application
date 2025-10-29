@@ -5,7 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_application/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 
-/// Simple value object describing an AR item (UI label + GLB asset path + scale).
+/// Simple data holder for an AR-presentable item.
+/// - [label]: human readable title
+/// - [glbPath]: path to the embedded .glb model inside assets
+/// - [scale]: model scale to use in AR scene
 class ARItem {
   final String label;
   final String glbPath;
@@ -13,7 +16,8 @@ class ARItem {
   const ARItem(this.label, this.glbPath, this.scale);
 }
 
-/// Catalog of selectable XT models for AR.
+/// Catalog of XT models available for AR placement.
+/// Note: paths must exist under your bundled assets for [_assetExists] to pass.
 const List<ARItem> kXtModels = [
   ARItem('XT1 3 poli', 'lib/3Dmodels/XT1/XT1_3p.glb', 0.20),
   ARItem('XT1 4 poli', 'lib/3Dmodels/XT1/XT1_4p.glb', 0.20),
@@ -29,10 +33,11 @@ const List<ARItem> kXtModels = [
   ARItem('XT7 4 poli', 'lib/3Dmodels/XT7/XT7_4p.glb', 0.20),
 ];
 
-/// Page that lets the user pick one of the available AR models.
+/// Page that lists XT variants and opens the AR scene for the selected item.
 class ARXTPage extends StatelessWidget {
   const ARXTPage({super.key});
 
+  /// Checks whether an asset exists in the app bundle.
   Future<bool> _assetExists(String path) async {
     try {
       await rootBundle.load(path);
@@ -42,6 +47,9 @@ class ARXTPage extends StatelessWidget {
     }
   }
 
+  /// Handles back navigation:
+  /// - If possible, pop current route
+  /// - Otherwise, go back to '/ar' landing
   void _handleBack(BuildContext context) {
     if (Navigator.of(context).canPop()) {
       context.pop();
@@ -50,6 +58,8 @@ class ARXTPage extends StatelessWidget {
     }
   }
 
+  /// Converts a GLB path into a companion PNG preview path.
+  /// Example: lib/3Dmodels/XT1/XT1_3p.glb -> lib/images/XT1/XT1_3p.png
   String _imagePathFor(ARItem item) {
     var p = item.glbPath.replaceFirst('3Dmodels', 'images');
     p = p.replaceFirst(RegExp(r'\.glb$', caseSensitive: false), '');
@@ -60,6 +70,8 @@ class ARXTPage extends StatelessWidget {
     return '$dir$file.png';
   }
 
+  /// Validates the model asset, shows a SnackBar if missing, otherwise
+  /// navigates to the AR live page with the selected model and scale.
   Future<void> _openModel(BuildContext context, ARItem item) async {
     final ok = await _assetExists(item.glbPath);
     if (!ok && context.mounted) {
@@ -90,6 +102,7 @@ class ARXTPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Responsive metrics.
     final mq = MediaQuery.of(context);
     final w = mq.size.width;
     final h = mq.size.height;
@@ -97,14 +110,14 @@ class ARXTPage extends StatelessWidget {
     final shortest = math.min(w, h);
     final scale = (shortest / 375.0).clamp(0.85, 1.30).toDouble();
     double sp(double v) => v * scale;
+
+    // Header and layout sizing.
     final double searchIconSize = (w * 0.085)
         .clamp(sp(26.0), sp(35.0))
         .toDouble();
 
-    // Header sizing
     final double titleSize = (w * 0.07).clamp(22.0, 38.0) * ts;
     final double barH = (w * 0.01).clamp(sp(3.0), sp(4.0)).toDouble();
-    // List spacing
     final EdgeInsets listPad = EdgeInsets.fromLTRB(
       (w * 0.03).clamp(10.0, 16.0),
       (h * 0.01).clamp(6.0, 12.0),
@@ -118,8 +131,10 @@ class ARXTPage extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
+            // Top spacer to breathe under the status bar.
             SizedBox(height: (h * 0.006).clamp(4.0, 8.0)),
-            // Header
+
+            // Header row: back button, centered title, trailing spacer (to keep title centered).
             Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: sp(12),
@@ -133,6 +148,7 @@ class ARXTPage extends StatelessWidget {
                     onPressed: () => _handleBack(context),
                   ),
 
+                  // Centered page title.
                   Expanded(
                     child: Center(
                       child: Text(
@@ -147,12 +163,13 @@ class ARXTPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  SizedBox(width: searchIconSize + 16)
+                  // Spacer with fixed width equals to leading icon size + small gap.
+                  SizedBox(width: searchIconSize + 16),
                 ],
               ),
             ),
 
-            // Accent bar
+            // Accent bar under the header.
             Container(
               height: barH,
               margin: EdgeInsets.symmetric(horizontal: sp(12)),
@@ -172,7 +189,7 @@ class ARXTPage extends StatelessWidget {
 
             SizedBox(height: sp(12)),
 
-            // List
+            // Scrollable list of XT model choices (cards).
             Expanded(
               child: ListView.separated(
                 padding: listPad,
@@ -197,7 +214,8 @@ class ARXTPage extends StatelessWidget {
   }
 }
 
-/// Reusable button for a single XT model.
+/// Single list item representing a model.
+/// Shows a thumbnail, the label, and a chevron; triggers [onTap] on press.
 class _XtButton extends StatelessWidget {
   final String label;
   final String? imageAsset;
@@ -208,9 +226,11 @@ class _XtButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (ctx, cons) {
+        // Adapt to the available width for consistent sizing across devices.
         final w = cons.maxWidth;
         final ts = MediaQuery.of(ctx).textScaleFactor.clamp(1.0, 1.3);
 
+        // Tile sizing and typography.
         final double cardRadius = (w * 0.06).clamp(18.0, 28.0);
         final double hPad = (w * 0.036).clamp(12.0, 18.0);
         final double vPad = (w * 0.028).clamp(10.0, 14.0);
@@ -230,6 +250,7 @@ class _XtButton extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
               child: Row(
                 children: [
+                  // Optional thumbnail preview (falls back to placeholder icon on load error).
                   if (imageAsset != null) ...[
                     ClipRRect(
                       borderRadius: BorderRadius.circular(cardRadius * 0.6),
@@ -254,6 +275,7 @@ class _XtButton extends StatelessWidget {
                     ),
                     SizedBox(width: gap),
                   ],
+                  // Title and chevron.
                   Expanded(
                     child: Text(
                       label,

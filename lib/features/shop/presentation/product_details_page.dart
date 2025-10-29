@@ -18,6 +18,10 @@ import '../../../core/theme/app_theme.dart';
 import '../../shop/controllers/shop_controller.dart';
 import '../../shop/domain/product_details.dart';
 
+/// Product details screen:
+/// - Shows hero image, specs, price and quantity stepper
+/// - Allows adding to cart, opening datasheet PDF, toggling favourite
+/// - Can launch AR viewer if a matching GLB model exists
 class ProductDetailsPage extends ConsumerStatefulWidget {
   final String productId;
   const ProductDetailsPage({super.key, required this.productId});
@@ -27,9 +31,10 @@ class ProductDetailsPage extends ConsumerStatefulWidget {
 }
 
 class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
-  int qty = 1;
-  bool _pdfBusy = false;
+  int qty = 1; // Selected quantity to add to cart
+  bool _pdfBusy = false; // Prevents multiple PDF taps while loading
 
+  // Simple UI cooldown to avoid spamming actions (cart, etc.)
   DateTime? _cooldownUntil;
 
   bool get _cooldownActive =>
@@ -39,11 +44,13 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     _cooldownUntil = DateTime.now().add(Duration(milliseconds: ms));
   }
 
+  /// Maps a category id to a visible family title (e.g., "XT3" or fallback)
   String _familyTitle(String categoryId) {
     final up = categoryId.toUpperCase();
     return up.startsWith('XT') ? up : 'Product';
   }
 
+  /// Returns true if an asset exists in the bundle.
   Future<bool> _assetExists(String path) async {
     try {
       await rootBundle.load(path);
@@ -53,12 +60,15 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     }
   }
 
+  // Regex helpers to extract family (xtN) and number of poles from product text.
   static final _reFamily = RegExp(r'\b(xt\d+)\b', caseSensitive: false);
   static final _rePoles = RegExp(
     r'\b([23468])\s*(?:p|poli)\b',
     caseSensitive: false,
   );
 
+  /// Attempts to resolve a GLB 3D model path for the product, trying several
+  /// common folder/name patterns. Returns null if nothing is found.
   Future<String?> _findModelPath(Product p) async {
     final hay = '${p.categoryId} ${p.code} ${p.displayName}'.toLowerCase();
     final fam = _reFamily.firstMatch(hay)?.group(1)?.toUpperCase();
@@ -78,13 +88,16 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     return null;
   }
 
+  /// Scale factor hook for family-specific hero image tweaks (currently fixed).
   double _familyImageScale(String famUp) => 0.82;
 
+  // Keys used by the in-app guided tour (ShowcaseView).
   final _kBack = GlobalKey();
   final _kPdf = GlobalKey();
   final _kAdd = GlobalKey();
   bool _tourScheduled = false;
 
+  /// Starts (or queues) the guided tour for this screen once the frame is ready.
   void _scheduleTour(BuildContext context) {
     if (_tourScheduled) return;
     _tourScheduled = true;
@@ -99,10 +112,13 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Product details (including specs) are provided via a FutureProvider family.
     final details = ref.watch(productDetailsProvider(widget.productId));
+    // Shop state provides favourites and other global info.
     final shop = ref.watch(shopControllerProvider);
     final shopCtrl = ref.read(shopControllerProvider.notifier);
 
+    // ---------- Responsive metrics ----------
     final mq = MediaQuery.of(context);
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
@@ -124,17 +140,20 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     final double sidePad = (w * 0.04);
     final double sheetTopRadius = (w * 0.055);
 
+    // CTA ("Add to cart") metrics
     final double ctaSide = (w * 0.12);
     final double ctaH = (h * 0.06);
     final double ctaRadius = ctaH * 0.5;
     final double ctaFont = (w * 0.055) * ts;
 
+    // Typography for sections/specs/price
     final double sectionTitle = (w * 0.055) * ts;
     final double priceSize = (w * 0.07) * ts;
     final double specTitleSize = (w * 0.045) * ts;
     final double specValueSize = (w * 0.04) * ts;
     final double snackFont = (w * 0.04) * ts;
 
+    // PDF floating button metrics
     final double pdfBtn = (w * 0.11);
     final double pdfIcon = (pdfBtn * 0.5);
 
@@ -142,6 +161,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     final onSurface = cs.onSurface.withOpacity(0.85);
     final dividerColor = cs.outlineVariant;
 
+    // ---------- Async states: loading/error/data ----------
     return details.when(
       loading: () => Scaffold(
         backgroundColor: bgScaffold,
@@ -177,7 +197,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
           body: SafeArea(
             child: Column(
               children: [
-                // ----- Header con titolo realmente centrato -----
+                // ----- Header with truly centered title and symmetric paddings -----
                 Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: sp(12),
@@ -188,7 +208,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        // Titolo centrato con padding simmetrico per non sovrapporsi alle icone
+                        // Centered title with extra horizontal padding so icons won't overlap it
                         Padding(
                           padding: EdgeInsets.symmetric(
                             horizontal: iconSize * 2.4,
@@ -205,7 +225,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                           ),
                         ),
 
-                        // Back (Showcase) a sinistra
+                        // Back button (Showcase target) on the left
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Showcase(
@@ -232,7 +252,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                           ),
                         ),
 
-                        // Help + Cart a destra
+                        // Help (starts tour) + Cart on the right
                         Align(
                           alignment: Alignment.centerRight,
                           child: Row(
@@ -260,6 +280,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                   ),
                 ),
 
+                // Accent bar under the header (ABB style)
                 Container(
                   height: barH,
                   margin: EdgeInsets.symmetric(horizontal: sp(12)),
@@ -279,10 +300,12 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
 
                 SizedBox(height: sp(12)),
 
+                // ----- Main content area (sheet + floating image + floating PDF button) -----
                 Expanded(
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
+                      // White sheet with rounded top that holds specs and actions
                       Positioned(
                         top: headerH - overlap,
                         left: 0,
@@ -306,6 +329,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                             children: [
                               Column(
                                 children: [
+                                  // Favourite + AR quick actions row
                                   Padding(
                                     padding: EdgeInsets.fromLTRB(
                                       sidePad * 0.4,
@@ -317,6 +341,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
+                                        // Toggle favourite
                                         IconButton(
                                           iconSize: iconSize,
                                           onPressed: () =>
@@ -333,6 +358,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                                 : cs.onSurface,
                                           ),
                                         ),
+                                        // Open AR viewer (if model is available and AR supported)
                                         IconButton(
                                           iconSize: iconSize,
                                           tooltip: 'View in AR',
@@ -377,6 +403,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                     ),
                                   ),
 
+                                  // Scrollable specs + price + qty stepper
                                   Expanded(
                                     child: SingleChildScrollView(
                                       physics: const BouncingScrollPhysics(),
@@ -400,6 +427,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                                 ),
                                           ),
                                           SizedBox(height: h * 0.01),
+                                          // Render all specs except "price"-like ones (those are handled separately)
                                           ...d.specs.entries
                                               .where((e) {
                                                 final k = e.key
@@ -421,6 +449,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                                 ),
                                               ),
 
+                                          // Price + quantity selection
                                           Divider(
                                             height: h * 0.04,
                                             thickness: 1,
@@ -460,6 +489,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                 ],
                               ),
 
+                              // Bottom "Add to cart" CTA (Showcase target)
                               Positioned(
                                 left: ctaSide,
                                 right: ctaSide,
@@ -520,6 +550,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                         ),
                       ),
 
+                      // Centered floating product image overlapping the sheet
                       Positioned(
                         top: headerH - imageSize + overlap,
                         left: 0,
@@ -544,6 +575,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                         ),
                       ),
 
+                      // Floating circular PDF button (Showcase target)
                       Positioned(
                         top: h * 0.01,
                         right: sidePad * 0.6,
@@ -564,10 +596,12 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                   : () async {
                                       setState(() => _pdfBusy = true);
                                       try {
+                                        // Slight delay for better perceived feedback
                                         await Future.delayed(
                                           const Duration(milliseconds: 120),
                                         );
                                         final prod = d.product;
+                                        // Detect family from product text
                                         final famUpper = _reFamily
                                             .firstMatch(
                                               '${prod.categoryId} ${prod.code} ${prod.displayName}'
@@ -593,6 +627,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                           return;
                                         }
 
+                                        // Resolve PDF source (file or network) from cache/service
                                         final src = await PdfCacheService
                                             .instance
                                             .resolveByFamilyAndId(
@@ -617,6 +652,7 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                           return;
                                         }
 
+                                        // Navigate to a shared PDF viewer route
                                         if (src is PdfFile) {
                                           await context.push(
                                             '/pdf-viewer',
@@ -685,6 +721,8 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
   }
 }
 
+/// Single specification row with title and value.
+/// Uses responsive typography sizes passed by parent.
 class _SpecRow extends StatelessWidget {
   final String title;
   final String value;
@@ -708,6 +746,7 @@ class _SpecRow extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Spec title (bold)
           Text(
             title,
             style: theme.textTheme.titleMedium?.copyWith(
@@ -717,6 +756,7 @@ class _SpecRow extends StatelessWidget {
             ),
           ),
           SizedBox(height: MediaQuery.of(context).size.height * 0.004),
+          // Spec value (regular)
           Text(
             value,
             textAlign: TextAlign.start,
@@ -733,6 +773,8 @@ class _SpecRow extends StatelessWidget {
   }
 }
 
+/// Minimal quantity stepper used beside the price.
+/// Calls [onMinus]/[onPlus] without holding internal state.
 class _SmallQtyStepper extends StatelessWidget {
   final int value;
   final VoidCallback onMinus;
@@ -774,6 +816,7 @@ class _SmallQtyStepper extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Decrease
           _TinyIconButton(
             icon: Icons.remove,
             onTap: onMinus,
@@ -781,6 +824,7 @@ class _SmallQtyStepper extends StatelessWidget {
             iconSize: iconSize,
           ),
           SizedBox(width: w * 0.01),
+          // Current qty (fixed width to avoid layout jump)
           SizedBox(
             width: w * 0.09,
             child: Text(
@@ -794,6 +838,7 @@ class _SmallQtyStepper extends StatelessWidget {
             ),
           ),
           SizedBox(width: w * 0.012),
+          // Increase
           _TinyIconButton(
             icon: Icons.add,
             onTap: onPlus,
@@ -806,6 +851,7 @@ class _SmallQtyStepper extends StatelessWidget {
   }
 }
 
+/// Unstyled tiny circular icon button used by the stepper.
 class _TinyIconButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
@@ -837,6 +883,8 @@ class _TinyIconButton extends StatelessWidget {
   }
 }
 
+/// Shows a floating, styled SnackBar confirming the item was added to cart.
+/// Provides a quick "See" action to open the cart popup.
 void showAddToCartSnack(
   BuildContext context, {
   required WidgetRef ref,
@@ -883,6 +931,7 @@ void showAddToCartSnack(
         ),
         child: Row(
           children: [
+            // Green circular badge with checkmark
             Container(
               width: w * 0.085,
               height: w * 0.085,
@@ -901,6 +950,7 @@ void showAddToCartSnack(
               child: Icon(Icons.check, size: w * 0.055, color: Colors.white),
             ),
             SizedBox(width: w * 0.03),
+            // Title + subtitle (product code + name and qty)
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -930,6 +980,7 @@ void showAddToCartSnack(
               ),
             ),
             SizedBox(width: w * 0.02),
+            // Quick action to open the cart overlay
             TextButton(
               onPressed: () => showCartPopup(context, ref),
               style: TextButton.styleFrom(

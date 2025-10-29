@@ -1,3 +1,9 @@
+// PDF Viewer screen with download/share actions and polished SnackBars.
+// - Renders a PDF from a local file path (`pdfFile`) or a network URL (`pdfUrl`).
+// - Offers actions to "Download" (save a copy) and "Share" the PDF.
+// - Uses Syncfusion's `SfPdfViewer` for rendering and custom floating SnackBars
+//   to confirm saves and display errors.
+
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -9,12 +15,16 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_saver/file_saver.dart';
 import 'package:open_filex/open_filex.dart';
-import 'package:flutter_application/core/theme/app_theme.dart'; // for accent color
+import 'package:flutter_application/core/theme/app_theme.dart';
 
 class PdfViewerPage extends StatelessWidget {
+  // Title shown in the AppBar and share text.
   final String title;
+  // Optional absolute path to a local PDF file.
   final String? pdfFile;
+  // Optional URL to a remote PDF (http/https).
   final String? pdfUrl;
+  // Optional page to open first (1-based for Syncfusion).
   final int? initialPage;
 
   const PdfViewerPage({
@@ -25,6 +35,8 @@ class PdfViewerPage extends StatelessWidget {
     this.initialPage,
   });
 
+  // Loads the PDF bytes from either local file or network URL.
+  // Throws if neither source is available or the download fails.
   Future<Uint8List> _loadPdfBytes() async {
     if (pdfFile != null && File(pdfFile!).existsSync()) {
       return File(pdfFile!).readAsBytes();
@@ -37,6 +49,9 @@ class PdfViewerPage extends StatelessWidget {
     throw Exception('No PDF source available.');
   }
 
+  // Heuristic for a friendly filename:
+  // - If URL looks like ".../name.pdf", use that tail segment.
+  // - Otherwise derive from `title`, sanitized for filesystem safety.
   String _suggestedFileName() {
     if (pdfUrl != null && pdfUrl!.isNotEmpty) {
       final uri = Uri.parse(pdfUrl!);
@@ -47,6 +62,8 @@ class PdfViewerPage extends StatelessWidget {
     return '${safe.replaceAll(RegExp(r"[^\w\s\-]"), "").replaceAll(" ", "_")}.pdf';
   }
 
+  // Saves the current PDF to the user's device using FileSaver.
+  // On success, shows a custom "PDF saved" SnackBar with an OPEN action if possible.
   Future<void> _downloadPdf(BuildContext context) async {
     try {
       final bytes = await _loadPdfBytes();
@@ -74,6 +91,8 @@ class PdfViewerPage extends StatelessWidget {
     }
   }
 
+  // Shares the PDF using `share_plus`.
+  // If viewing via URL, materializes a temporary file first.
   Future<void> _sharePdf(BuildContext context) async {
     try {
       XFile xfile;
@@ -106,7 +125,7 @@ class PdfViewerPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ---------- Responsive metrics ----------
+    // Basic responsive scaling for typography and icons.
     final media = MediaQuery.of(context);
     final w = media.size.width;
     final textScale = media.textScaleFactor.clamp(1.0, 1.3);
@@ -115,6 +134,7 @@ class PdfViewerPage extends StatelessWidget {
     final double iconSize = (w * 0.075).clamp(22.0, 28.0);
     final double emptyFont = (w * 0.045).clamp(14.0, 18.0) * textScale;
 
+    // Choose viewer source: local file → network → empty state.
     final Widget viewer = (pdfFile != null && File(pdfFile!).existsSync())
         ? SfPdfViewer.file(
             File(pdfFile!),
@@ -144,13 +164,13 @@ class PdfViewerPage extends StatelessWidget {
         actionsIconTheme: IconThemeData(size: iconSize),
         iconTheme: IconThemeData(size: iconSize, color: Colors.black87),
         actions: [
-          // Download
+          // Save to device.
           IconButton(
             tooltip: 'Download PDF',
             icon: Icon(Icons.download, size: iconSize),
             onPressed: () => _downloadPdf(context),
           ),
-          // Share
+          // Share externally.
           IconButton(
             tooltip: 'Share PDF',
             icon: Icon(Icons.share, size: iconSize),
@@ -163,12 +183,14 @@ class PdfViewerPage extends StatelessWidget {
   }
 }
 
-/// Fancy success snack (matches the style of "added to cart")
+// Success SnackBar: shows a green check badge, the saved filename,
+// and optionally an OPEN action that tries to launch the saved file.
 void showPdfSavedSnack(
   BuildContext context, {
   required String fileName,
   String? openPath,
 }) {
+  // Responsive sizes for badge, icon, and text.
   final media = MediaQuery.of(context);
   final w = media.size.width;
   final textScale = media.textScaleFactor.clamp(1.0, 1.3);
@@ -202,6 +224,7 @@ void showPdfSavedSnack(
         ),
         child: Row(
           children: [
+            // Green circular badge with a check.
             Container(
               width: badge,
               height: badge,
@@ -220,7 +243,7 @@ void showPdfSavedSnack(
               child: Icon(Icons.check, size: check, color: Colors.white),
             ),
             const SizedBox(width: 12),
-            // Texts
+            // Title + filename (ellipsized).
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,6 +273,7 @@ void showPdfSavedSnack(
               ),
             ),
             const SizedBox(width: 8),
+            // Optional OPEN action to launch the saved file.
             if (openPath != null)
               TextButton(
                 onPressed: () => OpenFilex.open(openPath),
@@ -277,8 +301,9 @@ void showPdfSavedSnack(
   );
 }
 
-/// Error snack with same visual language
+// Error SnackBar: shows a red error badge and the provided message.
 void showPdfErrorSnack(BuildContext context, {required String message}) {
+  // Responsive sizes for badge, icon, and text.
   final media = MediaQuery.of(context);
   final w = media.size.width;
   final textScale = media.textScaleFactor.clamp(1.0, 1.3);
@@ -311,6 +336,7 @@ void showPdfErrorSnack(BuildContext context, {required String message}) {
         ),
         child: Row(
           children: [
+            // Red circular badge with an error icon.
             Container(
               width: badge,
               height: badge,
@@ -329,6 +355,7 @@ void showPdfErrorSnack(BuildContext context, {required String message}) {
               child: Icon(Icons.error_outline, size: icon, color: Colors.white),
             ),
             const SizedBox(width: 12),
+            // Title + error message (ellipsized to two lines).
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,10 +1,7 @@
-// Profile controller & providers for reading/storing the current user's profile.
-// NOTE: Comments are in English as requested. The code itself is unchanged.
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_riverpod/legacy.dart'; // (Likely not needed on Riverpod 3, but kept as-is per your request)
+import 'package:flutter_riverpod/legacy.dart';
 
 import '../data/dto/user_profile_dto.dart';
 import '../data/dto/user_profile_dto_mapper.dart';

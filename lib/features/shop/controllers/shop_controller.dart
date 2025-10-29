@@ -12,10 +12,15 @@ import '../../cart/data/cart_providers.dart';
 import '../../favourites/data/favorites_providers.dart';
 
 class ShopState {
+  // All available categories (including a synthetic "all").
   final List<Category> categories;
+  // Currently selected category id (e.g., 'all' or a real category id).
   final String selectedCategoryId;
+  // Current products list for the selected category (loading/error/data).
   final AsyncValue<List<Product>> products;
+  // Set of favourite product IDs for the signed-in user.
   final Set<String> favourites;
+  // Current cart item count for the signed-in user.
   final int cartCount;
 
   const ShopState({
@@ -26,6 +31,7 @@ class ShopState {
     required this.cartCount,
   });
 
+  // Immutable update helper for partial state changes.
   ShopState copyWith({
     List<Category>? categories,
     String? selectedCategoryId,
@@ -42,6 +48,8 @@ class ShopState {
     );
   }
 
+  // Initial UI-friendly state: no categories, 'all' selected, empty products,
+  // no favourites, empty cart.
   static ShopState initial() => const ShopState(
     categories: [],
     selectedCategoryId: 'all',
@@ -51,10 +59,12 @@ class ShopState {
   );
 }
 
+// DI: concrete repository provider for products.
 final productsRepositoryProvider = Provider<ProductsRepository>((ref) {
   return ProductsRepositoryImpl();
 });
 
+// Fetches full product details for a given product id on demand.
 final productDetailsProvider = FutureProvider.family<ProductDetails, String>((
   ref,
   productId,
@@ -63,45 +73,57 @@ final productDetailsProvider = FutureProvider.family<ProductDetails, String>((
   return repo.fetchProductDetails(productId);
 });
 
+// Main controller provider managing ShopState.
+// bootstrap() runs once on creation to load categories and products and set up listeners.
 final shopControllerProvider = StateNotifierProvider<ShopController, ShopState>(
   (ref) =>
       ShopController(ref, ref.read(productsRepositoryProvider))..bootstrap(),
 );
 
+// Convenience provider exposing only the current cart count integer.
 final cartCountProvider = Provider<int>((ref) {
-    return ref.watch(shopControllerProvider).cartCount;
-  });
+  return ref.watch(shopControllerProvider).cartCount;
+});
 
 class ShopController extends StateNotifier<ShopState> {
   final Ref ref;
   final ProductsRepository _repo;
 
+  // Subscriptions to reactive sources we want to mirror inside ShopState.
   ProviderSubscription<AsyncValue<Set<String>>>? _favSub;
   ProviderSubscription<AsyncValue<int>>? _cartSub;
 
   ShopController(this.ref, this._repo) : super(ShopState.initial());
 
+  // Initializes categories, wires listeners to auth/favourites/cart, and loads products.
   Future<void> bootstrap() async {
+    // 1) Load categories upfront.
     final cats = await _repo.fetchCategories();
     state = state.copyWith(categories: cats);
 
+    // 2) React to auth state to attach/detach favourites/cart streams per user.
     ref.listen<AsyncValue<AppUser?>>(authControllerProvider, (prev, next) {
       final uid = next.value?.uid;
+
+      // Clean up previous subscriptions when user changes.
       _favSub?.close();
       _cartSub?.close();
 
       if (uid == null) {
+        // No user: clear user-specific slices.
         state = state.copyWith(favourites: {}, cartCount: 0);
         return;
       }
 
+      // Subscribe to favourites stream for this user and mirror into state.
       _favSub = ref.listen<AsyncValue<Set<String>>>(
         favouritesStreamProvider(uid),
         (_, favs) =>
             state = state.copyWith(favourites: favs.value ?? <String>{}),
-        fireImmediately: true,
+        fireImmediately: true, // Push current value immediately if available.
       );
 
+      // Subscribe to cart count for this user and mirror into state.
       _cartSub = ref.listen<AsyncValue<int>>(
         cartCountStreamProvider(uid),
         (_, c) => state = state.copyWith(cartCount: c.value ?? 0),
@@ -109,9 +131,11 @@ class ShopController extends StateNotifier<ShopState> {
       );
     }, fireImmediately: true);
 
+    // 3) Load initial products for the default category.
     await loadProducts();
   }
 
+  // Loads products for a given (or current) category with loading/error handling.
   Future<void> loadProducts({String? categoryId}) async {
     final cat = categoryId ?? state.selectedCategoryId;
     state = state.copyWith(
@@ -126,6 +150,7 @@ class ShopController extends StateNotifier<ShopState> {
     }
   }
 
+  // Toggles favourite for the current user (no-op if signed out).
   Future<void> toggleFavourite(String productId) async {
     final uid = ref.read(authControllerProvider).value?.uid;
     if (uid == null) return;
@@ -134,6 +159,7 @@ class ShopController extends StateNotifier<ShopState> {
 
   @override
   void dispose() {
+    // Ensure provider subscriptions are closed to avoid leaks.
     _favSub?.close();
     _cartSub?.close();
     super.dispose();

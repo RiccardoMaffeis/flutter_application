@@ -7,6 +7,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:flutter_application/core/tour/coach_tour.dart';
 
+/// AppScaffold
+/// - Hosts the nested navigation shell (GoRouter's StatefulNavigationShell)
+/// - Draws a floating Assistant button
+/// - Shows a custom bottom "pill" navigation bar
+/// - Triggers a one-time guided tour for the bottom navigation
 class AppScaffold extends ConsumerStatefulWidget {
   final StatefulNavigationShell shell;
   const AppScaffold({super.key, required this.shell});
@@ -16,12 +21,14 @@ class AppScaffold extends ConsumerStatefulWidget {
 }
 
 class _AppScaffoldState extends ConsumerState<AppScaffold> {
+  // Showcase keys for the bottom navigation and assistant FAB
   final _kTabShop = GlobalKey();
   final _kTabFavourites = GlobalKey();
   final _kTabAR = GlobalKey();
   final _kTabProfile = GlobalKey();
   final _kAssistant = GlobalKey();
 
+  // Prevents scheduling the nav tour multiple times per mount
   bool _navTourScheduled = false;
 
   @override
@@ -30,16 +37,20 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
     final mq = MediaQuery.of(context);
     final w = size.width;
     final shortest = math.min(size.width, size.height);
+    // Responsive scaler relative to a 375pt logical device
     final s = (shortest / 375.0).clamp(0.85, 1.30);
     double sp(double v) => (v * s).toDouble();
 
+    // Current route location (used to decide when to hide chrome)
     final location = GoRouterState.of(context).uri.toString();
     final bool isArDetails =
         location.startsWith('/ar/xt') || location.startsWith('/ar/emax');
 
+    // Global UI flags (hide chrome while searching or on certain pages)
     final bool hideChrome = ref.watch(hideChromeProvider);
     final bool hideNav = isArDetails || hideChrome;
 
+    // Schedule the bottom nav tour only once and only if the nav is visible
     if (!_navTourScheduled && !hideNav) {
       _navTourScheduled = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -51,21 +62,25 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
       });
     }
 
+    // Sizes for nav and assistant FAB
     final navHeight = sp(58);
     final btnSize = (w * 0.12).clamp(sp(40.0), sp(52.0)).toDouble();
 
+    // Assistant FAB offset adapts when bottom nav is hidden
     final double assistantBottomOffset = hideNav
         ? (mq.padding.bottom + sp(30))
         : (navHeight + mq.padding.bottom + sp(30));
 
     return Scaffold(
-      extendBody: true,
+      extendBody: true, // allow content under the rounded bottom nav shadow
       backgroundColor: const Color(0xFFF5F5F7),
 
       body: Stack(
         children: [
+          // Body is the nested navigation shell
           Positioned.fill(child: widget.shell),
 
+          // Floating Assistant button (hidden on AR details or when chrome is hidden)
           if (!hideNav)
             Positioned(
               right: sp(16),
@@ -88,6 +103,7 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
                       width: btnSize,
                       height: btnSize,
                       child: Center(
+                        // Scale the chatbot image inside the circular button
                         child: FractionallySizedBox(
                           widthFactor: 0.75,
                           heightFactor: 0.75,
@@ -105,6 +121,7 @@ class _AppScaffoldState extends ConsumerState<AppScaffold> {
         ],
       ),
 
+      // Rounded "pill" bottom navigation; hidden on AR details or when chrome is hidden
       bottomNavigationBar: hideNav
           ? null
           : SafeArea(
@@ -132,6 +149,7 @@ class _BottomPillNav extends StatelessWidget {
   final ValueChanged<int> onChanged;
   final double height;
 
+  // Showcase keys for each tab
   final GlobalKey kShop;
   final GlobalKey kFavourites;
   final GlobalKey kAR;
@@ -160,6 +178,7 @@ class _BottomPillNav extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(sp(28)),
         boxShadow: [
+          // Soft layered elevation for a floating pill look
           BoxShadow(
             color: const Color(0x22000000),
             blurRadius: sp(22),
@@ -179,11 +198,14 @@ class _BottomPillNav extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: LayoutBuilder(
         builder: (context, cons) {
+          // Horizontal padding scales with available width/height
           final pad =
               (math.min(cons.maxWidth, height) / 375.0).clamp(0.85, 1.30) * 6;
           final slotW = (cons.maxWidth - pad * 2) / 4;
+
           return Stack(
             children: [
+              // Animated selection highlight sliding under the active tab
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 220),
                 curve: Curves.easeOut,
@@ -198,11 +220,12 @@ class _BottomPillNav extends StatelessWidget {
                   ),
                 ),
               ),
+
+              // Four evenly spaced tab icons with Showcase wrappers
               Padding(
                 padding: EdgeInsets.all(pad),
                 child: Row(
                   children: [
-                    // Shop
                     Showcase(
                       key: kShop,
                       description: 'Shop: browse ABB products and categories.',
@@ -214,7 +237,6 @@ class _BottomPillNav extends StatelessWidget {
                         onTap: () => onChanged(0),
                       ),
                     ),
-                    // Favourites
                     Showcase(
                       key: kFavourites,
                       description:
@@ -227,7 +249,6 @@ class _BottomPillNav extends StatelessWidget {
                         onTap: () => onChanged(1),
                       ),
                     ),
-                    // AR
                     Showcase(
                       key: kAR,
                       description: 'AR: place 3D models in your environment.',
@@ -239,7 +260,6 @@ class _BottomPillNav extends StatelessWidget {
                         onTap: () => onChanged(2),
                       ),
                     ),
-                    // Profile
                     Showcase(
                       key: kProfile,
                       description:

@@ -6,19 +6,14 @@ import '../domain/cart_item.dart';
 import '../data/cart_repository_firebase.dart';
 import '../../../core/firebase/firebase_providers.dart';
 
-/// Prezzi già IVA inclusa: nessun ricalcolo IVA.
-/// - subtotal = somma (unitPrice * qty) [lordo]
-/// - tax      = 0.0
-/// - total    = subtotal
 class CartState {
   final AsyncValue<List<CartItem>> items;
 
-  /// Tenuto per compatibilità; non influisce sui totali.
   final double taxRate;
 
   const CartState({
     required this.items,
-    this.taxRate = 0.0, // IVA non applicata
+    this.taxRate = 0.0,
   });
 
   /// Creates a new state instance overriding any provided fields.
@@ -31,10 +26,7 @@ class CartState {
     orElse: () => 0.0,
   );
 
-  /// Nessuna IVA aggiunta: già inclusa nei prezzi.
   double get tax => 0.0;
-
-  /// Grand total coincide con il lordo (IVA inclusa).
   double get total => subtotal;
 
   /// Initial state with loading items.
@@ -90,7 +82,7 @@ class CartController extends StateNotifier<CartState> {
         code: p.code,
         displayName: p.displayName,
         imageUrl: p.imageUrl,
-        unitPrice: p.price, // già IVA inclusa
+        unitPrice: p.price,
         qty: qty,
       ),
       by: qty,

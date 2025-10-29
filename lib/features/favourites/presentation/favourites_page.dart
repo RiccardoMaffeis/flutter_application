@@ -10,7 +10,6 @@ import '../../shop/presentation/widgets/product_card.dart';
 import '../controllers/favourites_controller.dart';
 import '../../shop/controllers/shop_controller.dart';
 
-/// Page that displays the user's favourite products (100% responsive).
 class FavouritesPage extends ConsumerStatefulWidget {
   const FavouritesPage({super.key});
 

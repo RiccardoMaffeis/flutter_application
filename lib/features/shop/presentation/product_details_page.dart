@@ -11,6 +11,9 @@ import 'package:flutter_application/features/shop/presentation/widgets/cart_icon
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:showcaseview/showcaseview.dart';
+import 'package:flutter_application/core/tour/coach_tour.dart';
+
 import '../../../core/theme/app_theme.dart';
 import '../../shop/controllers/shop_controller.dart';
 import '../../shop/domain/product_details.dart';
@@ -77,6 +80,23 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
 
   double _familyImageScale(String famUp) => 0.82;
 
+  final _kBack = GlobalKey();
+  final _kPdf = GlobalKey();
+  final _kAdd = GlobalKey();
+  bool _tourScheduled = false;
+
+  void _scheduleTour(BuildContext context) {
+    if (_tourScheduled) return;
+    _tourScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(coachTourServiceProvider).startOrQueue(
+        context,
+        TourSection.product,
+        [_kBack, _kPdf, _kAdd],
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final details = ref.watch(productDetailsProvider(widget.productId));
@@ -87,7 +107,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
-    // ---- Responsive metrics ----
     final w = mq.size.width;
     final h = mq.size.height;
     final ts = mq.textScaleFactor.clamp(1.0, 1.3);
@@ -96,38 +115,29 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
     double sp(double v) => (v * scale).toDouble();
 
     final double titleSize = (w * 0.09).clamp(sp(24.0), sp(40.0)).toDouble();
-
     final double iconSize = (w * 0.085).clamp(sp(26.0), sp(35.0)).toDouble();
-
-    // Accent bar
     final double barH = (w * 0.01).clamp(sp(3.0), sp(4.0)).toDouble();
 
-    // Product image and header heights (come prima)
     _familyImageScale('');
     final double imgSizeBaseFrac = 0.94;
 
-    // Content paddings
     final double sidePad = (w * 0.04);
     final double sheetTopRadius = (w * 0.055);
 
-    // CTA button
     final double ctaSide = (w * 0.12);
     final double ctaH = (h * 0.06);
     final double ctaRadius = ctaH * 0.5;
     final double ctaFont = (w * 0.055) * ts;
 
-    // Text sizes
     final double sectionTitle = (w * 0.055) * ts;
     final double priceSize = (w * 0.07) * ts;
     final double specTitleSize = (w * 0.045) * ts;
     final double specValueSize = (w * 0.04) * ts;
     final double snackFont = (w * 0.04) * ts;
 
-    // Floating PDF button
     final double pdfBtn = (w * 0.11);
     final double pdfIcon = (pdfBtn * 0.5);
 
-    // Colors
     final bgScaffold = theme.scaffoldBackgroundColor;
     final onSurface = cs.onSurface.withOpacity(0.85);
     final dividerColor = cs.outlineVariant;
@@ -151,6 +161,8 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
         ),
       ),
       data: (ProductDetails d) {
+        _scheduleTour(context);
+
         final p = d.product;
         final famTitle = _familyTitle(p.categoryId);
         final isFav = shop.favourites.contains(p.id);
@@ -165,30 +177,22 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
           body: SafeArea(
             child: Column(
               children: [
+                // ----- Header con titolo realmente centrato -----
                 Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: sp(12),
                     vertical: sp(6),
                   ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back),
-                        iconSize: iconSize,
-                        color: cs.onSurface,
-                        onPressed: () {
-                          if (Navigator.of(context).canPop()) {
-                            context.pop();
-                          } else {
-                            context.go('/home');
-                          }
-                        },
-                        tooltip: MaterialLocalizations.of(
-                          context,
-                        ).backButtonTooltip,
-                      ),
-                      Expanded(
-                        child: Center(
+                  child: SizedBox(
+                    height: math.max(iconSize, sp(40)) + sp(8),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Titolo centrato con padding simmetrico per non sovrapporsi alle icone
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: iconSize * 2.4,
+                          ),
                           child: Text(
                             famTitle,
                             textAlign: TextAlign.center,
@@ -197,20 +201,62 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                 ?.copyWith(
                                   fontWeight: FontWeight.w900,
                                   fontSize: titleSize,
-                                  // opzionale: lascia senza color per essere 1:1 con Shop
-                                  // color: cs.onSurface,
                                 ),
                           ),
                         ),
-                      ),
-                      CartIconButton(
-                        onPressed: () {
-                          if (_cooldownActive) return;
-                          _startCooldown(500);
-                          showCartPopup(context, ref);
-                        },
-                      ),
-                    ],
+
+                        // Back (Showcase) a sinistra
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Showcase(
+                            key: _kBack,
+                            description:
+                                'Go back to the previous page or home.',
+                            overlayOpacity: 0.2,
+                            targetPadding: const EdgeInsets.all(2),
+                            child: IconButton(
+                              icon: const Icon(Icons.arrow_back),
+                              iconSize: iconSize,
+                              color: cs.onSurface,
+                              onPressed: () {
+                                if (Navigator.of(context).canPop()) {
+                                  context.pop();
+                                } else {
+                                  context.go('/home');
+                                }
+                              },
+                              tooltip: MaterialLocalizations.of(
+                                context,
+                              ).backButtonTooltip,
+                            ),
+                          ),
+                        ),
+
+                        // Help + Cart a destra
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.help_outline, size: iconSize),
+                                tooltip: 'Show page tour',
+                                onPressed: () => ref
+                                    .read(coachTourServiceProvider)
+                                    .startNow(context, [_kBack, _kPdf, _kAdd]),
+                              ),
+                              CartIconButton(
+                                onPressed: () {
+                                  if (_cooldownActive) return;
+                                  _startCooldown(500);
+                                  showCartPopup(context, ref);
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
 
@@ -331,7 +377,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                     ),
                                   ),
 
-                                  // Scrollable content
                                   Expanded(
                                     child: SingleChildScrollView(
                                       physics: const BouncingScrollPhysics(),
@@ -415,47 +460,56 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                                 ],
                               ),
 
-                              // Add to cart CTA
                               Positioned(
                                 left: ctaSide,
                                 right: ctaSide,
                                 bottom: h * 0.02,
                                 child: SafeArea(
                                   top: false,
-                                  child: SizedBox(
-                                    height: ctaH,
-                                    child: ElevatedButton(
-                                      onPressed: () async {
-                                        await ref
-                                            .read(
-                                              cartControllerProvider.notifier,
-                                            )
-                                            .add(p, qty: qty);
-                                        if (!context.mounted) return;
-                                        showAddToCartSnack(
-                                          context,
-                                          ref: ref,
-                                          product: p,
-                                          qty: qty,
-                                        );
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppTheme.accent,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            ctaRadius,
-                                          ),
-                                        ),
-                                        elevation: 2,
-                                      ),
-                                      child: Text(
-                                        'Add to cart',
-                                        style: theme.textTheme.titleMedium
-                                            ?.copyWith(
-                                              color: cs.onPrimary,
-                                              fontSize: ctaFont,
-                                              fontWeight: FontWeight.w700,
+                                  child: Showcase(
+                                    key: _kAdd,
+                                    description:
+                                        'Add the selected quantity to your cart.',
+                                    overlayOpacity: 0.2,
+                                    targetPadding: const EdgeInsets.all(6),
+                                    targetBorderRadius: BorderRadius.circular(
+                                      ctaRadius,
+                                    ),
+                                    child: SizedBox(
+                                      height: ctaH,
+                                      child: ElevatedButton(
+                                        onPressed: () async {
+                                          await ref
+                                              .read(
+                                                cartControllerProvider.notifier,
+                                              )
+                                              .add(p, qty: qty);
+                                          if (!context.mounted) return;
+                                          showAddToCartSnack(
+                                            context,
+                                            ref: ref,
+                                            product: p,
+                                            qty: qty,
+                                          );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppTheme.accent,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              ctaRadius,
                                             ),
+                                          ),
+                                          elevation: 2,
+                                        ),
+                                        child: Text(
+                                          'Add to cart',
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                                color: cs.onPrimary,
+                                                fontSize: ctaFont,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -466,7 +520,6 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                         ),
                       ),
 
-                      // Product image (overlapping header)
                       Positioned(
                         top: headerH - imageSize + overlap,
                         left: 0,
@@ -491,123 +544,129 @@ class _ProductDetailsPageState extends ConsumerState<ProductDetailsPage> {
                         ),
                       ),
 
-                      // Floating PDF button
                       Positioned(
                         top: h * 0.01,
                         right: sidePad * 0.6,
-                        child: Material(
-                          color: AppTheme.accent,
-                          shape: const CircleBorder(),
-                          elevation: 2,
-                          clipBehavior: Clip.antiAlias,
-                          child: InkWell(
-                            customBorder: const CircleBorder(),
-                            onTap: _pdfBusy
-                                ? null
-                                : () async {
-                                    setState(() => _pdfBusy = true);
-                                    try {
-                                      await Future.delayed(
-                                        const Duration(milliseconds: 120),
-                                      );
-                                      final prod = d.product;
-                                      final famUpper = _reFamily
-                                          .firstMatch(
-                                            '${prod.categoryId} ${prod.code} ${prod.displayName}'
-                                                .toLowerCase(),
-                                          )
-                                          ?.group(1)
-                                          ?.toUpperCase();
+                        child: Showcase(
+                          key: _kPdf,
+                          description: 'Open the product datasheet (PDF).',
+                          overlayOpacity: 0.2,
+                          targetPadding: const EdgeInsets.all(6),
+                          child: Material(
+                            color: AppTheme.accent,
+                            shape: const CircleBorder(),
+                            elevation: 2,
+                            clipBehavior: Clip.antiAlias,
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: _pdfBusy
+                                  ? null
+                                  : () async {
+                                      setState(() => _pdfBusy = true);
+                                      try {
+                                        await Future.delayed(
+                                          const Duration(milliseconds: 120),
+                                        );
+                                        final prod = d.product;
+                                        final famUpper = _reFamily
+                                            .firstMatch(
+                                              '${prod.categoryId} ${prod.code} ${prod.displayName}'
+                                                  .toLowerCase(),
+                                            )
+                                            ?.group(1)
+                                            ?.toUpperCase();
 
-                                      if (famUpper == null) {
-                                        if (!mounted) return;
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'Family not recognized',
-                                              style: TextStyle(
-                                                fontSize: snackFont,
+                                        if (famUpper == null) {
+                                          if (!mounted) return;
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                'Family not recognized',
+                                                style: TextStyle(
+                                                  fontSize: snackFont,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        );
-                                        return;
-                                      }
-
-                                      final src = await PdfCacheService.instance
-                                          .resolveByFamilyAndId(
-                                            famUpper: famUpper,
-                                            productId: prod.id,
                                           );
+                                          return;
+                                        }
 
-                                      if (!mounted) return;
-                                      if (src == null) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'PDF not found: $famUpper/${prod.id}.pdf',
-                                              style: TextStyle(
-                                                fontSize: snackFont,
+                                        final src = await PdfCacheService
+                                            .instance
+                                            .resolveByFamilyAndId(
+                                              famUpper: famUpper,
+                                              productId: prod.id,
+                                            );
+
+                                        if (!mounted) return;
+                                        if (src == null) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                'PDF not found: $famUpper/${prod.id}.pdf',
+                                                style: TextStyle(
+                                                  fontSize: snackFont,
+                                                ),
                                               ),
                                             ),
-                                          ),
-                                        );
-                                        return;
-                                      }
+                                          );
+                                          return;
+                                        }
 
-                                      if (src is PdfFile) {
-                                        await context.push(
-                                          '/pdf-viewer',
-                                          extra: {
-                                            'title': prod.code,
-                                            'pdfFile': src.path,
-                                          },
-                                        );
-                                      } else if (src is PdfNetwork) {
-                                        await context.push(
-                                          '/pdf-viewer',
-                                          extra: {
-                                            'title': prod.code,
-                                            'pdfUrl': src.url,
-                                          },
-                                        );
+                                        if (src is PdfFile) {
+                                          await context.push(
+                                            '/pdf-viewer',
+                                            extra: {
+                                              'title': prod.code,
+                                              'pdfFile': src.path,
+                                            },
+                                          );
+                                        } else if (src is PdfNetwork) {
+                                          await context.push(
+                                            '/pdf-viewer',
+                                            extra: {
+                                              'title': prod.code,
+                                              'pdfUrl': src.url,
+                                            },
+                                          );
+                                        }
+                                      } finally {
+                                        if (mounted)
+                                          setState(() => _pdfBusy = false);
                                       }
-                                    } finally {
-                                      if (mounted)
-                                        setState(() => _pdfBusy = false);
-                                    }
-                                  },
-                            child: SizedBox(
-                              width: pdfBtn,
-                              height: pdfBtn,
-                              child: Tooltip(
-                                message: 'Open PDF / datasheet',
-                                child: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 160),
-                                  child: _pdfBusy
-                                      ? SizedBox(
-                                          key: const ValueKey('pdfbusy'),
-                                          width: pdfIcon,
-                                          height: pdfIcon,
-                                          child:
-                                              const CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                valueColor:
-                                                    AlwaysStoppedAnimation<
-                                                      Color
-                                                    >(Colors.white),
-                                              ),
-                                        )
-                                      : Icon(
-                                          key: const ValueKey('pdficon'),
-                                          Icons.picture_as_pdf,
-                                          color: cs.onPrimary,
-                                          size: pdfIcon,
-                                        ),
+                                    },
+                              child: SizedBox(
+                                width: pdfBtn,
+                                height: pdfBtn,
+                                child: Tooltip(
+                                  message: 'Open PDF / datasheet',
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 160),
+                                    child: _pdfBusy
+                                        ? SizedBox(
+                                            key: const ValueKey('pdfbusy'),
+                                            width: pdfIcon,
+                                            height: pdfIcon,
+                                            child:
+                                                const CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation<
+                                                        Color
+                                                      >(Colors.white),
+                                                ),
+                                          )
+                                        : Icon(
+                                            key: const ValueKey('pdficon'),
+                                            Icons.picture_as_pdf,
+                                            color: cs.onPrimary,
+                                            size: pdfIcon,
+                                          ),
+                                  ),
                                 ),
                               ),
                             ),

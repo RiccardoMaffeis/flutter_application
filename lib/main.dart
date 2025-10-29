@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter/material.dart';
+import 'package:flutter_application/core/tour/coach_tour.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:showcaseview/showcaseview.dart'; // NEW
 
 import 'core/theme/app_theme.dart';
 import 'app_router.dart';
@@ -35,14 +37,19 @@ class MyApp extends ConsumerWidget {
     // Watch the router provider so navigation updates reactively on auth changes.
     final router = ref.watch(routerProvider);
 
-    return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      title: 'Welcome/Auth Demo',
-      // Centralized light theme for the app.
-      theme: AppTheme.light,
-      
-      // GoRouter configuration that handles routing and redirects.
-      routerConfig: router,
+    return ShowCaseWidget(
+      onStart: (index, key) {
+        ref.read(coachTourServiceProvider).onShowcaseStart(index!, key);
+      },
+      onComplete: (index, key) {
+        ref.read(coachTourServiceProvider).onShowcaseStepComplete(index!, key);
+      },
+      builder: (context) => MaterialApp.router(
+        debugShowCheckedModeBanner: false,
+        title: 'Welcome/Auth Demo',
+        theme: AppTheme.light,
+        routerConfig: router,
+      ),
     );
   }
 }

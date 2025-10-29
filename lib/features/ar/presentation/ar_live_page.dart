@@ -1,11 +1,11 @@
-// Fullscreen AR placement page using ar_flutter_plugin.
-// All paddings/radii/icon sizes/text sizes are now responsive (no fixed pixels).
-
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:showcaseview/showcaseview.dart';
+
 import 'package:ar_flutter_plugin/widgets/ar_view.dart';
 import 'package:ar_flutter_plugin/managers/ar_session_manager.dart';
 import 'package:ar_flutter_plugin/managers/ar_object_manager.dart';
@@ -15,14 +15,15 @@ import 'package:ar_flutter_plugin/models/ar_node.dart';
 import 'package:ar_flutter_plugin/models/ar_anchor.dart';
 import 'package:ar_flutter_plugin/datatypes/node_types.dart';
 import 'package:ar_flutter_plugin/datatypes/config_planedetection.dart';
-import 'package:flutter_application/core/theme/app_theme.dart';
 
-import 'package:vector_math/vector_math_64.dart' as vm;
 import 'package:flutter/services.dart' show rootBundle, HapticFeedback;
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:vector_math/vector_math_64.dart' as vm;
 
-/// Simple descriptor of an AR placeable item.
+import 'package:flutter_application/core/theme/app_theme.dart';
+import 'package:flutter_application/core/tour/coach_tour.dart';
+
 class ARItem {
   final String title;
   final String glbPath;
@@ -30,7 +31,6 @@ class ARItem {
   const ARItem(this.title, this.glbPath, this.scale);
 }
 
-/// Demo catalog (paths must exist and be declared in pubspec.yaml).
 const List<ARItem> kXtModels = [
   ARItem('XT1 3 poli', 'lib/3Dmodels/XT1/XT1_3p.glb', 0.20),
   ARItem('XT1 4 poli', 'lib/3Dmodels/XT1/XT1_4p.glb', 0.20),
@@ -46,7 +46,7 @@ const List<ARItem> kXtModels = [
   ARItem('XT7 4 poli', 'lib/3Dmodels/XT7/XT7_4p.glb', 0.20),
 ];
 
-class ArLivePage extends StatefulWidget {
+class ArLivePage extends ConsumerStatefulWidget {
   final String title;
   final String? glbUrl;
   final String? assetGlb;
@@ -61,10 +61,10 @@ class ArLivePage extends StatefulWidget {
   });
 
   @override
-  State<ArLivePage> createState() => _ArLivePageState();
+  ConsumerState<ArLivePage> createState() => _ArLivePageState();
 }
 
-class _ArLivePageState extends State<ArLivePage> {
+class _ArLivePageState extends ConsumerState<ArLivePage> {
   ARSessionManager? _session;
   ARObjectManager? _objectMgr;
   ARAnchorManager? _anchorMgr;
@@ -77,6 +77,23 @@ class _ArLivePageState extends State<ArLivePage> {
   double _sliderXDeg = 0;
   bool _appendMode = false;
   ARItem? _pendingItem;
+
+  final _kBack = GlobalKey();
+  final _kAdd = GlobalKey();
+  final _kDelete = GlobalKey();
+  final _kRotate = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(coachTourServiceProvider).startOrQueue(
+        context,
+        TourSection.arLive,
+        [_kBack, _kAdd, _kDelete, _kRotate],
+      );
+    });
+  }
 
   @override
   void dispose() {
@@ -161,12 +178,41 @@ class _ArLivePageState extends State<ArLivePage> {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: toolbarH,
+        leading: Showcase(
+          key: _kBack,
+          description: 'Go back to the previous screen.',
+          overlayOpacity: 0.2,
+          targetPadding: const EdgeInsets.all(2),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              }
+            },
+            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          ),
+        ),
         title: Text(
           widget.title,
           style: TextStyle(fontSize: titleFont, fontWeight: FontWeight.w800),
           overflow: TextOverflow.ellipsis,
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: 'Show page tour',
+            onPressed: () {
+              ref.read(coachTourServiceProvider).startNow(context, [
+                _kBack,
+                _kAdd,
+                _kDelete,
+                _kRotate,
+              ]);
+            },
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -175,52 +221,62 @@ class _ArLivePageState extends State<ArLivePage> {
             onARViewCreated: _onViewCreated,
           ),
 
-          // Add model (top-left)
           Positioned(
             left: cornerPad,
             top: cornerTop,
-            child: Material(
-              type: MaterialType.transparency,
-              child: IconButton(
-                icon: Icon(Icons.add, size: cornerIcon, color: Colors.white),
-                tooltip: 'Add a model',
-                onPressed: _onPressAdd,
-                splashRadius: (cornerIcon * 0.6).clamp(sp(18), sp(28)),
+            child: Showcase(
+              key: _kAdd,
+              description: 'Pick a device to add, then tap a detected plane.',
+              overlayOpacity: 0.2,
+              targetPadding: const EdgeInsets.all(4),
+              child: Material(
+                type: MaterialType.transparency,
+                child: IconButton(
+                  icon: Icon(Icons.add, size: cornerIcon, color: Colors.white),
+                  tooltip: 'Add a model',
+                  onPressed: _onPressAdd,
+                  splashRadius: (cornerIcon * 0.6).clamp(sp(18), sp(28)),
+                ),
               ),
             ),
           ),
 
-          // Remove all (top-right)
           Positioned(
             right: cornerPad,
             top: cornerTop,
-            child: Material(
-              type: MaterialType.transparency,
-              child: IconButton(
-                icon: Icon(
-                  Icons.delete_outline,
-                  size: cornerIcon,
-                  color: _placed.isEmpty
-                      ? Colors.white.withOpacity(0.4)
-                      : Colors.white,
-                ),
-                tooltip: 'Remove all models',
-                onPressed: _placed.isEmpty
-                    ? null
-                    : () async {
-                        final ok = await _confirmClearAll(context);
-                        if (ok == true) {
-                          await _removeAll();
-                          if (mounted) {
-                            showArSnack(
-                              context,
-                              title: 'All models removed',
-                              icon: Icons.delete_outline,
-                            );
+            child: Showcase(
+              key: _kDelete,
+              description: 'Remove all placed models from the scene.',
+              overlayOpacity: 0.2,
+              targetPadding: const EdgeInsets.all(4),
+              child: Material(
+                type: MaterialType.transparency,
+                child: IconButton(
+                  icon: Icon(
+                    Icons.delete_outline,
+                    size: cornerIcon,
+                    color: _placed.isEmpty
+                        ? Colors.white.withOpacity(0.4)
+                        : Colors.white,
+                  ),
+                  tooltip: 'Remove all models',
+                  onPressed: _placed.isEmpty
+                      ? null
+                      : () async {
+                          final ok = await _confirmClearAll(context);
+                          if (ok == true) {
+                            await _removeAll();
+                            if (mounted) {
+                              showArSnack(
+                                context,
+                                title: 'All models removed',
+                                icon: Icons.delete_outline,
+                              );
+                            }
                           }
-                        }
-                      },
-                splashRadius: (cornerIcon * 0.6).clamp(sp(18), sp(28)),
+                        },
+                  splashRadius: (cornerIcon * 0.6).clamp(sp(18), sp(28)),
+                ),
               ),
             ),
           ),
@@ -236,83 +292,94 @@ class _ArLivePageState extends State<ArLivePage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(sp(18)),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: sp(10),
-                          vertical: sp(6),
-                        ),
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minWidth: (size.width * 0.45).clamp(
-                              sp(170),
-                              sp(260),
-                            ),
-                            maxWidth: (size.width * 0.72).clamp(
-                              sp(220),
-                              sp(360),
-                            ),
+                    child: Showcase(
+                      key: _kRotate,
+                      description:
+                          'Rotate the selected model with this bar.\n'
+                          'First, tap a model to select it.',
+                      overlayOpacity: 0.2,
+                      targetPadding: const EdgeInsets.all(4),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(sp(18)),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: sp(10),
+                            vertical: sp(6),
                           ),
-                          child: Opacity(
-                            opacity: _selectedId == null ? 0.5 : 1,
-                            child: IgnorePointer(
-                              ignoring: _selectedId == null,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.screen_rotation_alt_outlined,
-                                    size: sp(18),
-                                    color: Colors.white,
-                                  ),
-                                  SizedBox(width: sp(6)),
-                                  Expanded(
-                                    child: SliderTheme(
-                                      data: SliderTheme.of(context).copyWith(
-                                        trackHeight: sp(4),
-                                        activeTrackColor: AppTheme.accent,
-                                        inactiveTrackColor: Colors.white,
-                                        thumbColor: AppTheme.accent,
-                                        overlayColor: AppTheme.accent
-                                            .withOpacity(0.12),
-                                        thumbShape: RoundSliderThumbShape(
-                                          enabledThumbRadius: sp(9),
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                              minWidth: (size.width * 0.45).clamp(
+                                sp(170),
+                                sp(260),
+                              ),
+                              maxWidth: (size.width * 0.72).clamp(
+                                sp(220),
+                                sp(360),
+                              ),
+                            ),
+                            child: Opacity(
+                              opacity: _selectedId == null ? 0.5 : 1,
+                              child: IgnorePointer(
+                                ignoring: _selectedId == null,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.screen_rotation_alt_outlined,
+                                      size: sp(18),
+                                      color: Colors.white,
+                                    ),
+                                    SizedBox(width: sp(6)),
+                                    Expanded(
+                                      child: SliderTheme(
+                                        data: SliderTheme.of(context).copyWith(
+                                          trackHeight: sp(4),
+                                          activeTrackColor: AppTheme.accent,
+                                          inactiveTrackColor: Colors.white,
+                                          thumbColor: AppTheme.accent,
+                                          overlayColor: AppTheme.accent
+                                              .withOpacity(0.12),
+                                          thumbShape: RoundSliderThumbShape(
+                                            enabledThumbRadius: sp(9),
+                                          ),
+                                          overlayShape: RoundSliderOverlayShape(
+                                            overlayRadius: sp(15),
+                                          ),
+                                          showValueIndicator:
+                                              ShowValueIndicator.never,
                                         ),
-                                        overlayShape: RoundSliderOverlayShape(
-                                          overlayRadius: sp(15),
-                                        ),
-                                        showValueIndicator:
-                                            ShowValueIndicator.never,
-                                      ),
-                                      child: Slider(
-                                        value: _sliderXDeg.clamp(-180, 180),
-                                        onChanged: (v) => _setSelectedXDeg(v),
-                                        min: -180,
-                                        max: 180,
-                                        divisions: math.max(
-                                          60,
-                                          (180 * (shortest / 375)).round(),
+                                        child: Slider(
+                                          value: _sliderXDeg.clamp(-180, 180),
+                                          onChanged: (v) => _setSelectedXDeg(v),
+                                          min: -180,
+                                          max: 180,
+                                          divisions: math.max(
+                                            60,
+                                            (180 * (shortest / 375)).round(),
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  SizedBox(width: sp(6)),
-                                  SizedBox(
-                                    width: sp(48),
-                                    child: Text(
-                                      '${_sliderXDeg.toStringAsFixed(0)}°',
-                                      textAlign: TextAlign.right,
-                                      style: TextStyle(
-                                        fontSize:
-                                            (sp(13) *
-                                            mq.textScaleFactor.clamp(1.0, 1.3)),
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.white,
+                                    SizedBox(width: sp(6)),
+                                    SizedBox(
+                                      width: sp(48),
+                                      child: Text(
+                                        '${_sliderXDeg.toStringAsFixed(0)}°',
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          fontSize:
+                                              (sp(13) *
+                                              mq.textScaleFactor.clamp(
+                                                1.0,
+                                                1.3,
+                                              )),
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -329,11 +396,9 @@ class _ArLivePageState extends State<ArLivePage> {
             ),
           ),
 
-          // Invisible overlay (reserved)
           Positioned.fill(
             child: const _BusyOverlay(visible: false, message: ''),
           ),
-          // Busy overlay
           Positioned.fill(
             child: _BusyOverlay(visible: _placeBusy, message: 'Placing…'),
           ),
@@ -868,14 +933,12 @@ class _TinyIconButton extends StatelessWidget {
   }
 }
 
-/// Top-aligned snack banner shown via OverlayEntry.
-/// Paddings, radius, icon/text sizes are responsive.
 void showArSnack(
   BuildContext context, {
   required String title,
   String? subtitle,
   IconData icon = Icons.info_outline,
-  Color? color, // reserved
+  Color? color,
   IconData? actionIcon,
   VoidCallback? onAction,
   bool centered = false,

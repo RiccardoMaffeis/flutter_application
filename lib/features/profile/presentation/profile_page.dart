@@ -6,13 +6,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'package:showcaseview/showcaseview.dart';               
+import 'package:flutter_application/core/tour/coach_tour.dart'; 
+
 import '../../../core/theme/app_theme.dart';
 import '../controllers/profile_controller.dart';
 
 /// Profile screen:
-/// - Shows basic user info (name/email/DOB/city) from `profileControllerProvider`
-/// - Lets the user log out (confirms via dialog, clears relevant providers)
-/// - Uses a custom bottom pill navigation at the bottom
+/// - Shows basic user info (name/email/DOB/city)
+/// - Logout (dialog confirm, clears providers, go '/welcome')
+/// - One-step coach mark on Logout + Help button to restart the tour
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
@@ -21,8 +24,20 @@ class ProfilePage extends ConsumerStatefulWidget {
 }
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
+  final _kLogout = GlobalKey();
 
-  /// Formats a DateTime as DD/MM/YYYY (returns '—' if null).
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(coachTourServiceProvider).startOrQueue(
+        context,
+        TourSection.profile,
+        [_kLogout],
+      );
+    });
+  }
+
   String _fmtDob(DateTime? d) {
     if (d == null) return '—';
     final dd = d.day.toString().padLeft(2, '0');
@@ -31,10 +46,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     return '$dd/$mm/$yy';
   }
 
-  /// Handles logout:
-  /// - Shows a blocking confirmation dialog
-  /// - On confirm: Firebase signOut, invalidate chat/profile providers
-  /// - Navigates to '/welcome' if still mounted
   Future<void> _onLogoutPressed(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -53,27 +64,21 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Watches the profile async state (loading/data/error).
     final prof = ref.watch(profileControllerProvider);
 
-    // ---- Responsive metrics (text + spacings) ----
     final media = MediaQuery.of(context);
     final size = media.size;
     final w = size.width;
     final shortest = size.shortestSide;
     final ts = media.textScaleFactor.clamp(1.0, 1.3);
-
-    // Base scale on a 375pt device; clamp to keep it readable on extremes
     final s = (shortest / 375.0).clamp(0.85, 1.30);
     double sp(double v) => v * s;
 
-    // Title & texts
     final double headerTitle = (w * 0.09).clamp(sp(28.0), sp(40.0)) * ts;
-    final double headerIcon = (w * 0.085).clamp(sp(26.0), sp(35.0));
-    final double sectionGap = (w * 0.08).clamp(sp(28.0), sp(40.0));
-    final double errorFont = (w * 0.045).clamp(sp(14.0), sp(18.0)) * ts;
+    final double headerIcon  = (w * 0.085).clamp(sp(26.0), sp(35.0));
+    final double sectionGap  = (w * 0.08).clamp(sp(28.0), sp(40.0));
+    final double errorFont   = (w * 0.045).clamp(sp(14.0), sp(18.0)) * ts;
 
-    // Reusable divider for the info card rows (scaled)
     final divider = Divider(
       height: sp(1),
       thickness: sp(1.2),
@@ -87,37 +92,42 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           children: [
             Column(
               children: [
-                // ----- Header with centered title and logout icon -----
                 Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: sp(12),
-                    vertical: sp(6),
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: sp(12), vertical: sp(6)),
                   child: Row(
                     children: [
-                      // Fixed-width spacer to keep title centered.
-                      SizedBox(width: sp(48)),
+                      IconButton(
+                        icon: Icon(Icons.help_outline, size: headerIcon),
+                        onPressed: () => ref
+                            .read(coachTourServiceProvider)
+                            .startNow(context, [_kLogout]),
+                      ),
                       Expanded(
                         child: Center(
                           child: Text(
                             'Profile',
-                            style: Theme.of(context).textTheme.headlineMedium
-                                ?.copyWith(
+                            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                   fontWeight: FontWeight.w900,
                                   fontSize: headerTitle,
                                 ),
                           ),
                         ),
                       ),
-                      // Logout action opens the confirmation dialog.
-                      IconButton(
-                        onPressed: () => _onLogoutPressed(context, ref),
-                        icon: Icon(Icons.logout, size: headerIcon),
+                      Showcase(
+                        key: _kLogout,
+                        description:
+                            'Log out of your account. You can sign in again later.',
+                        overlayOpacity: 0.2,
+                        targetPadding: const EdgeInsets.all(2),
+                        child: IconButton(
+                          onPressed: () => _onLogoutPressed(context, ref),
+                          icon: Icon(Icons.logout, size: headerIcon),
+                        ),
                       ),
                     ],
                   ),
                 ),
-                // Accent bar under header (brand color).
+
                 Container(
                   height: sp(4),
                   margin: EdgeInsets.symmetric(horizontal: sp(12)),
@@ -136,17 +146,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
                 SizedBox(height: sectionGap),
 
-                // ----- Profile content: loading/error/data states -----
                 prof.when(
-                  // Full-height loader.
                   loading: () => const Expanded(
                     child: Center(child: CircularProgressIndicator()),
                   ),
-                  // Error: ask to log in (original Italian copy preserved).
                   error: (e, _) => Expanded(
                     child: Center(
                       child: Text(
-                        'Accedi per vedere il profilo',
+                        'Login to view your profile',
                         style: TextStyle(
                           fontSize: errorFont,
                           fontWeight: FontWeight.w600,
@@ -160,7 +167,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       padding: EdgeInsets.symmetric(horizontal: sp(16)),
                       child: Column(
                         children: [
-                          // Avatar with camera overlay button (upload TODO).
                           Stack(
                             alignment: Alignment.bottomRight,
                             children: [
@@ -172,20 +178,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                 child: CircleAvatar(
                                   radius: sp(80),
                                   backgroundColor: Colors.white,
-                                  backgroundImage: (p.photoUrl != null)
-                                      ? NetworkImage(p.photoUrl!)
-                                      : null,
+                                  backgroundImage:
+                                      (p.photoUrl != null) ? NetworkImage(p.photoUrl!) : null,
                                   child: (p.photoUrl == null)
-                                      ? Icon(
-                                          Icons.person,
-                                          size: sp(85),
-                                          color: Colors.black26,
-                                        )
+                                      ? Icon(Icons.person, size: sp(85), color: Colors.black26)
                                       : null,
                                 ),
                               ),
-
-                              // Placeholder action for profile photo change.
                               Material(
                                 color: Colors.white,
                                 shape: const CircleBorder(),
@@ -193,14 +192,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                 child: InkWell(
                                   customBorder: const CircleBorder(),
                                   onTap: () {
-                                    // TODO: selezione/Upload foto profilo
                                   },
                                   child: Padding(
                                     padding: EdgeInsets.all(sp(6)),
-                                    child: Icon(
-                                      Icons.photo_camera_outlined,
-                                      size: sp(32),
-                                    ),
+                                    child: Icon(Icons.photo_camera_outlined, size: sp(32)),
                                   ),
                                 ),
                               ),
@@ -208,7 +203,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           ),
                           SizedBox(height: sectionGap),
 
-                          // Card with profile details (name/email/dob/city).
+                          // Info card
                           Container(
                             constraints: BoxConstraints(maxWidth: sp(400)),
                             decoration: BoxDecoration(
@@ -227,30 +222,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                   offset: Offset(0, sp(2)),
                                 ),
                               ],
-                              border: Border.all(
-                                color: const Color(0x11000000),
-                                width: sp(1),
-                              ),
+                              border: Border.all(color: const Color(0x11000000), width: sp(1)),
                             ),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                _ProfileRow(
-                                  label: 'Name',
-                                  value: p.displayName,
-                                ),
+                                _ProfileRow(label: 'Name',         value: p.displayName),
                                 divider,
-                                _ProfileRow(label: 'Email', value: p.email),
+                                _ProfileRow(label: 'Email',        value: p.email),
                                 divider,
-                                _ProfileRow(
-                                  label: 'Date of Birth',
-                                  value: _fmtDob(p.dob),
-                                ),
+                                _ProfileRow(label: 'Date of Birth',value: _fmtDob(p.dob)),
                                 divider,
-                                _ProfileRow(
-                                  label: 'City of Birth',
-                                  value: p.city.isEmpty ? '—' : p.city,
-                                ),
+                                _ProfileRow(label: 'City of Birth',value: p.city.isEmpty ? '—' : p.city),
                               ],
                             ),
                           ),
@@ -269,9 +252,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 }
 
 /// Confirmation dialog for logout.
-/// - Large title
-/// - "Yes" button returns true
-/// - Close icon (top-right) returns false
 class _LogoutDialog extends StatelessWidget {
   const _LogoutDialog();
 
@@ -286,14 +266,12 @@ class _LogoutDialog extends StatelessWidget {
     double sp(double v) => v * s;
 
     final double dlgTitle = (w * 0.09).clamp(sp(24.0), sp(40.0)) * ts;
-    final double btnFont = (w * 0.05).clamp(sp(16.0), sp(20.0)) * ts;
+    final double btnFont  = (w * 0.05).clamp(sp(16.0), sp(20.0)) * ts;
 
     return Dialog(
       backgroundColor: Colors.white,
       insetPadding: EdgeInsets.symmetric(horizontal: sp(28)),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(sp(18)),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(sp(18))),
       child: Stack(
         children: [
           Padding(
@@ -302,12 +280,8 @@ class _LogoutDialog extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(height: sp(6)),
-                Text(
-                  'Logout?',
-                  style: TextStyle(
-                    fontSize: dlgTitle,
-                    fontWeight: FontWeight.w800,
-                  ),
+                Text('Logout?',
+                  style: TextStyle(fontSize: dlgTitle, fontWeight: FontWeight.w800),
                 ),
                 SizedBox(height: sp(18)),
                 SizedBox(
@@ -318,13 +292,10 @@ class _LogoutDialog extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.accent,
                       padding: EdgeInsets.symmetric(vertical: sp(12)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(sp(22)),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(sp(22))),
                       elevation: 0,
                     ),
-                    child: Text(
-                      'Yes',
+                    child: Text('Yes',
                       style: TextStyle(
                         fontSize: btnFont,
                         color: Colors.white,
@@ -336,7 +307,6 @@ class _LogoutDialog extends StatelessWidget {
               ],
             ),
           ),
-          // Close icon (dismiss = false)
           Positioned(
             right: sp(6),
             top: sp(6),
@@ -353,7 +323,6 @@ class _LogoutDialog extends StatelessWidget {
 }
 
 /// Single labeled value row for the profile info card.
-/// - Left-aligned label, right-aligned value (ellipsized)
 class _ProfileRow extends StatelessWidget {
   final String label;
   final String value;
@@ -373,15 +342,11 @@ class _ProfileRow extends StatelessWidget {
     final double valueFont = (w * 0.042).clamp(sp(13.0), sp(17.0)) * ts;
 
     final labelStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
-      fontSize: labelFont,
-      fontWeight: FontWeight.w400,
-      color: Colors.black,
+      fontSize: labelFont, fontWeight: FontWeight.w400, color: Colors.black,
     );
 
     final valueStyle = Theme.of(context).textTheme.titleMedium?.copyWith(
-      fontSize: valueFont,
-      fontWeight: FontWeight.w600,
-      color: Colors.black,
+      fontSize: valueFont, fontWeight: FontWeight.w600, color: Colors.black,
     );
 
     return ListTile(

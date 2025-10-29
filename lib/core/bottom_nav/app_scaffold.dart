@@ -4,13 +4,28 @@ import 'package:flutter_application/core/bottom_nav/global_ui_providers.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_application/core/theme/app_theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:showcaseview/showcaseview.dart';
+import 'package:flutter_application/core/tour/coach_tour.dart';
 
-class AppScaffold extends ConsumerWidget {
+class AppScaffold extends ConsumerStatefulWidget {
   final StatefulNavigationShell shell;
   const AppScaffold({super.key, required this.shell});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppScaffold> createState() => _AppScaffoldState();
+}
+
+class _AppScaffoldState extends ConsumerState<AppScaffold> {
+  final _kTabShop = GlobalKey();
+  final _kTabFavourites = GlobalKey();
+  final _kTabAR = GlobalKey();
+  final _kTabProfile = GlobalKey();
+  final _kAssistant = GlobalKey();
+
+  bool _navTourScheduled = false;
+
+  @override
+  Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final mq = MediaQuery.of(context);
     final w = size.width;
@@ -23,8 +38,18 @@ class AppScaffold extends ConsumerWidget {
         location.startsWith('/ar/xt') || location.startsWith('/ar/emax');
 
     final bool hideChrome = ref.watch(hideChromeProvider);
-
     final bool hideNav = isArDetails || hideChrome;
+
+    if (!_navTourScheduled && !hideNav) {
+      _navTourScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(coachTourServiceProvider).startOrQueue(
+          context,
+          TourSection.nav,
+          [_kTabShop, _kTabFavourites, _kTabAR, _kTabProfile, _kAssistant],
+        );
+      });
+    }
 
     final navHeight = sp(58);
     final btnSize = (w * 0.12).clamp(sp(40.0), sp(52.0)).toDouble();
@@ -39,30 +64,37 @@ class AppScaffold extends ConsumerWidget {
 
       body: Stack(
         children: [
-          Positioned.fill(child: shell),
+          Positioned.fill(child: widget.shell),
 
           if (!hideNav)
             Positioned(
               right: sp(16),
               bottom: assistantBottomOffset,
-              child: Material(
-                color: Colors.white,
-                shape: const CircleBorder(),
-                elevation: sp(4),
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: () => context.push('/assistant'),
-                  child: SizedBox(
-                    width: btnSize,
-                    height: btnSize,
-                    child: Center(
-                      child: FractionallySizedBox(
-                        widthFactor: 0.75,
-                        heightFactor: 0.75,
-                        child: Image.asset(
-                          'lib/images/general/chatbot.png',
-                          fit: BoxFit.contain,
+              child: Showcase(
+                key: _kAssistant,
+                description:
+                    'Open the in-app Assistant.\nAsk about datasheets, manuals and specs.',
+                overlayOpacity: 0.2,
+                targetPadding: const EdgeInsets.all(6),
+                child: Material(
+                  color: Colors.white,
+                  shape: const CircleBorder(),
+                  elevation: sp(4),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () => context.push('/assistant'),
+                    child: SizedBox(
+                      width: btnSize,
+                      height: btnSize,
+                      child: Center(
+                        child: FractionallySizedBox(
+                          widthFactor: 0.75,
+                          heightFactor: 0.75,
+                          child: Image.asset(
+                            'lib/images/general/chatbot.png',
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       ),
                     ),
@@ -80,9 +112,14 @@ class AppScaffold extends ConsumerWidget {
               child: Padding(
                 padding: EdgeInsets.fromLTRB(sp(16), sp(8), sp(16), sp(16)),
                 child: _BottomPillNav(
-                  index: shell.currentIndex,
-                  height: navHeight,
-                  onChanged: (i) => shell.goBranch(i, initialLocation: false),
+                  index: widget.shell.currentIndex,
+                  height: sp(58),
+                  onChanged: (i) =>
+                      widget.shell.goBranch(i, initialLocation: false),
+                  kShop: _kTabShop,
+                  kFavourites: _kTabFavourites,
+                  kAR: _kTabAR,
+                  kProfile: _kTabProfile,
                 ),
               ),
             ),
@@ -94,10 +131,20 @@ class _BottomPillNav extends StatelessWidget {
   final int index;
   final ValueChanged<int> onChanged;
   final double height;
+
+  final GlobalKey kShop;
+  final GlobalKey kFavourites;
+  final GlobalKey kAR;
+  final GlobalKey kProfile;
+
   const _BottomPillNav({
     required this.index,
     required this.onChanged,
     required this.height,
+    required this.kShop,
+    required this.kFavourites,
+    required this.kAR,
+    required this.kProfile,
   });
 
   @override
@@ -133,8 +180,7 @@ class _BottomPillNav extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, cons) {
           final pad =
-              (math.min(cons.maxWidth, height) / 375.0).clamp(0.85, 1.30) *
-              6; // scala minima
+              (math.min(cons.maxWidth, height) / 375.0).clamp(0.85, 1.30) * 6;
           final slotW = (cons.maxWidth - pad * 2) / 4;
           return Stack(
             children: [
@@ -156,25 +202,55 @@ class _BottomPillNav extends StatelessWidget {
                 padding: EdgeInsets.all(pad),
                 child: Row(
                   children: [
-                    _NavIcon(
-                      icon: Icons.shopping_bag_outlined,
-                      selected: index == 0,
-                      onTap: () => onChanged(0),
+                    // Shop
+                    Showcase(
+                      key: kShop,
+                      description: 'Shop: browse ABB products and categories.',
+                      overlayOpacity: 0.2,
+                      targetPadding: const EdgeInsets.all(2),
+                      child: _NavIcon(
+                        icon: Icons.shopping_bag_outlined,
+                        selected: index == 0,
+                        onTap: () => onChanged(0),
+                      ),
                     ),
-                    _NavIcon(
-                      icon: Icons.favorite_border,
-                      selected: index == 1,
-                      onTap: () => onChanged(1),
+                    // Favourites
+                    Showcase(
+                      key: kFavourites,
+                      description:
+                          'Favourites: save items to revisit or compare later.',
+                      overlayOpacity: 0.2,
+                      targetPadding: const EdgeInsets.all(2),
+                      child: _NavIcon(
+                        icon: Icons.favorite_border,
+                        selected: index == 1,
+                        onTap: () => onChanged(1),
+                      ),
                     ),
-                    _NavIcon(
-                      icon: Icons.view_in_ar,
-                      selected: index == 2,
-                      onTap: () => onChanged(2),
+                    // AR
+                    Showcase(
+                      key: kAR,
+                      description: 'AR: place 3D models in your environment.',
+                      overlayOpacity: 0.2,
+                      targetPadding: const EdgeInsets.all(2),
+                      child: _NavIcon(
+                        icon: Icons.view_in_ar,
+                        selected: index == 2,
+                        onTap: () => onChanged(2),
+                      ),
                     ),
-                    _NavIcon(
-                      icon: Icons.person_outline,
-                      selected: index == 3,
-                      onTap: () => onChanged(3),
+                    // Profile
+                    Showcase(
+                      key: kProfile,
+                      description:
+                          'Profile: account, preferences and settings.',
+                      overlayOpacity: 0.2,
+                      targetPadding: const EdgeInsets.all(2),
+                      child: _NavIcon(
+                        icon: Icons.person_outline,
+                        selected: index == 3,
+                        onTap: () => onChanged(3),
+                      ),
                     ),
                   ],
                 ),

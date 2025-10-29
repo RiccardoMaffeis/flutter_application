@@ -1,4 +1,3 @@
-// lib/features/shop/presentation/shop_page.dart
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_application/core/bottom_nav/global_ui_providers.dart';
@@ -8,6 +7,9 @@ import 'package:flutter_application/features/shop/presentation/search/product_se
 import 'package:flutter_application/features/shop/presentation/widgets/cart_icon_button.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:showcaseview/showcaseview.dart'; // coach marks
+import 'package:flutter_application/core/tour/coach_tour.dart'; // tour service
+
 import '../../../core/theme/app_theme.dart';
 import '../controllers/shop_controller.dart';
 import 'widgets/product_card.dart';
@@ -25,6 +27,25 @@ class _ShopPageState extends ConsumerState<ShopPage> {
       _cooldownUntil != null && DateTime.now().isBefore(_cooldownUntil!);
   void _startCooldown([int ms = 700]) {
     _cooldownUntil = DateTime.now().add(Duration(milliseconds: ms));
+  }
+
+  final _kSearch = GlobalKey();
+  final _kFilters = GlobalKey();
+  final _kCart = GlobalKey();
+  final _kCard = GlobalKey();
+
+  bool _tourScheduled = false;
+
+  void _scheduleTourAfterData() {
+    if (_tourScheduled) return;
+    _tourScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(coachTourServiceProvider).startOrQueue(
+        context,
+        TourSection.shop,
+        [_kSearch, _kFilters, _kCart, _kCard],
+      );
+    });
   }
 
   Future<void> _onFavToggle(String productId) async {
@@ -196,34 +217,25 @@ class _ShopPageState extends ConsumerState<ShopPage> {
 
             return Column(
               children: [
-                // Header
                 Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: sp(12),
                     vertical: sp(6),
                   ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: () async {
-                          if (_cooldownActive) return;
-                          _startCooldown(500);
-                          ref.read(hideChromeProvider.notifier).state = true;
-                          try {
-                            await showSearch(
-                              context: context,
-                              delegate: ProductSearchDelegate(ref),
-                            );
-                          } finally {
-                            ref.read(hideChromeProvider.notifier).state = false;
-                          }
-                        },
-                        icon: Icon(Icons.search, size: searchIconSize),
-                      ),
-                      Expanded(
-                        child: Center(
+                  child: SizedBox(
+                    height: math.max(searchIconSize, sp(40)) + sp(8),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Centered title with symmetric padding so it won't overlap icons
+                        Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: searchIconSize * 2.6,
+                          ),
                           child: Text(
                             'Shop',
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.headlineMedium
                                 ?.copyWith(
                                   fontWeight: FontWeight.w900,
@@ -231,18 +243,75 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                 ),
                           ),
                         ),
-                      ),
-                      CartIconButton(
-                        onPressed: () {
-                          if (_cooldownActive) return;
-                          _startCooldown(500);
-                          showCartPopup(context, ref);
-                        },
-                      ),
-                    ],
+
+                        // Left: Search (Showcase)
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Showcase(
+                            key: _kSearch,
+                            description: 'Search products and manuals.',
+                            overlayOpacity: 0.2,
+                            targetPadding: const EdgeInsets.all(2),
+                            child: IconButton(
+                              onPressed: () async {
+                                if (_cooldownActive) return;
+                                _startCooldown(500);
+                                ref.read(hideChromeProvider.notifier).state =
+                                    true;
+                                try {
+                                  await showSearch(
+                                    context: context,
+                                    delegate: ProductSearchDelegate(ref),
+                                  );
+                                } finally {
+                                  ref.read(hideChromeProvider.notifier).state =
+                                      false;
+                                }
+                              },
+                              icon: Icon(Icons.search, size: searchIconSize),
+                            ),
+                          ),
+                        ),
+
+                        // Right: Help + Cart (Cart in Showcase)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  Icons.help_outline,
+                                  size: searchIconSize,
+                                ),
+                                tooltip: 'Show page tour',
+                                onPressed: () =>
+                                    ref.read(coachTourServiceProvider).startNow(
+                                      context,
+                                      [_kSearch, _kFilters, _kCart, _kCard],
+                                    ),
+                              ),
+                              Showcase(
+                                key: _kCart,
+                                description:
+                                    'Open the cart and proceed to checkout.',
+                                overlayOpacity: 0.2,
+                                targetPadding: const EdgeInsets.all(2),
+                                child: CartIconButton(
+                                  onPressed: () {
+                                    if (_cooldownActive) return;
+                                    _startCooldown(500);
+                                    showCartPopup(context, ref);
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                // Accent bar
                 Container(
                   height: barH,
                   margin: EdgeInsets.symmetric(horizontal: sp(12)),
@@ -260,72 +329,79 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                   ),
                 ),
                 SizedBox(height: sp(12)),
-                // Chip row
-                SizedBox(
-                  height: chipRowH,
-                  child: ListView.separated(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: sp(12),
-                      vertical: sp(12),
+
+                Showcase(
+                  key: _kFilters,
+                  description: 'Filter by family (XT1–XT7) or show all.',
+                  overlayOpacity: 0.2,
+                  targetPadding: const EdgeInsets.all(2),
+                  child: SizedBox(
+                    height: chipRowH,
+                    child: ListView.separated(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: sp(12),
+                        vertical: sp(12),
+                      ),
+                      scrollDirection: Axis.horizontal,
+                      itemCount: state.categories.length.clamp(
+                        0,
+                        categoryLabels.length,
+                      ),
+                      separatorBuilder: (_, __) => SizedBox(width: sp(6)),
+                      itemBuilder: (_, i) {
+                        final c = state.categories[i];
+                        final selected = c.id == state.selectedCategoryId;
+                        final label = categoryLabels[i];
+                        return ChoiceChip(
+                          label: Text(
+                            label,
+                            style: TextStyle(fontSize: chipFont),
+                          ),
+                          avatar: selected
+                              ? Container(
+                                  width: sp(18),
+                                  height: sp(18),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Icon(
+                                    Icons.check,
+                                    size: sp(14),
+                                    color: AppTheme.accent,
+                                  ),
+                                )
+                              : null,
+                          backgroundColor: Colors.white,
+                          selectedColor: AppTheme.accent,
+                          selected: selected,
+                          onSelected: (_) {
+                            if (selected ||
+                                isProductsLoading ||
+                                _cooldownActive)
+                              return;
+                            _startCooldown(600);
+                            ctrl.loadProducts(categoryId: c.id);
+                          },
+                          shape: const StadiumBorder(side: BorderSide.none),
+                          elevation: sp(3),
+                          showCheckmark: false,
+                          labelStyle: TextStyle(
+                            fontSize: chipFont,
+                            fontWeight: selected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: selected
+                                ? const Color(0xFFFFFFFF)
+                                : Colors.black87,
+                          ),
+                        );
+                      },
                     ),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: state.categories.length.clamp(
-                      0,
-                      categoryLabels.length,
-                    ),
-                    separatorBuilder: (_, __) => SizedBox(width: sp(6)),
-                    itemBuilder: (_, i) {
-                      final c = state.categories[i];
-                      final selected = c.id == state.selectedCategoryId;
-                      final label = categoryLabels[i];
-                      return ChoiceChip(
-                        label: Text(
-                          label,
-                          style: TextStyle(fontSize: chipFont),
-                        ),
-                        avatar: selected
-                            ? Container(
-                                width: sp(18),
-                                height: sp(18),
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  Icons.check,
-                                  size: sp(14),
-                                  color: AppTheme.accent,
-                                ),
-                              )
-                            : null,
-                        backgroundColor: Colors.white,
-                        selectedColor: AppTheme.accent,
-                        selected: selected,
-                        onSelected: (_) {
-                          if (selected || isProductsLoading || _cooldownActive)
-                            return;
-                          _startCooldown(600);
-                          ctrl.loadProducts(categoryId: c.id);
-                        },
-                        shape: const StadiumBorder(side: BorderSide.none),
-                        elevation: sp(3),
-                        showCheckmark: false,
-                        labelStyle: TextStyle(
-                          fontSize: chipFont,
-                          fontWeight: selected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
-                          color: selected
-                              ? const Color(0xFFFFFFFF)
-                              : Colors.black87,
-                        ),
-                      );
-                    },
                   ),
                 ),
 
-                // Content
                 Expanded(
                   child: state.products.when(
                     loading: () =>
@@ -338,9 +414,29 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                       ),
                     ),
                     data: (items) {
+                      if (items.isNotEmpty) {
+                        _scheduleTourAfterData();
+                      }
+
                       final titleUp = sectionTitle.toUpperCase();
                       final isAll = titleUp == 'ALL';
                       final isXtFamily = RegExp(r'^XT[1-7]$').hasMatch(titleUp);
+
+                      bool cardTipBound = false;
+                      Widget wrapCardTipIfFirst(Widget child) {
+                        if (cardTipBound) return child;
+                        cardTipBound = true;
+                        return Showcase(
+                          key: _kCard,
+                          description:
+                              'Tap the heart to add/remove favorites.\n'
+                              'Tap the AR icon to open Augmented Reality.\n'
+                              'Tap the card to view device details.',
+                          overlayOpacity: 0.2,
+                          targetPadding: const EdgeInsets.all(2),
+                          child: child,
+                        );
+                      }
 
                       if (isAll) {
                         final families = _groupByFamily(items);
@@ -381,7 +477,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                       final fav = state.favourites.contains(
                                         p.id,
                                       );
-                                      return SizedBox(
+                                      Widget card = SizedBox(
                                         width: carouselCardW,
                                         child: ProductCard(
                                           product: p,
@@ -391,6 +487,10 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                               context.go('/product/${p.id}'),
                                         ),
                                       );
+                                      if (!cardTipBound && i == 0) {
+                                        card = wrapCardTipIfFirst(card);
+                                      }
+                                      return card;
                                     },
                                     separatorBuilder: (_, __) =>
                                         SizedBox(width: listSep),
@@ -447,7 +547,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                       final fav = state.favourites.contains(
                                         p.id,
                                       );
-                                      return SizedBox(
+                                      Widget card = SizedBox(
                                         width: carouselCardW,
                                         child: ProductCard(
                                           product: p,
@@ -458,6 +558,11 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                                               context.go('/product/${p.id}'),
                                         ),
                                       );
+                                      if (!cardTipBound && i == 0) {
+                                        // NEW
+                                        card = wrapCardTipIfFirst(card);
+                                      }
+                                      return card;
                                     },
                                     separatorBuilder: (_, __) =>
                                         SizedBox(width: listSep),
@@ -473,7 +578,7 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                         );
                       }
 
-                      // grid
+                      // GRID
                       return Padding(
                         padding: EdgeInsets.fromLTRB(
                           sp(12),
@@ -495,12 +600,16 @@ class _ShopPageState extends ConsumerState<ShopPage> {
                           itemBuilder: (_, i) {
                             final p = items[i];
                             final fav = state.favourites.contains(p.id);
-                            return ProductCard(
+                            Widget card = ProductCard(
                               product: p,
                               isFavourite: fav,
                               onFavToggle: () => ctrl.toggleFavourite(p.id),
                               onTap: () => context.go('/product/${p.id}'),
                             );
+                            if (!cardTipBound && i == 0) {
+                              card = wrapCardTipIfFirst(card);
+                            }
+                            return card;
                           },
                         ),
                       );
